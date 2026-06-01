@@ -1,0 +1,14 @@
+.network-error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 70%;
+    text-align: center;
+    padding: 0 10%;
+    .icon {
+        font-size: 48px;
+        color: var(--danger-color);
+        margin-bottom: 16px;
+    }
+}
+@import "responsive";

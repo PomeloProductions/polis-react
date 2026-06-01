@@ -1,0 +1,35 @@
+.input-wrapper {
+  margin: 8vw 0 5vw;
+  &.rounded{
+    input{
+      border-radius: 5px;
+    }
+  }
+  &.dark{
+    input{
+      border-color: var(--color-dark);
+    }
+  }
+  label {
+    padding-left: 5px;
+    padding-bottom: 4px;
+    margin-bottom: 0;
+    display: block;
+  }
+  input {
+    border: 1px var(--color-primary) solid;
+    --padding-start: 3.125vw;
+  }
+  .subtext {
+    padding-top: 5px;
+    padding-left: 5px;
+  }
+}
+.plt-android {
+  .input-wrapper {
+    label {
+      padding-bottom: 3.5vw;
+    }
+  }
+}
+@import "responsive";

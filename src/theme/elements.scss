@@ -1,0 +1,148 @@
+:root {
+  --primary-color: #3880ff;
+  --primary-shade: #3171e0;
+  --primary-tint: #4c8dff;
+  --medium-color: #92949c;
+  --medium-tint: #a2a4ab;
+  --medium-shade: #808289;
+  --light-color: #f4f5f8;
+  --light-shade: #d7d8da;
+  --danger-color: #eb445a;
+}
+
+h3 {
+    color: var(--primary-shade);
+    text-align: center;
+    font-weight: bold;
+}
+h4 {
+    font-weight: bold;
+    margin: 0;
+    color: black;
+}
+h6 {
+    font-size: 5vw;
+    @media screen and (min-width: 400px) {
+        font-size: 20px;
+    }
+}
+.content {
+    --background: var(--color-light);
+    --padding-top: 20px;
+    --padding-bottom: 20px;
+    --padding-start: 20px;
+    --padding-end: 20px;
+}
+.button {
+    --background: var(--color-primary);
+    --background-hover: var(--color-primary-shade);
+    --background-activated: var(--color-primary-shade);
+    --background-focused: var(--color-primary-shade);
+    --color: var(--color-primary-contrast);
+    --border-radius: 4px;
+    --box-shadow: none;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --padding-start: 20px;
+    --padding-end: 20px;
+    font-weight: 500;
+    text-transform: none;
+}
+.button.outlined {
+    --background: transparent;
+    --background-hover: rgba(var(--color-primary-rgb), 0.1);
+    --background-activated: rgba(var(--color-primary-rgb), 0.2);
+    --background-focused: rgba(var(--color-primary-rgb), 0.1);
+    --color: var(--color-primary);
+    --border-color: var(--color-primary);
+    --border-width: 1px;
+    --border-style: solid;
+}
+.error {
+    color: var(--danger-color);
+}
+.select {
+    --background: transparent;
+    --color: var(--color-dark);
+    --placeholder-color: var(--color-medium);
+    --padding-start: 0;
+    --padding-end: 0;
+}
+.item {
+    --background: transparent;
+    --color: var(--color-dark);
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-end: 0;
+    --min-height: 40px;
+}
+.item,
+.list {
+    --background: transparent;
+}
+.alert {
+    --background: var(--color-light);
+    --backdrop-opacity: 0.4;
+    --max-width: 90%;
+    --width: 90%;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --header-color: var(--color-dark);
+    --message-color: var(--color-medium);
+    --button-color: var(--color-primary);
+    --button-background: transparent;
+    --button-background-hover: rgba(var(--color-primary-rgb), 0.1);
+    --button-background-activated: rgba(var(--color-primary-rgb), 0.2);
+    --button-background-focused: rgba(var(--color-primary-rgb), 0.1);
+}
+.toolbar .back-button {
+    --color: var(--color-dark);
+    --padding-start: 0;
+    --padding-end: 0;
+    margin: 0;
+}
+.app {
+    --background: var(--color-light);
+}
+a {
+    color: var(--primary-shade);
+    text-decoration: none;
+    
+    &:hover {
+        text-decoration: underline;
+    }
+}
+.plt-android {
+    .back-button {
+        display: none;
+    }
+}
+
+input, textarea {
+    border: 1px solid var(--light-shade);
+    padding: 8px;
+    border-radius: 4px;
+    
+    &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    color: var(--medium-color);
+    text-decoration: none;
+    padding: 8px;
+    
+    &:hover {
+        color: var(--medium-shade);
+    }
+}
+
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}

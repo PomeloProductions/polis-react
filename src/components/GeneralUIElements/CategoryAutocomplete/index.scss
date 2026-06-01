@@ -1,0 +1,12 @@
+.category-autocomplete {
+    width: 100%;
+    
+    .mantine-Autocomplete-input {
+        width: 100%;
+    }
+    
+    .mantine-Autocomplete-dropdown {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+} 

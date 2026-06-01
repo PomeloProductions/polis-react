@@ -1,0 +1,19 @@
+// Collections grid container
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.no-collections {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}

@@ -1,0 +1,30 @@
+#wrapper {
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  transition: all 0.3s;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#page-content-wrapper {
+  transition: margin 0.3s;
+  min-width: 0;
+  padding-bottom: 200px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    z-index: 1000;
+    height: 100%;
+  }
+}

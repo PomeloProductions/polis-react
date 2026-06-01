@@ -1,0 +1,15 @@
+#loading-screen {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  #loading-wrapper {
+    border-radius: 3.125vw;
+    padding: 4.6875vw 6.25vw;
+    text-align: center;
+    margin: 0 auto;
+    p {
+      margin: 0;
+    }
+  }
+}

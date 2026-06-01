@@ -1,0 +1,14 @@
+.bottom-sticky-section {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  z-index: 1000;
+  .side-by-side {
+    padding: 6px;
+    margin: 0;
+  }
+  button {
+    margin: 0;
+  }
+}

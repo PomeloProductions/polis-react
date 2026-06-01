@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+dist/
+build/
+.vite/
+.cache/
+coverage/

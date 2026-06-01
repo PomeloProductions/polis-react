@@ -1,0 +1,19 @@
+.input-wrapper {
+  @media screen and (min-width: 600px) {
+    margin: 48px 0 30px;
+  }
+  input {
+    @media screen and (min-width: 576px) {
+      --padding-start: 18px;
+    }
+  }
+}
+.plt-android {
+  .input-wrapper {
+    label {
+      @media screen and (min-width: 600px) {
+        padding-bottom: 21px;
+      }
+    }
+  }
+}

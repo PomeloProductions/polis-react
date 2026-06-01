@@ -1,0 +1,31 @@
+.bordered-input {
+  margin: 0 0 12px;
+  ion-datetime,
+  ion-textarea,
+  ion-input {
+    --padding-start: 12px;
+    border: 2px var(--ion-color-primary) solid;
+  }
+}
+
+input[type="datetime-local"],
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border: 2px var(--primary-color) solid;
+  border-radius: 4px;
+  font-size: 16px;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary-shade);
+  }
+  
+  &::placeholder {
+    color: var(--medium-color);
+  }
+}

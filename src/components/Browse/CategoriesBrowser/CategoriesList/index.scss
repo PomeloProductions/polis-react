@@ -1,0 +1,110 @@
+.categories-list {
+    padding: 2rem;
+    margin: 0 auto;
+    height: 600px;
+    width: 100%;
+
+    h1 {
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+        color: #333;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .category-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+
+            h2 {
+                margin: 0 0 1rem;
+                font-size: 1.5rem;
+                color: #333;
+            }
+
+            p {
+                margin: 0.5rem 0;
+                color: #666;
+            }
+        }
+    }
+
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        font-size: 1.2rem;
+        color: #666;
+    }
+
+    .error {
+        text-align: center;
+        padding: 2rem;
+        color: #dc3545;
+        font-size: 1.2rem;
+    }
+
+    .ag-theme-alpine {
+        height: 100%;
+        width: 100%;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .edit-button, .delete-button {
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: #6c757d;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .edit-button {
+        &:hover {
+            color: #007bff;
+        }
+
+        &:active {
+            color: #0056b3;
+        }
+    }
+
+    .delete-button {
+        &:hover {
+            color: #dc3545;
+        }
+
+        &:active {
+            color: #bd2130;
+        }
+    }
+} 

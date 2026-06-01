@@ -1,0 +1,8 @@
+p.footnote {
+  @media screen and (min-width: 400px) {
+    margin: 20px auto;
+  }
+  @media screen and (min-width: 450px) {
+    font-size: 18px !important;
+  }
+}

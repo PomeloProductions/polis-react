@@ -1,0 +1,34 @@
+.underlined-input {
+  input,
+  textarea {
+    --padding-start: 10px;
+    border: transparent;
+    border-bottom: 3px var(--medium-color) solid;
+  }
+  label {
+    font-weight: 600;
+  }
+}
+
+input[type="datetime-local"],
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  border-bottom: 3px var(--medium-color) solid;
+  font-size: 16px;
+  background: transparent;
+  
+  &:focus {
+    outline: none;
+    border-bottom-color: var(--primary-color);
+  }
+  
+  &::placeholder {
+    color: var(--medium-color);
+  }
+}

@@ -5,8 +5,7 @@ Shared React core for Polis-family apps. This is the React-side sibling of
 contexts, layout primitives, and reusable components.
 
 Initial contents were lifted from `PolisOS/apps/web/src/` on 2026-05-13.
-PolisOS and Video Game Rankings are not yet consuming this package — their
-existing code is left in place and will be migrated separately.
+PolisOS and Video Game Rankings are migrating onto it now.
 
 ## Layout
 
@@ -14,20 +13,22 @@ existing code is left in place and will be migrated separately.
 src/
 ├── assets/         Logos, icons, images
 ├── components/     Reusable React components (AuthenticatedRoute, Forms,
-│                   Errors, Template/Page, PageRenderer, …)
+│                   Errors, Template/Page, PageRenderer, Menu, ...)
 ├── config/         Static app-level config
-├── contexts/       React contexts (MeContext, BasePaginatedContext, …)
-├── data/           Static lookup tables (countries, etc.)
+├── contexts/       React contexts (MeContext, BasePaginatedContext, ...)
+├── data/           Static state stores + reducers
 ├── models/         TypeScript model interfaces matching the API
+├── pages/          Default page compositions (Auth pages, Welcome,
+│                   Dashboard) — use as-is or copy and customize
 ├── services/       api.ts (axios + auth interceptors), AuthManager,
 │                   requests/ (per-resource request modules)
 ├── test-utils/     Test helpers
 ├── theme/          SCSS theme: variables, fonts, elements, responsive
-├── util/           strings, platform detection, etc.
-└── index.ts        (TODO) barrel exports
+├── util/           strings, platform detection, regex, etc.
+└── index.ts        Top-level barrel exports
 ```
 
-## Consuming this package
+## Installing
 
 In a sibling app's `package.json`:
 
@@ -39,12 +40,132 @@ In a sibling app's `package.json`:
 }
 ```
 
-Then in code:
+## Consuming
+
+### v0.2 exports map (no consumer aliases required)
+
+Subpath imports resolve directly through the package's `exports` field —
+no `tsconfig` paths, no Vite alias, no Jest `moduleNameMapper`:
 
 ```ts
-import { api } from '@polis/react/services/api';
-import MeContext from '@polis/react/contexts/MeContext';
-import AuthenticatedRoute from '@polis/react/components/AuthenticatedRoute';
+// Subpath imports
+import Menu from '@polis/react/components/Menu';
+import SignInForm from '@polis/react/components/Forms/SignInForm';
+import api from '@polis/react/services/api';
+import AuthRequests from '@polis/react/services/requests/AuthRequests';
+import { ellipsisText } from '@polis/react/util/strings';
+
+// Top-level barrels
+import { Menu, SignInForm, ellipsisText, api } from '@polis/react';
+```
+
+The exports map is now structured so:
+
+- `@polis/react/components/X` → `./src/components/X/index.tsx`
+- `@polis/react/contexts/X` → `./src/contexts/X.tsx`
+- `@polis/react/services/X` and `@polis/react/services/Y/Z` →
+  `./src/services/X.ts` / `./src/services/Y/Z.ts`
+- `@polis/react/util/X` → `./src/util/X.ts`
+- `@polis/react/models/X` → `./src/models/X.ts`
+- `@polis/react/pages/X` → `./src/pages/X/index.tsx`
+- `@polis/react/theme/X` → `./src/theme/X.scss`
+
+Plus barrel entries at every top-level directory (`@polis/react/components`,
+`@polis/react/util`, `@polis/react/services`, `@polis/react/contexts`,
+`@polis/react/models`).
+
+If you were previously carrying a `tsconfig.json` `paths` mapping, a
+`vite.config.ts` `resolve.alias`, or a `jest.config.js` `moduleNameMapper`
+just to coax `@polis/react/...` resolution, you can delete all three.
+
+## Auth forms (v0.2)
+
+Four render-prop forms are now shipped. The render-prop pattern lets
+consumers inject additional fields without forking the package.
+
+| Form                  | Endpoint                | Base fields                                          |
+|-----------------------|-------------------------|------------------------------------------------------|
+| `SignInForm`          | `POST /auth/login`      | email, password                                      |
+| `SignUpForm`          | `POST /auth/sign-up`    | email, password, password_confirmation, accept_terms |
+| `ForgotPasswordForm`  | `POST /forgot-password` | email                                                |
+| `ResetPasswordForm`   | `POST /reset-password`  | password, password_confirmation (+ token, email)     |
+
+Each form (except SignInForm, which keeps the v0.1 API) accepts:
+
+- `additionalFields(formik)` — render-prop returning extra fields. The
+  bag is the full `FormikProps<BaseValues & TExtra>` so consumers can
+  read values, errors, touched, and call `setFieldValue` etc.
+- `additionalValidation` — a Yup schema merged into the base schema.
+  Describe only your extra fields; the base fields are validated by
+  the package.
+- `additionalInitialValues` (SignUpForm only) — initial values for the
+  consumer's extra fields, merged with the base values.
+- `additionalSubmitTransform` (SignUpForm only) — transform run on
+  merged values right before the request fires.
+- `onSuccessRedirect` — destination after success.
+
+Robustness applied uniformly:
+- 422 → server field errors lifted into Formik field errors
+- 429 → handled by the api.ts toast / backoff (form just no-ops)
+- Submission disables the button + shows a spinner
+- Network/generic errors surface as a single error string under the form
+
+### Example
+
+```tsx
+import * as Yup from 'yup';
+import SignUpForm from '@polis/react/components/Forms/SignUpForm';
+
+<SignUpForm
+  additionalInitialValues={{ first_name: '', last_name: '' }}
+  additionalValidation={Yup.object({
+    first_name: Yup.string().required('First name is required'),
+    last_name: Yup.string().required('Last name is required'),
+  })}
+  additionalFields={(form) => (
+    <>
+      <input
+        value={form.values.first_name as string}
+        onChange={e => form.setFieldValue('first_name', e.target.value)}
+      />
+      <input
+        value={form.values.last_name as string}
+        onChange={e => form.setFieldValue('last_name', e.target.value)}
+      />
+    </>
+  )}
+  onSuccessRedirect="/welcome"
+/>
+```
+
+## Default pages (v0.2)
+
+Pre-composed pages live under `@polis/react/pages/`. They wrap each form
+in a centered Mantine `<Paper>` layout with cross-page links and accept
+an optional `branding` prop (`{ appName, logo }`):
+
+- `@polis/react/pages/Auth/SignInPage`
+- `@polis/react/pages/Auth/SignUpPage`
+- `@polis/react/pages/Auth/ForgotPasswordPage`
+- `@polis/react/pages/Auth/ResetPasswordPage`
+- `@polis/react/pages/Welcome` — logged-out landing page with sign-in /
+  sign-up CTAs and an optional copy slot via `children`
+- `@polis/react/pages/Dashboard` — minimal logged-in stub that reads
+  `MeContext` and shows a greeting; override `children` for real content
+
+The `additionalFields` / `additionalValidation` / `additionalInitialValues` /
+`additionalSubmitTransform` props on each form are forwarded through
+their wrapper page, so you can use the pages without ever importing the
+underlying forms:
+
+```tsx
+import SignUpPage from '@polis/react/pages/Auth/SignUpPage';
+
+<SignUpPage
+  branding={{ appName: 'Video Game Rankings' }}
+  additionalInitialValues={{ first_name: '' }}
+  additionalFields={(form) => /* ... */}
+/>
 ```
 
 ## How it ships
@@ -55,24 +176,12 @@ Tradeoff: faster iteration, slightly slower consumer builds.
 
 ## Customization
 
-This package provides **building blocks**. Pages and how they're arranged
-belong in the consuming app. If a component here doesn't fit, fork it locally
-in the consuming app; don't bend the package to fit a single consumer.
+The forms and pages are designed to be customized via props (render-prop
+fields, additional validation, branding). If a component still doesn't
+fit, fork it locally in the consuming app; don't bend the package to fit
+a single consumer.
 
-## Re-syncing from PolisOS (for now)
+## Re-syncing from PolisOS (legacy)
 
-Until PolisOS itself starts consuming this package, the canonical copy of
-each file lives in `PolisOS/apps/web/src/`. To pull updates:
-
-```bash
-rsync -a \
-  --exclude='App.tsx' --exclude='App.test.tsx' \
-  --exclude='index.tsx' --exclude='index.test.tsx' \
-  --exclude='pages/' --exclude='serviceWorker.ts' \
-  --exclude='setupTests.ts' --exclude='*.d.ts' \
-  /Users/bryce/Projects/PolisOS/apps/web/src/ \
-  packages/polis-react/src/
-```
-
-Once PolisOS migrates onto this package the direction reverses: PolisOS
-consumes from here, drift stops being a problem.
+Until PolisOS itself fully consumes this package, drift may exist. The
+migration plan is in `CLAUDE.md`.

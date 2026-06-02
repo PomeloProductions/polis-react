@@ -25,6 +25,35 @@ export { default as InputWrapper } from './components/InputWrapper';
 export { default as LoadingScreen } from './components/LoadingScreen';
 export { default as NetworkError } from './components/Errors/NetworkError';
 
+// ───── Auth forms (render-prop pattern) ─────
+export { default as SignInForm } from './components/Forms/SignInForm';
+export { default as SignUpForm } from './components/Forms/SignUpForm';
+export type { SignUpFormProps, SignUpValues } from './components/Forms/SignUpForm';
+export { default as ForgotPasswordForm } from './components/Forms/ForgotPasswordForm';
+export type {
+    ForgotPasswordFormProps,
+    ForgotPasswordValues,
+} from './components/Forms/ForgotPasswordForm';
+export { default as ResetPasswordForm } from './components/Forms/ResetPasswordForm';
+export type {
+    ResetPasswordFormProps,
+    ResetPasswordValues,
+} from './components/Forms/ResetPasswordForm';
+
+// ───── Default page compositions ─────
+export { default as SignInPage } from './pages/Auth/SignInPage';
+export type { SignInPageProps, AuthPageBranding } from './pages/Auth/SignInPage';
+export { default as SignUpPage } from './pages/Auth/SignUpPage';
+export type { SignUpPageProps } from './pages/Auth/SignUpPage';
+export { default as ForgotPasswordPage } from './pages/Auth/ForgotPasswordPage';
+export type { ForgotPasswordPageProps } from './pages/Auth/ForgotPasswordPage';
+export { default as ResetPasswordPage } from './pages/Auth/ResetPasswordPage';
+export type { ResetPasswordPageProps } from './pages/Auth/ResetPasswordPage';
+export { default as WelcomePage } from './pages/Welcome';
+export type { WelcomePageProps } from './pages/Welcome';
+export { default as DashboardPage } from './pages/Dashboard';
+export type { DashboardPageProps } from './pages/Dashboard';
+
 // ───── Util helpers ─────
 export {
   ellipsisText,

@@ -1,6 +1,6 @@
 {
   "name": "@polis/react",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Shared React core for Polis-family apps (auth, API client, base contexts, layout primitives, reusable components).",
   "type": "module",
   "main": "src/index.ts",

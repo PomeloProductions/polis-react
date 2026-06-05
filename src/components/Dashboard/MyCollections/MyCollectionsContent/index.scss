@@ -2,18 +2,20 @@
 .collections-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  gap: var(--polis-spacing-lg, 20px);
+  margin-top: var(--polis-spacing-lg, 20px);
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
-  color: #666;
+  padding: var(--polis-spacing-xl, 40px);
+  color: var(--polis-color-text-muted, #666);
+  font-family: var(--polis-font-body, system-ui, sans-serif);
 }
 
 .no-collections {
   text-align: center;
-  padding: 40px;
-  color: #666;
+  padding: var(--polis-spacing-xl, 40px);
+  color: var(--polis-color-text-muted, #666);
+  font-family: var(--polis-font-body, system-ui, sans-serif);
 }

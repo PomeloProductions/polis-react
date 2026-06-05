@@ -5,6 +5,7 @@
  * (`@polis/react/components/Forms/SignInForm`) remain available and are
  * usually preferred for tree-shaking.
  */
+export { PolisProvider, usePolisTheme } from './PolisProvider';
 export { default as ApplicationLogo } from './ApplicationLogo';
 export { default as BottomStickySection } from './BottomStickySection';
 export { default as Footnote } from './Footnote';

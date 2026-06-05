@@ -1,12 +1,17 @@
 #wrapper {
   min-height: 100vh;
   align-items: stretch;
+  background: var(--polis-color-surface, transparent);
+  color: var(--polis-color-text-primary, inherit);
+  font-family: var(--polis-font-body, system-ui, sans-serif);
 }
 
 .sidebar {
   width: 220px;
   min-width: 220px;
   transition: all 0.3s;
+  background: var(--polis-color-surface-alt, transparent);
+  border-right: 1px solid var(--polis-color-border, transparent);
 }
 
 .sidebar.collapsed {

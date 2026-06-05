@@ -3,19 +3,26 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.scss';
 import Menu from "../../Menu";
 import { Link } from "react-router-dom";
+import { usePolisTheme } from "../../PolisProvider";
 
 interface PageProps extends React.HTMLProps<HTMLDivElement> {
 }
 
 const Page: React.FC<PageProps> = ({children}) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const theme = usePolisTheme();
 
     return (
         <div className="d-flex" id="wrapper">
             {/* Sidebar */}
-            <div className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'}`} id="sidebar-wrapper" data-testid="sidebar" style={{ borderRight: '1px solid var(--mantine-color-gray-2)', background: '#fff' }}>
-                <div style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', padding: '12px 16px' }}>
-                    <Link to="/" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 500 }}>
+            <div
+                className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}
+                id="sidebar-wrapper"
+                data-testid="sidebar"
+                style={{ borderRight: `1px solid ${theme.colors.border}`, background: theme.colors.surface }}
+            >
+                <div style={{ borderBottom: `1px solid ${theme.colors.border}`, padding: '12px 16px' }}>
+                    <Link to="/" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 500, fontFamily: theme.fonts.heading }}>
                         Home
                     </Link>
                 </div>

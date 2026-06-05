@@ -2,5 +2,7 @@ p.footnote {
     margin: 5vw auto;
     text-align: center;
     font-size: 4vw !important;
+    color: var(--polis-color-text-muted, #6c757d);
+    font-family: var(--polis-font-body, system-ui, sans-serif);
 }
 @import "responsive";

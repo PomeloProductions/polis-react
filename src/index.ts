@@ -17,6 +17,11 @@
  * devDependencies if it isn't already there.
  */
 
+// ───── Theming ─────
+export { PolisProvider, usePolisTheme } from './components/PolisProvider';
+export { PolisThemeContext, FALLBACK_POLIS_THEME } from './theme/PolisThemeContext';
+export type { PolisTheme } from './theme/PolisTheme';
+
 // ───── Pure components ─────
 export { default as ApplicationLogo } from './components/ApplicationLogo';
 export { default as BottomStickySection } from './components/BottomStickySection';

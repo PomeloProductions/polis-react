@@ -4,8 +4,10 @@
   right: 0;
   left: 0;
   z-index: 1000;
+  background: var(--polis-color-surface, transparent);
+  border-top: 1px solid var(--polis-color-border, transparent);
   .side-by-side {
-    padding: 6px;
+    padding: var(--polis-spacing-xs, 6px);
     margin: 0;
   }
   button {

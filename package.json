@@ -25,6 +25,10 @@
 
     "./data/*": "./src/data/*.ts",
 
+    "./components/PolisProvider": "./src/components/PolisProvider/index.tsx",
+    "./theme": "./src/theme/index.ts",
+    "./theme/PolisTheme": "./src/theme/PolisTheme.ts",
+    "./theme/PolisThemeContext": "./src/theme/PolisThemeContext.tsx",
     "./theme/*": "./src/theme/*.scss",
 
     "./assets/*": "./src/assets/*",

@@ -49,7 +49,9 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --reporters=default --reporters=github-actions"
+    "test:ci": "jest --ci --reporters=default --reporters=github-actions",
+    "test:coverage": "jest --coverage",
+    "test:coverage:ci": "jest --ci --coverage --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -28,5 +28,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm run test:ci
+      - name: Run tests with coverage
+        run: npm run test:coverage:ci
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Coverage summary
+        if: success()
+        run: |
+          echo "### Jest Coverage" >> "$GITHUB_STEP_SUMMARY"
+          cat coverage/coverage-summary.json | node -e '
+            let data = "";
+            process.stdin.on("data", chunk => data += chunk);
+            process.stdin.on("end", () => {
+              const t = JSON.parse(data).total;
+              console.log(`| Metric | Coverage |`);
+              console.log(`|---|---|`);
+              console.log(`| Lines | ${t.lines.pct}% (${t.lines.covered}/${t.lines.total}) |`);
+              console.log(`| Statements | ${t.statements.pct}% (${t.statements.covered}/${t.statements.total}) |`);
+              console.log(`| Branches | ${t.branches.pct}% (${t.branches.covered}/${t.branches.total}) |`);
+              console.log(`| Functions | ${t.functions.pct}% (${t.functions.covered}/${t.functions.total}) |`);
+            });
+          ' >> "$GITHUB_STEP_SUMMARY"

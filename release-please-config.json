@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "packages": {
+    ".": {
+      "package-name": "@polis/react",
+      "include-component-in-tag": false,
+      "changelog-path": "CHANGELOG.md",
+      "release-as": null,
+      "draft": false,
+      "prerelease": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    }
+  },
+  "plugins": ["sentence-case"]
+}

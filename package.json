@@ -44,7 +44,14 @@
     "./pages/ComponentGuide/ComponentPlayground": "./src/pages/ComponentGuide/ComponentPlayground.tsx",
     "./pages/ComponentGuide/AddToPageModal": "./src/pages/ComponentGuide/AddToPageModal.tsx",
     "./pages/ComponentGuide/ConfigEditor": "./src/pages/ComponentGuide/ConfigEditor.tsx",
-    "./pages/ComponentGuide/componentMetadata": "./src/pages/ComponentGuide/componentMetadata.ts"
+    "./pages/ComponentGuide/componentMetadata": "./src/pages/ComponentGuide/componentMetadata.ts",
+
+    "./components/Templates/TemplateList": "./src/components/Templates/TemplateList/index.tsx",
+    "./components/Templates/TemplateEditor": "./src/components/Templates/TemplateEditor/index.tsx",
+    "./pages/Admin/Templates": "./src/pages/Admin/Templates/index.tsx",
+    "./services/MessagingTemplateRequests": "./src/services/requests/MessagingTemplateRequests.ts",
+    "./models/messaging-template": "./src/models/messaging-template.ts",
+    "./util/template-interpolate": "./src/util/template-interpolate.ts"
   },
   "peerDependencies": {
     "react": ">=18",

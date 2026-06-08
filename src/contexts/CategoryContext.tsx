@@ -4,7 +4,7 @@ import {generateEmptyCategory} from '../util/category-utils';
 import CategoryRequests from '../services/requests/CategoryRequests';
 import LoadingScreen from '../components/LoadingScreen';
 
-let cachedCategories = [] as Category[];
+const cachedCategories = [] as Category[];
 
 /**
  * The structure of the consumer
@@ -16,11 +16,11 @@ export interface CategoryContextConsumerState {
     setCategory: (category: Category) => void,
 }
 
-let defaultContext: CategoryContextConsumerState = {
+const defaultContext: CategoryContextConsumerState = {
     hasLoaded: false,
     notFound: false,
     category: generateEmptyCategory(),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     setCategory: (_category: Category) => {}
 };
 

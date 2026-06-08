@@ -33,7 +33,7 @@ export function connect<
   TDispatchProps extends ActionCreatorsMap = {} // Default to empty map, constrained
 >(
   {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     mapStateToProps = (_state?: AppState, _props?: TOwnProps) => ({} as TStateProps),
     mapDispatchToProps = {} as TDispatchProps,
     component

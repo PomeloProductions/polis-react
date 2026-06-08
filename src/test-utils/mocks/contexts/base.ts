@@ -2,7 +2,7 @@ import { mockPagination } from '../pagination';
 import BaseModel from '../../../models/base-model';
 
 // Mock appState
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 (global as any).appState = {
     state: {
         persistent: {
@@ -35,9 +35,9 @@ export const createBaseMockContextState = <T extends BaseModel>(data: T[]) => mo
     setFilter: jest.fn(),
     setSearch: jest.fn(),
     setOrder: jest.fn(),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     addModel: jest.fn((_model: T) => {}),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     removeModel: jest.fn((_model: T) => {}),
     getModel: jest.fn((id: number) => {
         const found = data.find(item => typeof item.id === 'number' && item.id === id);

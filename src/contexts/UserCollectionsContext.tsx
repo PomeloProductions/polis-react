@@ -14,7 +14,7 @@ export interface UserCollectionsContextState extends BasePaginatedContextState<C
 /**
  * This lets us persist the loaded state across multiple instances of the provider
  */
-let persistentContext = createDefaultState();
+const persistentContext = createDefaultState();
 
 function createDefaultState(): UserCollectionsContextState {
     return {

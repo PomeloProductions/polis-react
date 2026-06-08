@@ -3,7 +3,7 @@ import Collection, {collectionPlaceholder} from "../models/user/collection";
 import CollectionManagementRequests from "../services/requests/CollectionManagementRequests";
 import LoadingScreen from "../components/LoadingScreen";
 
-let cachedCollections = [] as Collection[];
+const cachedCollections = [] as Collection[];
 /**
  * The state interface for our state
  */
@@ -14,11 +14,11 @@ export interface CollectionContextConsumerState {
     setCollection: (collection: Collection) => void,
 }
 
-let defaultContext: CollectionContextConsumerState = {
+const defaultContext: CollectionContextConsumerState = {
     hasLoaded: false,
     notFound: false,
     collection: collectionPlaceholder,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     setCollection: (_collection: Collection) => {}
 };
 

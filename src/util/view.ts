@@ -1,6 +1,6 @@
 export function isElementInViewport (el: HTMLElement) {
 
-    var rect = el.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
 
     return (
         rect.top >= 0 &&

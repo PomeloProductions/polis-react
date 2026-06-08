@@ -175,7 +175,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
         // Always reset session on mark-done (clears lastSessionRef when stopped, restarts entry when running)
         resetSession();
 
-        let updatedGroups = groups.map((g) =>
+        const updatedGroups = groups.map((g) =>
             g.group_number === groupNum
                 ? {
                       ...g,
@@ -222,7 +222,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
         }
         resetSession();
 
-        let updatedGroups = groups.map((g) =>
+        const updatedGroups = groups.map((g) =>
             g.group_number === groupNum
                 ? { ...g, count_this_group: g.count_this_group + 1, last_date: formatted }
                 : g
@@ -641,7 +641,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                     // Single onUpdate that handles both inner changes AND parent propagation
                     const inlineOnUpdate = (_path: number[], patch: Partial<TodoTaskNode>) => {
                         // Merge inner changes into parent groups
-                        let updatedGroups = groups.map((g) =>
+                        const updatedGroups = groups.map((g) =>
                             g.group_number === group.group_number
                                 ? { ...g, children: g.children.map((c) => c.id === item.id ? { ...c, ...patch } : c) }
                                 : g
@@ -652,7 +652,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                     const inlineDone = (innerPatch: Partial<TodoTaskNode>) => {
                         const formatted = new Date().toISOString();
                         // Start with parent groups, merge inner child changes AND increment parent group
-                        let updatedGroups = groups.map((g) => {
+                        const updatedGroups = groups.map((g) => {
                             if (g.group_number === group.group_number) {
                                 // Merge inner child changes into this group's children
                                 const updatedChildren = g.children.map((c) =>

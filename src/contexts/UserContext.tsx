@@ -3,7 +3,7 @@ import User, {placeholderUser} from '../models/user/user';
 import UserRequests from '../services/requests/UserRequests';
 import LoadingScreen from '../components/LoadingScreen';
 
-let cachedUsers = [] as User[];
+const cachedUsers = [] as User[];
 
 /**
  * The structure of the consumer
@@ -12,15 +12,15 @@ export interface UserContextConsumerState {
     hasLoaded: boolean,
     notFound: boolean,
     user: User,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     setUser: (_user: User) => void,
 }
 
-let defaultContext: UserContextConsumerState = {
+const defaultContext: UserContextConsumerState = {
     hasLoaded: false,
     notFound: false,
     user: placeholderUser(),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     setUser: (_user: User) => {}
 };
 

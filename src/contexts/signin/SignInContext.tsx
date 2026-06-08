@@ -27,7 +27,7 @@ function createSetDataCallback(setData: Dispatch<SetStateAction<SignInData>>) {
 interface SignInContextProviderProps {}
 
 const SignInContextProvider : React.FC<PropsWithChildren<SignInContextProviderProps>> = ({children}) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const [_, setSignUpContext] = useState(persistedState);
 
     const fullContext = {

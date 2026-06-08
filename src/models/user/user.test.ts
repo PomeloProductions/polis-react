@@ -3,7 +3,7 @@ import User, {
 } from "./user";
 
 test('Make sure that the user model can send the name properly with a registered user', () => {
-    let model = {
+    const model = {
         id: 4,
         first_name: 'Sven',
         last_name: 'Nevs',

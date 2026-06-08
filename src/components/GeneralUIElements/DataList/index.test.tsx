@@ -1,8 +1,7 @@
 import { screen, fireEvent, render } from '@testing-library/react';
 import DataList from '.';
 import { MantineProvider } from '@mantine/core';
-import { BasePaginatedContextState } from '../../../contexts/BasePaginatedContext';
-import { defaultBaseContext } from '../../../contexts/BasePaginatedContext';
+import { BasePaginatedContextState , defaultBaseContext } from '../../../contexts/BasePaginatedContext';
 import BaseModel from '../../../models/base-model';
 import { CellContext } from '@tanstack/react-table';
 import { PolisProvider } from '../../PolisProvider';

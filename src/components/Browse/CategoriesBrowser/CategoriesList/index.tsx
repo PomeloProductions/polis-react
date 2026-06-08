@@ -2,13 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
 import { CategoriesContextState } from '../../../../contexts/CategoriesContext';
-import { createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper , AccessorKeyColumnDef } from '@tanstack/react-table';
 import { ActionIcon, Group } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import Category from '../../../../models/category';
 import CategoryRequests from '../../../../services/requests/CategoryRequests';
 import DataList from '../../../GeneralUIElements/DataList';
-import { AccessorKeyColumnDef } from '@tanstack/react-table';
 
 interface Props {
     contextState: CategoriesContextState;

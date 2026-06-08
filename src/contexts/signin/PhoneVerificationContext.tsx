@@ -12,7 +12,7 @@ export interface PhoneVerificationContextStateConsumer<T extends PhoneVerificati
 export function createDefaultPhoneVerificationContextState<T extends PhoneVerificationContextData>(persistedState: T): PhoneVerificationContextStateConsumer<T> {
     return {
         data: persistedState,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         setData: (_data: T) => {},
     }
 }

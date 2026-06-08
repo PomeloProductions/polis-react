@@ -1,7 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import { MeContextStateConsumer, MeContext } from '../../../contexts/MeContext';
-import { placeholderUser } from '../../../models/user/user';
-import User from '../../../models/user/user';
+import User, { placeholderUser } from '../../../models/user/user';
 import { Provider } from 'react-redux';
 import configureStore from 'redux-mock-store';
 

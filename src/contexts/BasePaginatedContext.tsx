@@ -1,12 +1,11 @@
 import Page, {createDummyPage, mergePageData} from '../models/page';
-import React, {Dispatch, SetStateAction} from 'react';
+import React, {Dispatch, SetStateAction, act } from 'react';
 import api from '../services/api';
 import { type AxiosResponse, type AxiosError } from 'axios';
 import BaseModel from '../models/base-model';
-import { act } from 'react';
 
 // Global cache for pending requests organized by route and page number
-let pendingRequests: { [route: string]: { [page: number]: AbortController } } = {};
+const pendingRequests: { [route: string]: { [page: number]: AbortController } } = {};
 
 function cancelAllPendingRequests(route: string) {
     if (pendingRequests[route]) {
@@ -112,11 +111,11 @@ export function defaultBaseContext<Model extends BaseModel>(): BasePaginatedCont
         setFilter: () => Promise.resolve(createDummyPage<Model>()),
         setSearch: () => Promise.resolve(createDummyPage<Model>()),
         setOrder: () => Promise.resolve(createDummyPage<Model>()),
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         addModel: (_model: Model) => {},
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         removeModel: (_model: Model) => {},
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         getModel: (_id: number): Model | null => null,
     }
 }
@@ -150,15 +149,15 @@ function runRequest<Model extends BaseModel>(endpoint: string, page: number, exp
             params["expand[" + expand + "]"] = '*';
         });
     }
-    for (let orderKey in order) {
+    for (const orderKey in order) {
         params["order[" + orderKey + "]"] = order[orderKey];
     }
-    for (let filterKey in filter) {
+    for (const filterKey in filter) {
         if (filter[filterKey] !== undefined) {
             params["filter[" + filterKey + "]"] = filter[filterKey];
         }
     }
-    for (let searchKey in search) {
+    for (const searchKey in search) {
         if (search[searchKey]) {
             const value = search[searchKey];
             if (Array.isArray(value)) {

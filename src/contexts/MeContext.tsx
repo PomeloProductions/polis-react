@@ -31,12 +31,12 @@ let meRequest: Promise<User>|null = null;
 let authFailed = false;
 let retryBackoffUntil = 0;
 
-let meSubscriptions: {[key: string]: Dispatch<SetStateAction<MeContextState>>} = {};
+const meSubscriptions: {[key: string]: Dispatch<SetStateAction<MeContextState>>} = {};
 
 function createDefaultState(): MeContextStateConsumer {
     return {
         ...persistedState,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         setMe: (_user: User) => {},
     }
 }
@@ -121,7 +121,7 @@ interface MeContextProviderProps extends OwnProps, StateProps {
  */
 const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = ({hideLoadingSpace, logOut, optional, reset, tokenData, ...props}) => {
     const [meContext, setMeContext] = useState(persistedState);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const [instanceKey, _] = useState(Math.random() + "-" + Date.now());
     const navigate = useNavigate();
 

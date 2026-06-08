@@ -7,7 +7,6 @@ import { CategoriesContext, CategoriesContextState } from '../contexts/Categorie
 
 // Import mocks
 import './mocks/requests';
-import './mocks/contexts';
 
 interface RouterOptions {
     route?: string;

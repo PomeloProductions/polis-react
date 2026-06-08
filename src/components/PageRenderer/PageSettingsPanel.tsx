@@ -188,9 +188,9 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         padding: '8px 12px',
-                                                        borderRadius: 'var(--mantine-radius-sm)',
-                                                        border: '1px solid var(--mantine-color-gray-2)',
-                                                        backgroundColor: 'white',
+                                                        borderRadius: 'var(--polis-radius-sm, var(--mantine-radius-sm))',
+                                                        border: '1px solid var(--polis-color-border, var(--mantine-color-gray-2))',
+                                                        backgroundColor: 'var(--polis-color-surface, white)',
                                                     }}
                                                 >
                                                     <div
@@ -204,7 +204,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
                                                     >
                                                         <IconGripVertical
                                                             size={16}
-                                                            color="var(--mantine-color-gray-5)"
+                                                            color="var(--polis-color-text-muted, var(--mantine-color-gray-5))"
                                                         />
                                                     </div>
                                                     <Text size="sm" fw={500} style={{ flex: 1 }}>

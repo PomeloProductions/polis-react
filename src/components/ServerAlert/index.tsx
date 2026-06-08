@@ -19,7 +19,7 @@ const ServerAlert: React.FC<ServerAlertProps> = ({ requestError }) => {
 	if (!message) {
 		message = 'Unknown Error';
 	}
-	return <p>{message}</p>
+	return <p className={'error'}>{message}</p>
 	// return (
 	// 	<IonAlert
 	// 		isOpen={true}

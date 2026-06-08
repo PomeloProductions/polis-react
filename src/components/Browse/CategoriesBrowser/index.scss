@@ -2,17 +2,20 @@
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
+    font-family: var(--polis-font-body, system-ui, sans-serif);
+    color: var(--polis-color-text-primary, #222428);
 
     h1 {
         margin-bottom: 2rem;
         font-size: 2.5rem;
-        color: #333;
+        color: var(--polis-color-text-primary, #333);
+        font-family: var(--polis-font-heading, inherit);
     }
 
     .loading {
         text-align: center;
         padding: 2rem;
         font-size: 1.2rem;
-        color: #666;
+        color: var(--polis-color-text-muted, #666);
     }
-} 
+}

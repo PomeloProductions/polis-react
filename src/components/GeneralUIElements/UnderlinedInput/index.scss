@@ -3,10 +3,12 @@
   textarea {
     --padding-start: 10px;
     border: transparent;
-    border-bottom: 3px var(--medium-color) solid;
+    border-bottom: 3px var(--polis-color-border, var(--medium-color, #92949c)) solid;
+    font-family: var(--polis-font-body, system-ui, sans-serif);
   }
   label {
     font-weight: 600;
+    font-family: var(--polis-font-heading, var(--polis-font-body, system-ui, sans-serif));
   }
 }
 
@@ -19,16 +21,18 @@ input[type="number"] {
   width: 100%;
   padding: 8px 0;
   border: none;
-  border-bottom: 3px var(--medium-color) solid;
+  border-bottom: 3px var(--polis-color-border, var(--medium-color, #92949c)) solid;
   font-size: 16px;
   background: transparent;
-  
+  font-family: var(--polis-font-body, system-ui, sans-serif);
+  color: var(--polis-color-text-primary, #222428);
+
   &:focus {
     outline: none;
-    border-bottom-color: var(--primary-color);
+    border-bottom-color: var(--polis-color-primary, var(--primary-color, #3880ff));
   }
-  
+
   &::placeholder {
-    color: var(--medium-color);
+    color: var(--polis-color-text-muted, var(--medium-color, #92949c));
   }
 }

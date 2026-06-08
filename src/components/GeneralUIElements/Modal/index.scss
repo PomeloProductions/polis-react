@@ -5,29 +5,32 @@
 
   .modal-content {
     position: relative;
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
+    background-color: var(--polis-color-surface, #fff);
+    color: var(--polis-color-text-primary, #222428);
+    font-family: var(--polis-font-body, system-ui, sans-serif);
+    border-radius: var(--polis-radius-lg, 8px);
+    padding: var(--polis-spacing-lg, 20px);
     max-width: 90%;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     outline: none;
     min-width: 300px;
-    margin: 32px;
+    margin: var(--polis-spacing-xl, 32px);
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #eee;
+      padding-bottom: var(--polis-spacing-md, 16px);
+      border-bottom: 1px solid var(--polis-color-border, #eee);
 
       .modal-title {
         margin: 0;
         font-size: 1.5rem;
         font-weight: 600;
-        color: #333;
+        font-family: var(--polis-font-heading, var(--polis-font-body, system-ui, sans-serif));
+        color: var(--polis-color-text-primary, #333);
       }
 
       .modal-close-button {
@@ -36,89 +39,91 @@
         font-size: 1.5rem;
         cursor: pointer;
         padding: 4px 8px;
-        color: #666;
+        color: var(--polis-color-text-muted, #666);
         transition: color 0.2s ease;
 
         &:hover {
-          color: #333;
+          color: var(--polis-color-text-primary, #333);
         }
       }
     }
 
     .modal-body {
-      padding-top: 16px;
-      
+      padding-top: var(--polis-spacing-md, 16px);
+
       // Form styling within modal
       form {
         .form-group {
-          margin-bottom: 20px;
-          
+          margin-bottom: var(--polis-spacing-lg, 20px);
+
           label {
             display: block;
             font-weight: 500;
-            color: #333;
+            color: var(--polis-color-text-primary, #333);
           }
-          
+
           input[type="text"] {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid var(--polis-color-border, #ddd);
+            border-radius: var(--polis-radius-md, 4px);
             font-size: 16px;
-            
+            font-family: var(--polis-font-body, system-ui, sans-serif);
+
             &:focus {
               outline: none;
-              border-color: #007bff;
+              border-color: var(--polis-color-primary, #007bff);
               box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
             }
           }
-          
+
           &.checkbox-label {
             display: flex;
             align-items: center;
             cursor: pointer;
-            
+
             input[type="checkbox"] {
-              margin-right: 8px;
+              margin-right: var(--polis-spacing-sm, 8px);
             }
-            
+
             span {
-              color: #666;
+              color: var(--polis-color-text-muted, #666);
             }
           }
         }
-        
+
         .form-actions {
           display: flex;
           justify-content: flex-end;
-          gap: 12px;
-          margin-top: 24px;
-          
+          gap: var(--polis-spacing-sm, 12px);
+          margin-top: var(--polis-spacing-lg, 24px);
+
           button {
             padding: 8px 16px;
-            border-radius: 4px;
+            border-radius: var(--polis-radius-md, 4px);
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            
+            font-family: var(--polis-font-body, system-ui, sans-serif);
+
             &.cancel-button {
               background: none;
-              border: 1px solid #ddd;
-              color: #666;
-              
+              border: 1px solid var(--polis-color-border, #ddd);
+              color: var(--polis-color-text-muted, #666);
+
               &:hover {
-                background: #f5f5f5;
+                background: var(--polis-color-surface-alt, #f5f5f5);
               }
             }
-            
+
             &.submit-button {
-              background: #007bff;
+              background: var(--polis-color-primary, #007bff);
               border: none;
-              color: white;
-              
+              color: #fff;
+
               &:hover {
-                background: #0056b3;
+                background: var(--polis-color-primary-hover, #0056b3);
               }
             }
           }
@@ -139,4 +144,4 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-} 
+}

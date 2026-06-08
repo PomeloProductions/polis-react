@@ -1,7 +1,9 @@
 .category-form {
     max-width: 800px;
     margin: 0 auto;
-    
+    font-family: var(--polis-font-body, system-ui, sans-serif);
+    color: var(--polis-color-text-primary, #222428);
+
     .form-group {
         margin-bottom: 1.5rem;
 
@@ -9,50 +11,51 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: #333;
+            color: var(--polis-color-text-primary, #333);
         }
 
         input[type="text"], textarea {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid var(--polis-color-border, #ddd);
+            border-radius: var(--polis-radius-md, 4px);
             font-size: 1rem;
+            font-family: var(--polis-font-body, system-ui, sans-serif);
 
             &:focus {
                 outline: none;
-                border-color: #007bff;
+                border-color: var(--polis-color-primary, #007bff);
                 box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
             }
         }
     }
-    
+
     .error-message {
-        color: #dc3545;
+        color: var(--polis-color-danger, #dc3545);
         font-size: 0.9rem;
         margin-top: 0.25rem;
         padding: 0.5rem;
-        background-color: #f8d7da;
-        border-radius: 4px;
+        background-color: var(--polis-color-surface-alt, #f8d7da);
+        border-radius: var(--polis-radius-md, 4px);
         margin-bottom: 1rem;
     }
-    
+
     .button-group {
         display: flex;
         justify-content: space-between;
         margin-top: 2rem;
-        
+
         button {
             padding: 0.75rem 1.5rem;
-            border-radius: 4px;
+            border-radius: var(--polis-radius-md, 4px);
             font-size: 1rem;
             font-weight: 500;
             transition: all 0.2s;
-            
+
             &:disabled {
                 opacity: 0.7;
                 cursor: not-allowed;
             }
         }
     }
-} 
+}

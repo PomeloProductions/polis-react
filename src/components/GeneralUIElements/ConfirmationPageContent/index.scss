@@ -4,16 +4,18 @@
   flex-direction: column;
   min-height: 75vh;
   justify-content: space-between;
+  font-family: var(--polis-font-body, system-ui, sans-serif);
   p {
     font-size: 3.5vw;
-    color: black;
+    color: var(--polis-color-text-primary, black);
   }
   h3 {
-    color: var(--ion-color-medium);
+    color: var(--polis-color-text-muted, var(--ion-color-medium, #92949c));
     font-weight: bold;
+    font-family: var(--polis-font-heading, inherit);
   }
   hr {
-    background: var(--ion-color-light-shade);
+    background: var(--polis-color-border, var(--ion-color-light-shade, #d7d8da));
     height: 1px;
     max-width: 35vw;
     margin: 0 auto;

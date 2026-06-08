@@ -2,9 +2,13 @@
     padding: 1rem;
     width: 100%;
     box-sizing: border-box;
-    
+    color: var(--polis-color-text-primary, inherit);
+    font-family: var(--polis-font-body, system-ui, sans-serif);
+
     h3 {
         margin-bottom: 1rem;
+        font-family: var(--polis-font-heading, inherit);
+        color: var(--polis-color-text-primary, inherit);
     }
     
     .collections-list {

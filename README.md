@@ -78,6 +78,71 @@ If you were previously carrying a `tsconfig.json` `paths` mapping, a
 `vite.config.ts` `resolve.alias`, or a `jest.config.js` `moduleNameMapper`
 just to coax `@polis/react/...` resolution, you can delete all three.
 
+## Theming
+
+Themes ship as separate packages — `@polis/theme-bootstrap`,
+`@polis/theme-mantine`, or a custom one — and each exports a `theme`
+object that satisfies `PolisTheme` (defined in `@polis/react/theme`).
+Swapping themes is a one-line consumer change.
+
+### Consumer pattern
+
+```tsx
+import { PolisProvider } from '@polis/react';
+import { theme } from '@polis/theme-mantine';        // or '@polis/theme-bootstrap'
+
+<PolisProvider theme={theme}>
+  <App />
+</PolisProvider>
+```
+
+`PolisProvider` does three things:
+
+1. **Injects CSS custom properties** on `document.documentElement` for
+   every token (e.g. `--polis-color-primary`, `--polis-font-body`,
+   `--polis-radius-md`). SCSS files in this package read those vars with
+   safe fallbacks: `background: var(--polis-color-surface, #fff)`.
+2. **Wraps children in `<MantineProvider>`** using the theme's optional
+   `mantineTheme` override so Mantine components pick up the same
+   palette / fonts / radius.
+3. **Exposes the active theme via React context** so components that
+   need JS access to tokens can call `usePolisTheme()`:
+
+   ```tsx
+   import { usePolisTheme } from '@polis/react';
+   const theme = usePolisTheme();
+   // theme.colors.primary, theme.fonts.body, ...
+   ```
+
+### Writing a new theme
+
+Create a package whose `src/theme.ts` exports a `theme: PolisTheme`
+object. The interface is:
+
+```ts
+import type { PolisTheme } from '@polis/react/theme/PolisTheme';
+```
+
+…and includes `name`, `colors`, `fonts`, `radius`, `spacing`, and an
+optional `mantineTheme`. See `@polis/theme-bootstrap` and
+`@polis/theme-mantine` for reference implementations.
+
+### Components and themes today
+
+The PolisProvider + token interface plus an initial pass of token-
+consuming components landed in the same change. Many components in
+this package still ship with hardcoded values in their `.scss` —
+they will render correctly under any theme, they just won't visually
+respond to theme swaps yet. Migration is incremental: each component's
+SCSS is updated to use `var(--polis-* )` over time. The components
+already on the new tokens include InputWrapper, Footnote, LoadingScreen,
+NetworkError, BottomStickySection, Menu/MenuLink, Template/Page, the
+GeneralUIElements form inputs (UnderlinedInput, BorderedInput,
+GrayInput, ConfirmationPageContent, Modal), the CategoryForm /
+CollectionForm forms, the Dashboard MyCollections set, the
+CollectionsModal item, and the Browse CategoriesBrowser /
+CategoriesList. The `theme/elements.scss` baseline is also tokenized.
+
 ## Auth forms (v0.2)
 
 Four render-prop forms are now shipped. The render-prop pattern lets

@@ -3,8 +3,11 @@
   justify-content: center;
   flex-direction: column;
   height: 100%;
+  color: var(--polis-color-text-primary, #222428);
+  font-family: var(--polis-font-body, system-ui, sans-serif);
   #loading-wrapper {
-    border-radius: 3.125vw;
+    border-radius: var(--polis-radius-md, 3.125vw);
+    background: var(--polis-color-surface, transparent);
     padding: 4.6875vw 6.25vw;
     text-align: center;
     margin: 0 auto;

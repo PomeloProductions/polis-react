@@ -1,10 +1,11 @@
 .bordered-input {
-  margin: 0 0 12px;
+  margin: 0 0 var(--polis-spacing-sm, 12px);
   ion-datetime,
   ion-textarea,
   ion-input {
     --padding-start: 12px;
-    border: 2px var(--ion-color-primary) solid;
+    border: 2px var(--polis-color-primary, var(--ion-color-primary, #3880ff)) solid;
+    border-radius: var(--polis-radius-md, 4px);
   }
 }
 
@@ -15,17 +16,19 @@ input[type="email"],
 input[type="password"],
 input[type="number"] {
   width: 100%;
-  padding: 8px;
-  border: 2px var(--primary-color) solid;
-  border-radius: 4px;
+  padding: var(--polis-spacing-sm, 8px);
+  border: 2px var(--polis-color-primary, var(--primary-color, #3880ff)) solid;
+  border-radius: var(--polis-radius-md, 4px);
   font-size: 16px;
-  
+  font-family: var(--polis-font-body, system-ui, sans-serif);
+  color: var(--polis-color-text-primary, #222428);
+
   &:focus {
     outline: none;
-    border-color: var(--primary-shade);
+    border-color: var(--polis-color-primary-hover, var(--primary-shade, #3171e0));
   }
-  
+
   &::placeholder {
-    color: var(--medium-color);
+    color: var(--polis-color-text-muted, var(--medium-color, #92949c));
   }
 }

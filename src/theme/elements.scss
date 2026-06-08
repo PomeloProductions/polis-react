@@ -11,14 +11,16 @@
 }
 
 h3 {
-    color: var(--primary-shade);
+    color: var(--polis-color-primary, var(--primary-shade, #3171e0));
     text-align: center;
     font-weight: bold;
+    font-family: var(--polis-font-heading, inherit);
 }
 h4 {
     font-weight: bold;
     margin: 0;
-    color: black;
+    color: var(--polis-color-text-primary, black);
+    font-family: var(--polis-font-heading, inherit);
 }
 h6 {
     font-size: 5vw;
@@ -59,7 +61,7 @@ h6 {
     --border-style: solid;
 }
 .error {
-    color: var(--danger-color);
+    color: var(--polis-color-danger, var(--danger-color, #eb445a));
 }
 .select {
     --background: transparent;
@@ -105,9 +107,9 @@ h6 {
     --background: var(--color-light);
 }
 a {
-    color: var(--primary-shade);
+    color: var(--polis-color-primary, var(--primary-shade, #3171e0));
     text-decoration: none;
-    
+
     &:hover {
         text-decoration: underline;
     }
@@ -119,25 +121,26 @@ a {
 }
 
 input, textarea {
-    border: 1px solid var(--light-shade);
-    padding: 8px;
-    border-radius: 4px;
-    
+    border: 1px solid var(--polis-color-border, var(--light-shade, #d7d8da));
+    padding: var(--polis-spacing-sm, 8px);
+    border-radius: var(--polis-radius-md, 4px);
+    font-family: var(--polis-font-body, system-ui, sans-serif);
+
     &:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: var(--polis-color-primary, var(--primary-color, #3880ff));
     }
 }
 
 .back-button {
     display: inline-flex;
     align-items: center;
-    color: var(--medium-color);
+    color: var(--polis-color-text-muted, var(--medium-color, #92949c));
     text-decoration: none;
-    padding: 8px;
-    
+    padding: var(--polis-spacing-sm, 8px);
+
     &:hover {
-        color: var(--medium-shade);
+        color: var(--polis-color-text-primary, var(--medium-shade, #808289));
     }
 }
 

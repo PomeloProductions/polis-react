@@ -9,46 +9,39 @@ import { CategoriesContext, CategoriesContextState } from '../contexts/Categorie
 import './mocks/requests';
 
 interface RouterOptions {
-    route?: string;
+  route?: string;
 }
 
 interface ProviderOptions extends RouterOptions {
-    value?: CategoriesContextState;
+  value?: CategoriesContextState;
 }
 
 export const renderWithRouter = (
-    component: React.ReactElement,
-    {
-        route = '/',
-    }: RouterOptions = {}
+  component: React.ReactElement,
+  { route = '/' }: RouterOptions = {},
 ) => {
-    return {
-        ...render(
-            <MemoryRouter initialEntries={[route]}>
-                <MantineProvider>
-                    <MeContextProvider>
-                        {component}
-                    </MeContextProvider>
-                </MantineProvider>
-            </MemoryRouter>
-        ),
-    };
+  return {
+    ...render(
+      <MemoryRouter initialEntries={[route]}>
+        <MantineProvider>
+          <MeContextProvider>{component}</MeContextProvider>
+        </MantineProvider>
+      </MemoryRouter>,
+    ),
+  };
 };
 
 export const renderWithProviders = (
-    component: React.ReactElement,
-    {
-        route = '/',
-        value,
-    }: ProviderOptions = {}
+  component: React.ReactElement,
+  { route = '/', value }: ProviderOptions = {},
 ) => {
-    const wrappedComponent = value ? (
-        <CategoriesContext.Provider value={value}>
-            {component}
-        </CategoriesContext.Provider>
-    ) : component;
+  const wrappedComponent = value ? (
+    <CategoriesContext.Provider value={value}>{component}</CategoriesContext.Provider>
+  ) : (
+    component
+  );
 
-    return renderWithRouter(wrappedComponent, { route });
+  return renderWithRouter(wrappedComponent, { route });
 };
 
 // Re-export mocks

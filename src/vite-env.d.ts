@@ -4,8 +4,8 @@
 // `process.env.NODE_ENV` at build time. This declaration only exists so
 // TypeScript stops complaining when typechecking the package in isolation.
 declare const process: {
-    env: {
-        NODE_ENV?: string;
-        [key: string]: string | undefined;
-    };
+  env: {
+    NODE_ENV?: string;
+    [key: string]: string | undefined;
+  };
 };

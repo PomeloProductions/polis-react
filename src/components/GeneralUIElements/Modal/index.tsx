@@ -26,7 +26,7 @@ const ContentModal: React.FC<PropsWithChildren<ModalProps>> = ({
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -36,20 +36,20 @@ const ContentModal: React.FC<PropsWithChildren<ModalProps>> = ({
 
   return (
     <div className="content-modal">
-      <div 
-        className={`modal-overlay ${overlayClassName}`} 
-        onClick={onRequestClose} 
+      <div
+        className={`modal-overlay ${overlayClassName}`}
+        onClick={onRequestClose}
         data-testid="modal-overlay"
       >
-        <div 
+        <div
           className={`modal-content ${className}`}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           data-testid="modal-content"
           aria-label={contentLabel}
         >
           <div className="modal-header">
             {title && <h2 className="modal-title">{title}</h2>}
-            <button 
+            <button
               className="modal-close-button"
               onClick={onRequestClose}
               aria-label="Close modal"
@@ -57,13 +57,11 @@ const ContentModal: React.FC<PropsWithChildren<ModalProps>> = ({
               &times;
             </button>
           </div>
-          <div className="modal-body">
-            {children}
-          </div>
+          <div className="modal-body">{children}</div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ContentModal; 
+export default ContentModal;

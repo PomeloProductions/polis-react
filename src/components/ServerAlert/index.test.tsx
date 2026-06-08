@@ -8,9 +8,9 @@ const buildRequestError = () => ({
   data: {
     errors: {
       field1: ['Error message 1'],
-      field2: ['Error message 2']
-    }
-  }
+      field2: ['Error message 2'],
+    },
+  },
 });
 
 const makeTheme = (danger: string, body: string): PolisTheme => ({
@@ -35,33 +35,23 @@ const makeTheme = (danger: string, body: string): PolisTheme => ({
 });
 
 test('renders ServerAlert without crashing', () => {
-  renderWithRouter(
-    <ServerAlert
-      requestError={buildRequestError()}
-    />
-  );
+  renderWithRouter(<ServerAlert requestError={buildRequestError()} />);
   expect(screen.getByText('Error message 1')).toBeInTheDocument();
 });
 
 test('renders unknown error when no error messages are provided', () => {
   const emptyRequestError = {
     data: {
-      errors: {}
-    }
+      errors: {},
+    },
   };
 
-  renderWithRouter(
-    <ServerAlert
-      requestError={emptyRequestError}
-    />
-  );
+  renderWithRouter(<ServerAlert requestError={emptyRequestError} />);
   expect(screen.getByText('Unknown Error')).toBeInTheDocument();
 });
 
 test('error paragraph carries the .error class so theme tokens apply', () => {
-  const { getByText } = renderWithRouter(
-    <ServerAlert requestError={buildRequestError()} />
-  );
+  const { getByText } = renderWithRouter(<ServerAlert requestError={buildRequestError()} />);
   const paragraph = getByText('Error message 1');
   expect(paragraph).toHaveClass('error');
 });
@@ -71,7 +61,7 @@ test('renders inside PolisProvider with theme A (danger token applied)', () => {
   const { getByText } = render(
     <PolisProvider theme={theme}>
       <ServerAlert requestError={buildRequestError()} />
-    </PolisProvider>
+    </PolisProvider>,
   );
   expect(getByText('Error message 1')).toBeInTheDocument();
   expect(document.documentElement.style.getPropertyValue('--polis-color-danger')).toBe('#ff00aa');
@@ -82,7 +72,7 @@ test('renders inside PolisProvider with theme B (different danger token)', () =>
   const { getByText } = render(
     <PolisProvider theme={theme}>
       <ServerAlert requestError={buildRequestError()} />
-    </PolisProvider>
+    </PolisProvider>,
   );
   expect(getByText('Error message 1')).toBeInTheDocument();
   expect(document.documentElement.style.getPropertyValue('--polis-color-danger')).toBe('#00aaff');

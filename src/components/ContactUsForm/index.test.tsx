@@ -45,7 +45,7 @@ test('renders inside PolisProvider with theme A (primary token applied)', () => 
       <PolisProvider theme={theme}>
         <ContactUsForm />
       </PolisProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
   expect(container.querySelector('.contact-us-form')).toBeInTheDocument();
   expect(document.documentElement.style.getPropertyValue('--polis-color-primary')).toBe('#ff7700');
@@ -59,7 +59,7 @@ test('renders inside PolisProvider with theme B (primary token swapped)', () => 
       <PolisProvider theme={theme}>
         <ContactUsForm />
       </PolisProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
   expect(container.querySelector('.contact-us-form')).toBeInTheDocument();
   expect(document.documentElement.style.getPropertyValue('--polis-color-primary')).toBe('#00ff77');

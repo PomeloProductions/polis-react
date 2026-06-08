@@ -4,8 +4,8 @@ import { PolisThemeContext } from '../../theme/PolisThemeContext';
 import type { PolisTheme } from '../../theme/PolisTheme';
 
 interface PolisProviderProps {
-    theme: PolisTheme;
-    children: React.ReactNode;
+  theme: PolisTheme;
+  children: React.ReactNode;
 }
 
 /**
@@ -14,33 +14,33 @@ interface PolisProviderProps {
  * and the runtime injection stay in lockstep.
  */
 const tokenMap = (theme: PolisTheme): Record<string, string> => ({
-    '--polis-color-primary': theme.colors.primary,
-    '--polis-color-primary-hover': theme.colors.primaryHover,
-    '--polis-color-primary-active': theme.colors.primaryActive,
-    '--polis-color-surface': theme.colors.surface,
-    '--polis-color-surface-alt': theme.colors.surfaceAlt,
-    '--polis-color-text-primary': theme.colors.textPrimary,
-    '--polis-color-text-muted': theme.colors.textMuted,
-    '--polis-color-border': theme.colors.border,
-    '--polis-color-success': theme.colors.success,
-    '--polis-color-warning': theme.colors.warning,
-    '--polis-color-danger': theme.colors.danger,
-    '--polis-color-info': theme.colors.info,
+  '--polis-color-primary': theme.colors.primary,
+  '--polis-color-primary-hover': theme.colors.primaryHover,
+  '--polis-color-primary-active': theme.colors.primaryActive,
+  '--polis-color-surface': theme.colors.surface,
+  '--polis-color-surface-alt': theme.colors.surfaceAlt,
+  '--polis-color-text-primary': theme.colors.textPrimary,
+  '--polis-color-text-muted': theme.colors.textMuted,
+  '--polis-color-border': theme.colors.border,
+  '--polis-color-success': theme.colors.success,
+  '--polis-color-warning': theme.colors.warning,
+  '--polis-color-danger': theme.colors.danger,
+  '--polis-color-info': theme.colors.info,
 
-    '--polis-font-body': theme.fonts.body,
-    '--polis-font-heading': theme.fonts.heading,
-    '--polis-font-mono': theme.fonts.mono,
+  '--polis-font-body': theme.fonts.body,
+  '--polis-font-heading': theme.fonts.heading,
+  '--polis-font-mono': theme.fonts.mono,
 
-    '--polis-radius-sm': theme.radius.sm,
-    '--polis-radius-md': theme.radius.md,
-    '--polis-radius-lg': theme.radius.lg,
-    '--polis-radius-full': theme.radius.full,
+  '--polis-radius-sm': theme.radius.sm,
+  '--polis-radius-md': theme.radius.md,
+  '--polis-radius-lg': theme.radius.lg,
+  '--polis-radius-full': theme.radius.full,
 
-    '--polis-spacing-xs': theme.spacing.xs,
-    '--polis-spacing-sm': theme.spacing.sm,
-    '--polis-spacing-md': theme.spacing.md,
-    '--polis-spacing-lg': theme.spacing.lg,
-    '--polis-spacing-xl': theme.spacing.xl,
+  '--polis-spacing-xs': theme.spacing.xs,
+  '--polis-spacing-sm': theme.spacing.sm,
+  '--polis-spacing-md': theme.spacing.md,
+  '--polis-spacing-lg': theme.spacing.lg,
+  '--polis-spacing-xl': theme.spacing.xl,
 });
 
 /**
@@ -58,36 +58,34 @@ const tokenMap = (theme: PolisTheme): Record<string, string> => ({
  *     that need JS access (see `usePolisTheme`).
  */
 export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, children }) => {
-    useEffect(() => {
-        if (typeof document === 'undefined') return;
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
 
-        const root = document.documentElement;
-        const tokens = tokenMap(theme);
-        const previousValues: Record<string, string> = {};
+    const root = document.documentElement;
+    const tokens = tokenMap(theme);
+    const previousValues: Record<string, string> = {};
 
-        Object.entries(tokens).forEach(([prop, value]) => {
-            previousValues[prop] = root.style.getPropertyValue(prop);
-            root.style.setProperty(prop, value);
-        });
+    Object.entries(tokens).forEach(([prop, value]) => {
+      previousValues[prop] = root.style.getPropertyValue(prop);
+      root.style.setProperty(prop, value);
+    });
 
-        return () => {
-            Object.entries(previousValues).forEach(([prop, prev]) => {
-                if (prev) {
-                    root.style.setProperty(prop, prev);
-                } else {
-                    root.style.removeProperty(prop);
-                }
-            });
-        };
-    }, [theme]);
+    return () => {
+      Object.entries(previousValues).forEach(([prop, prev]) => {
+        if (prev) {
+          root.style.setProperty(prop, prev);
+        } else {
+          root.style.removeProperty(prop);
+        }
+      });
+    };
+  }, [theme]);
 
-    return (
-        <MantineProvider theme={theme.mantineTheme}>
-            <PolisThemeContext.Provider value={theme}>
-                {children}
-            </PolisThemeContext.Provider>
-        </MantineProvider>
-    );
+  return (
+    <MantineProvider theme={theme.mantineTheme}>
+      <PolisThemeContext.Provider value={theme}>{children}</PolisThemeContext.Provider>
+    </MantineProvider>
+  );
 };
 
 /**

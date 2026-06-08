@@ -9,8 +9,9 @@ import { mockUserRequests } from './user-requests';
 
 // Mock Page component
 jest.mock('../../../components/Template/Page', () => ({
-    __esModule: true,
-    default: ({ children }: { children: React.ReactNode }) => React.createElement('div', { className: 'page' }, children)
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', { className: 'page' }, children),
 }));
 
 // Export all request mocks
@@ -22,31 +23,31 @@ export { mockUserRequests } from './user-requests';
 
 // Mock all request services
 jest.mock('../../../services/requests/AuthRequests', () => ({
-    __esModule: true,
-    default: mockAuthRequests,
-    ...mockAuthRequests
+  __esModule: true,
+  default: mockAuthRequests,
+  ...mockAuthRequests,
 }));
 
 jest.mock('../../../services/requests/CategoryRequests', () => ({
-    __esModule: true,
-    default: mockCategoryRequests,
-    ...mockCategoryRequests
+  __esModule: true,
+  default: mockCategoryRequests,
+  ...mockCategoryRequests,
 }));
 
 jest.mock('../../../services/requests/CollectionManagementRequests', () => ({
-    __esModule: true,
-    default: mockCollectionManagementRequests,
-    ...mockCollectionManagementRequests
+  __esModule: true,
+  default: mockCollectionManagementRequests,
+  ...mockCollectionManagementRequests,
 }));
 
 jest.mock('../../../services/requests/OrganizationRequests', () => ({
-    __esModule: true,
-    default: mockOrganizationRequests,
-    ...mockOrganizationRequests
+  __esModule: true,
+  default: mockOrganizationRequests,
+  ...mockOrganizationRequests,
 }));
 
 jest.mock('../../../services/requests/UserRequests', () => ({
-    __esModule: true,
-    default: mockUserRequests,
-    ...mockUserRequests
-})); 
+  __esModule: true,
+  default: mockUserRequests,
+  ...mockUserRequests,
+}));

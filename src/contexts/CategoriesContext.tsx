@@ -1,10 +1,10 @@
 import {
-    BasePaginatedContextState,
-    defaultBaseContext,
-    prepareContextState,
+  BasePaginatedContextState,
+  defaultBaseContext,
+  prepareContextState,
 } from './BasePaginatedContext';
-import React, {PropsWithChildren, useState} from 'react';
-import Category from "../models/category";
+import React, { PropsWithChildren, useState } from 'react';
+import Category from '../models/category';
 
 /**
  * The state interface for our state
@@ -17,12 +17,12 @@ export interface CategoriesContextState extends BasePaginatedContextState<Catego
 const persistentStateRef = { current: createDefaultState() };
 
 function createDefaultState(): CategoriesContextState {
-    return {
-        ...defaultBaseContext(),
-        loadAll: true,
-        expands: [],
-        limit: 100,
-    }
+  return {
+    ...defaultBaseContext(),
+    loadAll: true,
+    expands: [],
+    limit: 100,
+  };
 }
 
 /**
@@ -30,23 +30,22 @@ function createDefaultState(): CategoriesContextState {
  */
 export const CategoriesContext = React.createContext<CategoriesContextState>(createDefaultState());
 
-export const CategoriesContextProvider: React.FC<PropsWithChildren> = (props => {
+export const CategoriesContextProvider: React.FC<PropsWithChildren> = (props) => {
+  const [categoriesState, setCategoriesState] = useState(persistentStateRef.current);
 
-    const [categoriesState, setCategoriesState] = useState(persistentStateRef.current);
+  const fullContext = {
+    ...categoriesState,
+    ...prepareContextState(setCategoriesState, categoriesState, '/categories'),
+  };
 
-    const fullContext = {
-        ...categoriesState,
-        ...prepareContextState(setCategoriesState, categoriesState, '/categories')
-    }
-
-    return (
-        <CategoriesContext.Provider value={fullContext}>
-            <CategoriesContext.Consumer>
-                {context => {
-                    persistentStateRef.current = context
-                    return props.children
-                }}
-            </CategoriesContext.Consumer>
-        </CategoriesContext.Provider>
-    )
-}); 
+  return (
+    <CategoriesContext.Provider value={fullContext}>
+      <CategoriesContext.Consumer>
+        {(context) => {
+          persistentStateRef.current = context;
+          return props.children;
+        }}
+      </CategoriesContext.Consumer>
+    </CategoriesContext.Provider>
+  );
+};

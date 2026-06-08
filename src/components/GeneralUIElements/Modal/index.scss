@@ -62,7 +62,7 @@
             color: var(--polis-color-text-primary, #333);
           }
 
-          input[type="text"] {
+          input[type='text'] {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--polis-color-border, #ddd);
@@ -82,7 +82,7 @@
             align-items: center;
             cursor: pointer;
 
-            input[type="checkbox"] {
+            input[type='checkbox'] {
               margin-right: var(--polis-spacing-sm, 8px);
             }
 

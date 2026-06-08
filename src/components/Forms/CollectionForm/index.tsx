@@ -11,13 +11,13 @@ interface CollectionFormProps {
   isEditing?: boolean;
 }
 
-const CollectionForm: React.FC<CollectionFormProps> = ({ 
-  onSubmit, 
+const CollectionForm: React.FC<CollectionFormProps> = ({
+  onSubmit,
   onCancel,
   isSubmitting = false,
   error = null,
   initialValues,
-  isEditing = false
+  isEditing = false,
 }) => {
   const [name, setName] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -37,12 +37,8 @@ const CollectionForm: React.FC<CollectionFormProps> = ({
 
   return (
     <form className="collection-form" onSubmit={handleSubmit}>
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
-      
+      {error && <div className="error-message">{error}</div>}
+
       <div className="form-group">
         <label htmlFor="collection-name">Collection Name</label>
         <input
@@ -65,31 +61,30 @@ const CollectionForm: React.FC<CollectionFormProps> = ({
           onChange={(e) => setIsPublic(e.target.checked)}
           disabled={isSubmitting}
         />
-        <label htmlFor="collection-public">
-          Make this collection public
-        </label>
+        <label htmlFor="collection-public">Make this collection public</label>
       </div>
 
       <div className="form-actions">
-        <button 
-          type="button" 
-          className="cancel-button" 
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
+        <button type="button" className="cancel-button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="submit-button"
           disabled={isSubmitting}
           data-testid="submit-button"
         >
-          {isSubmitting ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Collection' : 'Create Collection')}
+          {isSubmitting
+            ? isEditing
+              ? 'Updating...'
+              : 'Creating...'
+            : isEditing
+              ? 'Update Collection'
+              : 'Create Collection'}
         </button>
       </div>
     </form>
   );
 };
 
-export default CollectionForm; 
+export default CollectionForm;

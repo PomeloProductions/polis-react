@@ -10,13 +10,13 @@ import { HasType } from '../models/has-type';
  * @returns boolean indicating if the item is in the collection
  */
 export const isInCollection = (
-    item: HasType,
-    collectionId: number,
-    collectionItemsContext: CollectionItemsContextState
+  item: HasType,
+  collectionId: number,
+  collectionItemsContext: CollectionItemsContextState,
 ): boolean => {
-    if (!collectionId || !collectionItemsContext[collectionId]) return false;
-    
-    return collectionItemsContext[collectionId].loadedData.some(
-        (ci: CollectionItem) => ci.item_id === item.id && ci.item_type === item.type
-    );
-}; 
+  if (!collectionId || !collectionItemsContext[collectionId]) return false;
+
+  return collectionItemsContext[collectionId].loadedData.some(
+    (ci: CollectionItem) => ci.item_id === item.id && ci.item_type === item.type,
+  );
+};

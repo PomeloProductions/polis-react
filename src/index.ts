@@ -36,13 +36,13 @@ export { default as SignUpForm } from './components/Forms/SignUpForm';
 export type { SignUpFormProps, SignUpValues } from './components/Forms/SignUpForm';
 export { default as ForgotPasswordForm } from './components/Forms/ForgotPasswordForm';
 export type {
-    ForgotPasswordFormProps,
-    ForgotPasswordValues,
+  ForgotPasswordFormProps,
+  ForgotPasswordValues,
 } from './components/Forms/ForgotPasswordForm';
 export { default as ResetPasswordForm } from './components/Forms/ResetPasswordForm';
 export type {
-    ResetPasswordFormProps,
-    ResetPasswordValues,
+  ResetPasswordFormProps,
+  ResetPasswordValues,
 } from './components/Forms/ResetPasswordForm';
 
 // ───── Default page compositions ─────

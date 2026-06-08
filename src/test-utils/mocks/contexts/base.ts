@@ -2,24 +2,25 @@ import { mockPagination } from '../pagination';
 import BaseModel from '../../../models/base-model';
 
 // Mock appState
- 
+
 (global as any).appState = {
-    state: {
-        persistent: {
-            tokenData: null
-        },
-        session: {
-            loadingCount: 0
-        }
+  state: {
+    persistent: {
+      tokenData: null,
     },
-    dispatch: jest.fn()
+    session: {
+      loadingCount: 0,
+    },
+  },
+  dispatch: jest.fn(),
 };
 
 // Mock functions
 export const mockSetFilter = jest.fn();
 
 // Base mock context state creator
-export const createBaseMockContextState = <T extends BaseModel>(data: T[]) => mockPagination<T>({
+export const createBaseMockContextState = <T extends BaseModel>(data: T[]) =>
+  mockPagination<T>({
     loadedData: data,
     initialLoadComplete: true,
     refreshing: false,
@@ -35,15 +36,15 @@ export const createBaseMockContextState = <T extends BaseModel>(data: T[]) => mo
     setFilter: jest.fn(),
     setSearch: jest.fn(),
     setOrder: jest.fn(),
-     
+
     addModel: jest.fn((_model: T) => {}),
-     
+
     removeModel: jest.fn((_model: T) => {}),
     getModel: jest.fn((id: number) => {
-        const found = data.find(item => typeof item.id === 'number' && item.id === id);
-        return found || null;
+      const found = data.find((item) => typeof item.id === 'number' && item.id === id);
+      return found || null;
     }),
     params: {},
     loadNext: jest.fn(),
-    refreshData: jest.fn()
-}); 
+    refreshData: jest.fn(),
+  });

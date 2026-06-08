@@ -1,10 +1,10 @@
-import { 
-  emailRegExp, 
-  phoneRegExp, 
-  zipRegExp, 
-  stateRegExp, 
-  urlRegExp, 
-  validateRegexMatch 
+import {
+  emailRegExp,
+  phoneRegExp,
+  zipRegExp,
+  stateRegExp,
+  urlRegExp,
+  validateRegexMatch,
 } from './regex';
 
 describe('regex utilities', () => {
@@ -110,4 +110,4 @@ describe('regex utilities', () => {
       expect(validateRegexMatch(/123/, '12345')).toBe(true);
     });
   });
-}); 
+});

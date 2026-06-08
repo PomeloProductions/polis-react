@@ -15,53 +15,53 @@ import type { MantineThemeOverride } from '@mantine/core';
  * `@polis/theme-mantine` so all themes satisfy the interface.
  */
 export interface PolisTheme {
-    /** Theme identifier, e.g. `'bootstrap'`, `'mantine'`. */
-    name: string;
+  /** Theme identifier, e.g. `'bootstrap'`, `'mantine'`. */
+  name: string;
 
-    colors: {
-        primary: string;
-        primaryHover: string;
-        primaryActive: string;
-        /** Background of cards / panels. */
-        surface: string;
-        /** Muted background (e.g. table-row hover, alt rows). */
-        surfaceAlt: string;
-        textPrimary: string;
-        textMuted: string;
-        border: string;
-        success: string;
-        warning: string;
-        danger: string;
-        info: string;
-    };
+  colors: {
+    primary: string;
+    primaryHover: string;
+    primaryActive: string;
+    /** Background of cards / panels. */
+    surface: string;
+    /** Muted background (e.g. table-row hover, alt rows). */
+    surfaceAlt: string;
+    textPrimary: string;
+    textMuted: string;
+    border: string;
+    success: string;
+    warning: string;
+    danger: string;
+    info: string;
+  };
 
-    fonts: {
-        body: string;
-        heading: string;
-        mono: string;
-    };
+  fonts: {
+    body: string;
+    heading: string;
+    mono: string;
+  };
 
-    radius: {
-        sm: string;
-        md: string;
-        lg: string;
-        full: string;
-    };
+  radius: {
+    sm: string;
+    md: string;
+    lg: string;
+    full: string;
+  };
 
-    spacing: {
-        xs: string;
-        sm: string;
-        md: string;
-        lg: string;
-        xl: string;
-    };
+  spacing: {
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+  };
 
-    /**
-     * Mantine-specific overrides that the theme wants to inject when the
-     * consumer wraps in `<MantineProvider>`. Optional — themes that don't
-     * override defaults can omit.
-     */
-    mantineTheme?: MantineThemeOverride;
+  /**
+   * Mantine-specific overrides that the theme wants to inject when the
+   * consumer wraps in `<MantineProvider>`. Optional — themes that don't
+   * override defaults can omit.
+   */
+  mantineTheme?: MantineThemeOverride;
 }
 
 export default PolisTheme;

@@ -7,34 +7,24 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*/index.tsx",
-
     "./contexts": "./src/contexts/index.ts",
     "./contexts/*": "./src/contexts/*.tsx",
-
     "./services": "./src/services/index.ts",
     "./services/*": "./src/services/*.ts",
-
     "./util": "./src/util/index.ts",
     "./util/*": "./src/util/*.ts",
-
     "./models": "./src/models/index.ts",
     "./models/*": "./src/models/*.ts",
-
     "./data/*": "./src/data/*.ts",
-
     "./components/PolisProvider": "./src/components/PolisProvider/index.tsx",
     "./theme": "./src/theme/index.ts",
     "./theme/PolisTheme": "./src/theme/PolisTheme.ts",
     "./theme/PolisThemeContext": "./src/theme/PolisThemeContext.tsx",
     "./theme/*": "./src/theme/*.scss",
-
     "./assets/*": "./src/assets/*",
-
     "./pages/*": "./src/pages/*/index.tsx",
-
     "./pages/DynamicPage": "./src/pages/DynamicPage/index.tsx",
     "./pages/Browse/CategoryEditor": "./src/pages/Browse/CategoryEditor/index.tsx",
     "./pages/ComponentGuide": "./src/pages/ComponentGuide/index.ts",
@@ -45,7 +35,6 @@
     "./pages/ComponentGuide/AddToPageModal": "./src/pages/ComponentGuide/AddToPageModal.tsx",
     "./pages/ComponentGuide/ConfigEditor": "./src/pages/ComponentGuide/ConfigEditor.tsx",
     "./pages/ComponentGuide/componentMetadata": "./src/pages/ComponentGuide/componentMetadata.ts",
-
     "./components/Templates/TemplateList": "./src/components/Templates/TemplateList/index.tsx",
     "./components/Templates/TemplateEditor": "./src/components/Templates/TemplateEditor/index.tsx",
     "./pages/Admin/Templates": "./src/pages/Admin/Templates/index.tsx",

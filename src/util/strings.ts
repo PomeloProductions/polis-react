@@ -5,18 +5,17 @@
  * @param length
  * @param ellipsisSign
  */
-export function ellipsisText(text: string, length: number, ellipsisSign: string = '...'): string
-{
-    if (!text) {
-        return '';
-    }
+export function ellipsisText(text: string, length: number, ellipsisSign: string = '...'): string {
+  if (!text) {
+    return '';
+  }
 
-    if (length > text.length) {
-        return text;
-    }
+  if (length > text.length) {
+    return text;
+  }
 
-    const stripped = text.replace(/(<([^>]+)>)/gi, "");
-    return stripped.substring(0, length) + ellipsisSign;
+  const stripped = text.replace(/(<([^>]+)>)/gi, '');
+  return stripped.substring(0, length) + ellipsisSign;
 }
 
 /**
@@ -24,20 +23,19 @@ export function ellipsisText(text: string, length: number, ellipsisSign: string 
  * and then return the grammatically correct list
  * @param listItems
  */
-export function grammaticalList(listItems: string[]): string
-{
-    if (listItems.length === 0) {
-        return '';
-    }
-    if (listItems.length === 1) {
-        return listItems[0];
-    }
-    if (listItems.length === 2) {
-        return `${listItems[0]} and ${listItems[1]}`;
-    }
-    const lastItem = listItems[listItems.length - 1];
-    const otherItems = listItems.slice(0, -1);
-    return `${otherItems.join(', ')} and ${lastItem}`;
+export function grammaticalList(listItems: string[]): string {
+  if (listItems.length === 0) {
+    return '';
+  }
+  if (listItems.length === 1) {
+    return listItems[0];
+  }
+  if (listItems.length === 2) {
+    return `${listItems[0]} and ${listItems[1]}`;
+  }
+  const lastItem = listItems[listItems.length - 1];
+  const otherItems = listItems.slice(0, -1);
+  return `${otherItems.join(', ')} and ${lastItem}`;
 }
 
 /**
@@ -45,26 +43,25 @@ export function grammaticalList(listItems: string[]): string
  * if the http header is missing from the string
  * @param url
  */
-export function addHttpPrefix(url: string | null): string
-{
-    if (!url) {
-        return '';
-    }
-    const trimmedURL = url.trim();
-    if (trimmedURL.length === 0) {
-        return '';
-    }
-    const validHttp = trimmedURL.startsWith('http');
+export function addHttpPrefix(url: string | null): string {
+  if (!url) {
+    return '';
+  }
+  const trimmedURL = url.trim();
+  if (trimmedURL.length === 0) {
+    return '';
+  }
+  const validHttp = trimmedURL.startsWith('http');
 
-    if(!validHttp && trimmedURL.indexOf('://') > -1 ) {
-        let replacer = 'http://';
-        if( trimmedURL.indexOf('s://') > -1 ) {
-            replacer = 'https://';
-        }
-        return trimmedURL.replace( /((.|[\n\r])*):\/\//g, replacer );
+  if (!validHttp && trimmedURL.indexOf('://') > -1) {
+    let replacer = 'http://';
+    if (trimmedURL.indexOf('s://') > -1) {
+      replacer = 'https://';
     }
+    return trimmedURL.replace(/((.|[\n\r])*):\/\//g, replacer);
+  }
 
-    return (!validHttp ? 'http://' : '') + trimmedURL;
+  return (!validHttp ? 'http://' : '') + trimmedURL;
 }
 
 /**
@@ -74,33 +71,31 @@ export function addHttpPrefix(url: string | null): string
  * Document Title: Parameter values for the HDTV standards for production and international programme exchange, Page 4, Item 3.2
  * @param color
  */
-export function convertHexColorToBrightness(color: string): number
-{
-    const hex = color.startsWith('#') ? color.substring(1) : color;
-    const RBGColor = parseInt(hex, 16);
-    const r = (RBGColor >> 16) & 0xff;
-    const g = (RBGColor >>  8) & 0xff;
-    const b = (RBGColor >>  0) & 0xff;
+export function convertHexColorToBrightness(color: string): number {
+  const hex = color.startsWith('#') ? color.substring(1) : color;
+  const RBGColor = parseInt(hex, 16);
+  const r = (RBGColor >> 16) & 0xff;
+  const g = (RBGColor >> 8) & 0xff;
+  const b = (RBGColor >> 0) & 0xff;
 
-    return Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+  return Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
 }
 
 /**
  * Passes back initials for whatever was passed in
  * @param name
  */
-export function initialize(name: string | null): string
-{
-    if (!name) {
-        return '';
-    }
-    const nameParts = name.trim().split(/\s+/);
+export function initialize(name: string | null): string {
+  if (!name) {
+    return '';
+  }
+  const nameParts = name.trim().split(/\s+/);
 
-    if (nameParts.length === 0) {
-        return '';
-    }
-    if (nameParts.length === 1) {
-        return nameParts[0].charAt(0).toUpperCase();
-    }
-    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  if (nameParts.length === 0) {
+    return '';
+  }
+  if (nameParts.length === 1) {
+    return nameParts[0].charAt(0).toUpperCase();
+  }
+  return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
 }

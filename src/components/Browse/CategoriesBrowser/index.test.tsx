@@ -1,6 +1,10 @@
 import { screen } from '@testing-library/react';
 import CategoriesBrowser from './index';
-import { mockCategoriesContextValue, mockCategoriesContextValueLoading, mockCategoriesContextValueEmpty } from '../../../test-utils/mocks/contexts';
+import {
+  mockCategoriesContextValue,
+  mockCategoriesContextValueLoading,
+  mockCategoriesContextValueEmpty,
+} from '../../../test-utils/mocks/contexts';
 import { renderWithProviders } from '../../../test-utils';
 
 // Mock the useNavigate hook
@@ -72,4 +76,4 @@ describe('CategoriesBrowser', () => {
 
     // This test would need to be updated based on how the actual component renders action buttons
   });
-}); 
+});

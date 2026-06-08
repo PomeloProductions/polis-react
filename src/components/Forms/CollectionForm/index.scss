@@ -22,7 +22,7 @@
       color: var(--polis-color-text-primary, #333);
     }
 
-    input[type="text"] {
+    input[type='text'] {
       width: 100%;
       padding: 12px 16px;
       border: 1px solid var(--polis-color-border, #ced4da);
@@ -30,7 +30,9 @@
       font-size: 16px;
       font-family: var(--polis-font-body, system-ui, sans-serif);
       color: var(--polis-color-text-primary, #222428);
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 
       &:focus {
         outline: none;
@@ -51,7 +53,7 @@
       padding: 8px 0;
       margin-bottom: 0;
 
-      input[type="checkbox"] {
+      input[type='checkbox'] {
         margin-right: var(--polis-spacing-sm, 12px);
         width: 18px;
         height: 18px;

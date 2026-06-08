@@ -8,10 +8,10 @@ Object.defineProperty(globalThis, 'import', {
         VITE_API_URL: 'http://localhost:3000',
         MODE: 'test',
         BASE_URL: '/',
-      }
-    }
+      },
+    },
   },
-  writable: true
+  writable: true,
 });
 
 // Mock dependencies
@@ -19,50 +19,50 @@ jest.mock('../data/AppContext', () => ({
   appState: {
     state: {
       persistent: {
-        tokenData: null
-      }
+        tokenData: null,
+      },
     },
-    dispatch: jest.fn()
-  }
+    dispatch: jest.fn(),
+  },
 }));
 
 jest.mock('./AuthManager', () => ({
   storeReceivedToken: jest.fn(),
-  tokenNeedsRefresh: jest.fn()
+  tokenNeedsRefresh: jest.fn(),
 }));
 
 jest.mock('../data/session/session.actions', () => ({
   incrementLoadingCount: jest.fn(),
-  decrementLoadingCount: jest.fn()
+  decrementLoadingCount: jest.fn(),
 }));
 
 const mockAxiosInstance = {
   interceptors: {
     request: { use: jest.fn() },
-    response: { use: jest.fn() }
+    response: { use: jest.fn() },
   },
   get: jest.fn(),
   post: jest.fn(),
   put: jest.fn(),
-  delete: jest.fn()
+  delete: jest.fn(),
 };
 
 jest.mock('axios', () => {
   const mockCreate = jest.fn();
   mockCreate.mockReturnValue(mockAxiosInstance);
-  
+
   return {
     default: {
       create: mockCreate,
       interceptors: {
         request: { use: jest.fn() },
-        response: { use: jest.fn() }
+        response: { use: jest.fn() },
       },
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
-    }
+      delete: jest.fn(),
+    },
   };
 });
 

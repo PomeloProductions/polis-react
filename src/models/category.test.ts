@@ -1,11 +1,15 @@
-import { findCategory, removeCategoryFromList, generateEmptyCategory } from '../util/category-utils';
+import {
+  findCategory,
+  removeCategoryFromList,
+  generateEmptyCategory,
+} from '../util/category-utils';
 import { mockCategory } from '../test-utils/mocks/models/category';
 
 describe('Category Model', () => {
   const mockCategories = [
     mockCategory({ id: 1, name: 'Action', description: 'Action games', can_be_primary: true }),
     mockCategory({ id: 2, name: 'RPG', description: 'Role-playing games', can_be_primary: true }),
-    mockCategory({ id: 3, name: 'Strategy', description: 'Strategy games', can_be_primary: false })
+    mockCategory({ id: 3, name: 'Strategy', description: 'Strategy games', can_be_primary: false }),
   ];
 
   describe('findCategory', () => {
@@ -38,7 +42,7 @@ describe('Category Model', () => {
       const emptyCategory = generateEmptyCategory();
       expect(emptyCategory).toEqual({
         name: '',
-        can_be_primary: false
+        can_be_primary: false,
       });
     });
   });

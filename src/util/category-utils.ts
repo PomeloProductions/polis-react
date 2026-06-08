@@ -5,8 +5,8 @@ import Category from '../models/category';
  * @param categories
  * @param name
  */
-export function findCategory(categories: Category[], name: string): Category|undefined {
-    return categories.find(i => i.name.toLowerCase() === name.toLowerCase());
+export function findCategory(categories: Category[], name: string): Category | undefined {
+  return categories.find((i) => i.name.toLowerCase() === name.toLowerCase());
 }
 
 /**
@@ -15,15 +15,15 @@ export function findCategory(categories: Category[], name: string): Category|und
  * @param name
  */
 export function removeCategoryFromList(categories: Category[], name: string): Category[] {
-    return categories.filter(i => i.name.toLowerCase() !== name.toLowerCase());
+  return categories.filter((i) => i.name.toLowerCase() !== name.toLowerCase());
 }
 
 /**
  * Outputs an empty Category object
  */
 export function generateEmptyCategory(): Category {
-    return {
-        name: "",
-        can_be_primary: false
-    }
-} 
+  return {
+    name: '',
+    can_be_primary: false,
+  };
+}

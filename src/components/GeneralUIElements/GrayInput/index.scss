@@ -3,10 +3,10 @@
   ion-input {
     --padding-start: 3.125vw;
     border: transparent;
-  	background: var(--polis-color-surface-alt, var(--ion-color-light, #f4f5f8));
-  	border-radius: var(--polis-radius-md, 10px);
-  	color: var(--polis-color-text-primary, #222428);
-  	font-family: var(--polis-font-body, system-ui, sans-serif);
+    background: var(--polis-color-surface-alt, var(--ion-color-light, #f4f5f8));
+    border-radius: var(--polis-radius-md, 10px);
+    color: var(--polis-color-text-primary, #222428);
+    font-family: var(--polis-font-body, system-ui, sans-serif);
   }
 }
-@import "responsive";
+@import 'responsive';

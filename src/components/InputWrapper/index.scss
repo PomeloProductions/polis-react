@@ -1,12 +1,12 @@
 .input-wrapper {
   margin: 8vw 0 5vw;
-  &.rounded{
-    input{
+  &.rounded {
+    input {
       border-radius: var(--polis-radius-sm, 5px);
     }
   }
-  &.dark{
-    input{
+  &.dark {
+    input {
       border-color: var(--polis-color-text-primary, var(--color-dark, #222428));
     }
   }
@@ -33,4 +33,4 @@
     }
   }
 }
-@import "responsive";
+@import 'responsive';

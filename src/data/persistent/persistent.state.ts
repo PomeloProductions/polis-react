@@ -1,11 +1,10 @@
 export interface TokenState {
-    token: string;
-    receivedAt: number;
+  token: string;
+  receivedAt: number;
 }
 
 export interface PersistentState {
-    tokenData?: TokenState;
+  tokenData?: TokenState;
 }
 
-export const initialPersistentState: PersistentState = {
-}
+export const initialPersistentState: PersistentState = {};

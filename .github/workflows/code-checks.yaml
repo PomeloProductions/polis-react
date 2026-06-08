@@ -1,0 +1,36 @@
+name: Code Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  type-check:
+    name: TypeScript (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        # Existing tests.yml uses `npm ci`; mirror that here to keep the
+        # install reproducible against package-lock.json.
+        run: npm ci
+
+      - name: Type check
+        # tsconfig has noEmit elsewhere via build pipeline; run an
+        # explicit no-emit type check that fails on any type error.
+        run: npx tsc --noEmit

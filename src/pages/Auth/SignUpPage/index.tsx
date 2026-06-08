@@ -1,4 +1,3 @@
-import React from 'react';
 import { Anchor, Center, Container, Paper, Stack, Text, Title } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import SignUpForm, { SignUpFormProps } from '../../../components/Forms/SignUpForm';

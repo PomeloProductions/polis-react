@@ -76,7 +76,7 @@ const TodoBulletListWidget: React.FC<ComponentProps> = ({ config, onConfigChange
                                     flex: 1,
                                     cursor: 'pointer',
                                     textDecoration: item.completed ? 'line-through' : undefined,
-                                    color: item.completed ? 'var(--mantine-color-dimmed)' : undefined,
+                                    color: item.completed ? 'var(--polis-color-text-muted, var(--mantine-color-dimmed))' : undefined,
                                 }}
                                 onClick={() => setEditingId(item.id)}
                             >

@@ -5,6 +5,29 @@ import { BasePaginatedContextState } from '../../../contexts/BasePaginatedContex
 import { defaultBaseContext } from '../../../contexts/BasePaginatedContext';
 import BaseModel from '../../../models/base-model';
 import { CellContext } from '@tanstack/react-table';
+import { PolisProvider } from '../../PolisProvider';
+import type { PolisTheme } from '../../../theme/PolisTheme';
+
+const makeTheme = (primary: string, body: string): PolisTheme => ({
+    name: `t-${primary}`,
+    colors: {
+        primary,
+        primaryHover: primary,
+        primaryActive: primary,
+        surface: '#fff',
+        surfaceAlt: '#eee',
+        textPrimary: '#111',
+        textMuted: '#666',
+        border: '#ccc',
+        success: '#0a0',
+        warning: '#aa0',
+        danger: '#a00',
+        info: '#00a',
+    },
+    fonts: { body, heading: body, mono: body },
+    radius: { sm: '1px', md: '2px', lg: '3px', full: '99px' },
+    spacing: { xs: '1px', sm: '2px', md: '3px', lg: '4px', xl: '5px' },
+});
 
 // Mock useNavigate
 jest.mock('react-router-dom', () => ({
@@ -132,6 +155,36 @@ describe('DataList', () => {
 
         fireEvent.change(maxInput, { target: { value: '200' } });
         expect(onFilterChanged).toHaveBeenCalledWith('score', 'between,100,200');
+    });
+
+    it('renders inside PolisProvider with theme A', () => {
+        const theme = makeTheme('#aa00aa', 'Body-A');
+        render(
+            <PolisProvider theme={theme}>
+                <DataList
+                    context={mockContext}
+                    columns={columns}
+                />
+            </PolisProvider>
+        );
+        expect(screen.getByTestId('data-table')).toBeInTheDocument();
+        expect(document.documentElement.style.getPropertyValue('--polis-color-primary')).toBe('#aa00aa');
+        expect(document.documentElement.style.getPropertyValue('--polis-font-body')).toBe('Body-A');
+    });
+
+    it('renders inside PolisProvider with theme B and reflects swapped token', () => {
+        const theme = makeTheme('#00aa00', 'Body-B');
+        render(
+            <PolisProvider theme={theme}>
+                <DataList
+                    context={mockContext}
+                    columns={columns}
+                />
+            </PolisProvider>
+        );
+        expect(screen.getByTestId('data-table')).toBeInTheDocument();
+        expect(document.documentElement.style.getPropertyValue('--polis-color-primary')).toBe('#00aa00');
+        expect(document.documentElement.style.getPropertyValue('--polis-font-body')).toBe('Body-B');
     });
 
     it('handles bulk selection when enabled', () => {

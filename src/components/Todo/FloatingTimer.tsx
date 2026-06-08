@@ -32,7 +32,7 @@ const SessionRow: React.FC<{
         <Stack gap={2}>
             <Group justify="space-between">
                 <Group gap={4}>
-                    {session.completed && <IconCheck size={12} color="var(--mantine-color-green-6)" />}
+                    {session.completed && <IconCheck size={12} color="var(--polis-color-success, var(--mantine-color-green-6))" />}
                     <Text size="xs" fw={session.completed ? 500 : 400} c={session.completed ? undefined : 'dimmed'}>
                         {session.label}
                     </Text>

@@ -275,23 +275,26 @@ const DataList = <T extends BaseModel>({
                         <Loader data-testid="loading-spinner" />
                     </div>
                 ) : (
-                    <Table 
-                        striped 
-                        highlightOnHover 
+                    <Table
+                        striped
+                        highlightOnHover
                         borderColor="gray.3"
                         data-testid="data-table-content"
                         styles={{
                             th: {
                                 padding: rem(12),
-                                backgroundColor: 'var(--mantine-color-gray-0)',
-                                borderBottom: '2px solid var(--mantine-color-gray-3)',
+                                backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-gray-0))',
+                                borderBottom: '2px solid var(--polis-color-border, var(--mantine-color-gray-3))',
+                                fontFamily: 'var(--polis-font-heading, inherit)',
                             },
                             td: {
                                 padding: rem(12),
+                                fontFamily: 'var(--polis-font-body, inherit)',
+                                color: 'var(--polis-color-text-primary, inherit)',
                             },
                             tr: {
                                 '&:hover': {
-                                    backgroundColor: 'var(--mantine-color-gray-0)',
+                                    backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-gray-0))',
                                 },
                             },
                         }}
@@ -344,10 +347,11 @@ const DataList = <T extends BaseModel>({
                                                         variant="filled"
                                                         styles={{
                                                             input: {
-                                                                backgroundColor: 'var(--mantine-color-gray-0)',
-                                                                borderColor: 'var(--mantine-color-gray-3)',
+                                                                backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-gray-0))',
+                                                                borderColor: 'var(--polis-color-border, var(--mantine-color-gray-3))',
+                                                                fontFamily: 'var(--polis-font-body, inherit)',
                                                                 '&:focus': {
-                                                                    borderColor: 'var(--mantine-color-blue-6)',
+                                                                    borderColor: 'var(--polis-color-primary, var(--mantine-color-blue-6))',
                                                                 },
                                                             },
                                                         }}

@@ -81,7 +81,7 @@ const ContactUsForm: React.FC<ContactUsFormProps> = ({loggedInUser}) => {
     }
 
     return (
-        <div>
+        <div className={'contact-us-form'}>
             <p className={'error'}>{getCurrentError()}</p>
             <BorderedInput>
                 <input
@@ -128,7 +128,10 @@ const ContactUsForm: React.FC<ContactUsFormProps> = ({loggedInUser}) => {
                     rows={6}
                 />
             </BorderedInput>
-            <button onClick={() => form.handleSubmit()}>
+            <button
+                className={'contact-us-form__submit'}
+                onClick={() => form.handleSubmit()}
+            >
                 Submit
             </button>
         </div>

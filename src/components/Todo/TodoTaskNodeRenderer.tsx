@@ -578,7 +578,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                                 style={{
                                     minHeight: 4,
                                     ...(snapshot.isDraggingOver ? {
-                                        backgroundColor: 'var(--mantine-color-blue-0)',
+                                        backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-blue-0))',
                                         borderRadius: 4,
                                     } : {}),
                                 }}
@@ -699,7 +699,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                         gap="xs"
                         wrap="nowrap"
                         style={isNextToDo ? {
-                            backgroundColor: 'var(--mantine-color-blue-0)',
+                            backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-blue-0))',
                             borderRadius: 4,
                             padding: '2px 4px',
                             margin: '-2px -4px',
@@ -791,7 +791,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                     const hasChildren = group.children.length > 0;
                     return (
                         <Paper key={group.group_number} p="xs" radius="sm" withBorder={isCurrentGroup}
-                            style={isCurrentGroup ? { borderColor: 'var(--mantine-color-blue-3)' } : undefined}
+                            style={isCurrentGroup ? { borderColor: 'var(--polis-color-primary, var(--mantine-color-blue-3))' } : undefined}
                         >
                             <Group justify="space-between" wrap="nowrap"
                                 style={{ cursor: hasChildren ? 'pointer' : undefined }}
@@ -974,8 +974,8 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                                     radius="sm"
                                     withBorder
                                     style={{
-                                        ...(isCurrent ? { borderColor: 'var(--mantine-color-blue-5)', borderWidth: 2 } : {}),
-                                        ...(isCurrent ? { backgroundColor: 'var(--mantine-color-blue-0)' } : {}),
+                                        ...(isCurrent ? { borderColor: 'var(--polis-color-primary, var(--mantine-color-blue-5))', borderWidth: 2 } : {}),
+                                        ...(isCurrent ? { backgroundColor: 'var(--polis-color-surface-alt, var(--mantine-color-blue-0))' } : {}),
                                     }}
                                 >
                                     <Group gap="xs" wrap="nowrap">
@@ -1004,7 +1004,7 @@ const TodoTaskNodeRenderer: React.FC<TodoTaskNodeRendererProps> = ({
                                 p="xs"
                                 radius="sm"
                                 withBorder
-                                style={isCurrent ? { borderColor: 'var(--mantine-color-blue-5)', borderWidth: 2 } : undefined}
+                                style={isCurrent ? { borderColor: 'var(--polis-color-primary, var(--mantine-color-blue-5))', borderWidth: 2 } : undefined}
                             >
                                 <Group
                                     gap="xs"

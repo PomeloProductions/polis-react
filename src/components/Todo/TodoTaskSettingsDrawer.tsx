@@ -300,7 +300,7 @@ const TodoTaskSettingsDrawer: React.FC<TodoTaskSettingsDrawerProps> = ({
                             onUpdate({ groups: newGroups });
                         }}>
                         {groups.map((group, groupIdx) => (
-                            <Stack gap="xs" key={group.group_number} style={{ borderLeft: '3px solid var(--mantine-color-blue-2)', paddingLeft: 12 }}>
+                            <Stack gap="xs" key={group.group_number} style={{ borderLeft: '3px solid var(--polis-color-primary, var(--mantine-color-blue-2))', paddingLeft: 12 }}>
                                 <Group gap="xs" wrap="nowrap">
                                     <Badge size="sm" variant="light">#{group.group_number}</Badge>
                                     <TextInput
@@ -337,7 +337,7 @@ const TodoTaskSettingsDrawer: React.FC<TodoTaskSettingsDrawerProps> = ({
                                                             {...dragProvided.draggableProps}
                                                         >
                                                             <div {...dragProvided.dragHandleProps} style={{ cursor: 'grab' }}>
-                                                                <IconGripVertical size={14} color="var(--mantine-color-gray-5)" />
+                                                                <IconGripVertical size={14} color="var(--polis-color-text-muted, var(--mantine-color-gray-5))" />
                                                             </div>
                                                             <TextInput
                                                                 value={child.label}
@@ -503,7 +503,7 @@ const TodoTaskSettingsDrawer: React.FC<TodoTaskSettingsDrawerProps> = ({
                                                             {...dragProvided.draggableProps}
                                                         >
                                                             <div {...dragProvided.dragHandleProps} style={{ cursor: 'grab' }}>
-                                                                <IconGripVertical size={14} color="var(--mantine-color-gray-5)" />
+                                                                <IconGripVertical size={14} color="var(--polis-color-text-muted, var(--mantine-color-gray-5))" />
                                                             </div>
                                                             <Badge size="xs" variant="light" color={
                                                                 child.task_type === 'category' ? 'blue' :

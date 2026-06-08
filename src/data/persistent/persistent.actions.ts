@@ -1,14 +1,12 @@
-import {TokenState} from './persistent.state';
+import { TokenState } from './persistent.state';
 
 export const setTokenData = (tokenData: TokenState) => ({
-    type: 'set-token-data' as const,
-    tokenData,
+  type: 'set-token-data' as const,
+  tokenData,
 });
 
 export const logOut = () => ({
-    type: 'log-out' as const,
+  type: 'log-out' as const,
 });
 
-export type PersistentActions =
-    | ReturnType<typeof setTokenData>
-    | ReturnType<typeof logOut>; 
+export type PersistentActions = ReturnType<typeof setTokenData> | ReturnType<typeof logOut>;

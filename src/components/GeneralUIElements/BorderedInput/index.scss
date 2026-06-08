@@ -9,12 +9,12 @@
   }
 }
 
-input[type="datetime-local"],
+input[type='datetime-local'],
 textarea,
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"] {
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'] {
   width: 100%;
   padding: var(--polis-spacing-sm, 8px);
   border: 2px var(--polis-color-primary, var(--primary-color, #3880ff)) solid;

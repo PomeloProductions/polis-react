@@ -7,34 +7,24 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*/index.tsx",
-
     "./contexts": "./src/contexts/index.ts",
     "./contexts/*": "./src/contexts/*.tsx",
-
     "./services": "./src/services/index.ts",
     "./services/*": "./src/services/*.ts",
-
     "./util": "./src/util/index.ts",
     "./util/*": "./src/util/*.ts",
-
     "./models": "./src/models/index.ts",
     "./models/*": "./src/models/*.ts",
-
     "./data/*": "./src/data/*.ts",
-
     "./components/PolisProvider": "./src/components/PolisProvider/index.tsx",
     "./theme": "./src/theme/index.ts",
     "./theme/PolisTheme": "./src/theme/PolisTheme.ts",
     "./theme/PolisThemeContext": "./src/theme/PolisThemeContext.tsx",
     "./theme/*": "./src/theme/*.scss",
-
     "./assets/*": "./src/assets/*",
-
     "./pages/*": "./src/pages/*/index.tsx",
-
     "./pages/DynamicPage": "./src/pages/DynamicPage/index.tsx",
     "./pages/Browse/CategoryEditor": "./src/pages/Browse/CategoryEditor/index.tsx",
     "./pages/ComponentGuide": "./src/pages/ComponentGuide/index.ts",
@@ -45,7 +35,6 @@
     "./pages/ComponentGuide/AddToPageModal": "./src/pages/ComponentGuide/AddToPageModal.tsx",
     "./pages/ComponentGuide/ConfigEditor": "./src/pages/ComponentGuide/ConfigEditor.tsx",
     "./pages/ComponentGuide/componentMetadata": "./src/pages/ComponentGuide/componentMetadata.ts",
-
     "./components/Templates/TemplateList": "./src/components/Templates/TemplateList/index.tsx",
     "./components/Templates/TemplateEditor": "./src/components/Templates/TemplateEditor/index.tsx",
     "./pages/Admin/Templates": "./src/pages/Admin/Templates/index.tsx",
@@ -62,7 +51,9 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --reporters=default --reporters=github-actions",
     "test:coverage": "jest --coverage",
-    "test:coverage:ci": "jest --ci --coverage --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary"
+    "test:coverage:ci": "jest --ci --coverage --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write ."
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -96,6 +87,7 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -104,12 +96,20 @@
     "@types/react-dom": "^18.3.7",
     "@types/react-helmet": "^6.1.11",
     "@types/redux-mock-store": "^1.5.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.4.2",
     "redux-mock-store": "^1.5.5",
     "ts-jest": "^29.4.11",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.20.0",
     "vite": "^8.0.16"
   }
 }

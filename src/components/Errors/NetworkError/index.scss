@@ -1,16 +1,16 @@
 .network-error {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 70%;
-    text-align: center;
-    padding: 0 10%;
-    color: var(--polis-color-text-primary, #222428);
-    font-family: var(--polis-font-body, system-ui, sans-serif);
-    .icon {
-        font-size: 48px;
-        color: var(--polis-color-danger, var(--danger-color, #eb445a));
-        margin-bottom: var(--polis-spacing-md, 16px);
-    }
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 70%;
+  text-align: center;
+  padding: 0 10%;
+  color: var(--polis-color-text-primary, #222428);
+  font-family: var(--polis-font-body, system-ui, sans-serif);
+  .icon {
+    font-size: 48px;
+    color: var(--polis-color-danger, var(--danger-color, #eb445a));
+    margin-bottom: var(--polis-spacing-md, 16px);
+  }
 }
-@import "responsive";
+@import 'responsive';

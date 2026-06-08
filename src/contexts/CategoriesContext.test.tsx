@@ -43,7 +43,7 @@ describe('CategoriesContext', () => {
     render(
       <CategoriesContextProvider>
         <TestComponent />
-      </CategoriesContextProvider>
+      </CategoriesContextProvider>,
     );
 
     expect(screen.getByTestId('has-another-page')).toHaveTextContent('false');
@@ -58,7 +58,7 @@ describe('CategoriesContext', () => {
     const { rerender } = render(
       <CategoriesContextProvider>
         <TestComponent />
-      </CategoriesContextProvider>
+      </CategoriesContextProvider>,
     );
 
     // Initial render should have 2 items in loadedData
@@ -68,10 +68,10 @@ describe('CategoriesContext', () => {
     rerender(
       <CategoriesContextProvider>
         <TestComponent />
-      </CategoriesContextProvider>
+      </CategoriesContextProvider>,
     );
 
     // The state should be persisted
     expect(screen.getByTestId('loaded-data-count')).toHaveTextContent('2');
   });
-}); 
+});

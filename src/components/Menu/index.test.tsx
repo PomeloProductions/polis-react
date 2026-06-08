@@ -6,14 +6,15 @@ import { renderWithProviders, MeContextProvider as RealMeContextProvider } from 
 
 // Passthrough mock for MeContextProvider (default and named)
 jest.mock('../../contexts/MeContext', () => {
-    const actual = jest.requireActual('../../contexts/MeContext');
-    const Passthrough: React.FC<PropsWithChildren<{}>> = ({ children }) => React.createElement(React.Fragment, null, children);
-    return {
-        __esModule: true,
-        ...actual,
-        MeContextProvider: Passthrough,
-        default: Passthrough,
-    };
+  const actual = jest.requireActual('../../contexts/MeContext');
+  const Passthrough: React.FC<PropsWithChildren<{}>> = ({ children }) =>
+    React.createElement(React.Fragment, null, children);
+  return {
+    __esModule: true,
+    ...actual,
+    MeContextProvider: Passthrough,
+    default: Passthrough,
+  };
 });
 
 // Use the real MeContextProvider for context setup in the test
@@ -23,45 +24,49 @@ const MeContextProvider = RealMeContextProvider;
 // expose Todos/Settings (authenticated) and Sign In/Sign Up (unauth) links;
 // the old "Browse" link was removed during the polis-react extraction.
 describe.skip('Menu', () => {
-    it('renders basic navigation links when not logged in', () => {
-        renderWithProviders(
-            <MeContextProvider initialState={{
-                me: {
-                    user: mockUser(),
-                    networkError: false,
-                    isLoggedIn: false,
-                    isLoading: false
-                }
-            }}>
-                <Menu />
-            </MeContextProvider>
-        );
+  it('renders basic navigation links when not logged in', () => {
+    renderWithProviders(
+      <MeContextProvider
+        initialState={{
+          me: {
+            user: mockUser(),
+            networkError: false,
+            isLoggedIn: false,
+            isLoading: false,
+          },
+        }}
+      >
+        <Menu />
+      </MeContextProvider>,
+    );
 
-        expect(screen.getByText('Browse')).toBeInTheDocument();
-        expect(screen.getByText('Sign In')).toBeInTheDocument();
-        expect(screen.getByText('Sign Up')).toBeInTheDocument();
-        expect(screen.queryByText('Settings')).not.toBeInTheDocument();
-    });
+    expect(screen.getByText('Browse')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByText('Sign Up')).toBeInTheDocument();
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+  });
 
-    it('renders authenticated navigation links when logged in', () => {
-        const loggedInUser = mockUser({ id: 1 });
-        
-        renderWithProviders(
-            <MeContextProvider initialState={{
-                me: {
-                    user: loggedInUser,
-                    networkError: false,
-                    isLoggedIn: true,
-                    isLoading: false
-                }
-            }}>
-                <Menu />
-            </MeContextProvider>
-        );
+  it('renders authenticated navigation links when logged in', () => {
+    const loggedInUser = mockUser({ id: 1 });
 
-        expect(screen.getByText('Browse')).toBeInTheDocument();
-        expect(screen.getByText('Settings')).toBeInTheDocument();
-        expect(screen.queryByText('Sign In')).not.toBeInTheDocument();
-        expect(screen.queryByText('Sign Up')).not.toBeInTheDocument();
-    });
-}); 
+    renderWithProviders(
+      <MeContextProvider
+        initialState={{
+          me: {
+            user: loggedInUser,
+            networkError: false,
+            isLoggedIn: true,
+            isLoading: false,
+          },
+        }}
+      >
+        <Menu />
+      </MeContextProvider>,
+    );
+
+    expect(screen.getByText('Browse')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.queryByText('Sign In')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign Up')).not.toBeInTheDocument();
+  });
+});

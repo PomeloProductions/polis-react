@@ -7,24 +7,24 @@
   }
 }
 
-input[type="datetime-local"],
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"] {
+input[type='datetime-local'],
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'] {
   width: 100%;
   padding: 8px;
   background: var(--light-color);
   border: none;
   border-radius: 4px;
   font-size: 16px;
-  
+
   &:focus {
     outline: none;
     background: white;
     box-shadow: 0 0 0 2px var(--primary-color);
   }
-  
+
   &::placeholder {
     color: var(--medium-color);
   }

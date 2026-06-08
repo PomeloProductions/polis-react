@@ -1,25 +1,25 @@
 .contact-us-form {
+  font-family: var(--polis-font-body, system-ui, sans-serif);
+  color: var(--polis-color-text-primary, #222428);
+
+  .contact-us-form__submit {
+    margin-top: var(--polis-spacing-md, 16px);
+    padding: var(--polis-spacing-sm, 8px) var(--polis-spacing-md, 16px);
+    background-color: var(--polis-color-primary, #2299dd);
+    color: var(--polis-color-surface, #ffffff);
+    border: none;
+    border-radius: var(--polis-radius-md, 4px);
     font-family: var(--polis-font-body, system-ui, sans-serif);
-    color: var(--polis-color-text-primary, #222428);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 
-    .contact-us-form__submit {
-        margin-top: var(--polis-spacing-md, 16px);
-        padding: var(--polis-spacing-sm, 8px) var(--polis-spacing-md, 16px);
-        background-color: var(--polis-color-primary, #2299dd);
-        color: var(--polis-color-surface, #ffffff);
-        border: none;
-        border-radius: var(--polis-radius-md, 4px);
-        font-family: var(--polis-font-body, system-ui, sans-serif);
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-            background-color: var(--polis-color-primary-hover, #1e88c7);
-        }
-
-        &:active {
-            background-color: var(--polis-color-primary-active, #1a78b0);
-        }
+    &:hover {
+      background-color: var(--polis-color-primary-hover, #1e88c7);
     }
+
+    &:active {
+      background-color: var(--polis-color-primary-active, #1a78b0);
+    }
+  }
 }

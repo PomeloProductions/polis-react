@@ -6,8 +6,8 @@ before any of this PR's new tests were added. All numbers come from
 
 ## Overall baseline
 
-| Metric     | Coverage |
-|------------|----------|
+| Metric     | Coverage            |
+| ---------- | ------------------- |
 | Lines      | 26.37% (959 / 3636) |
 | Statements | 24.89% (984 / 3953) |
 | Branches   | 14.63% (318 / 2173) |
@@ -63,18 +63,18 @@ the gap-filling priority.
 
 ## Notable partial-coverage files at baseline
 
-| File                                            | Lines% |
-|-------------------------------------------------|--------|
-| src/services/requests/CollectionManagementRequests.ts | 10.0% |
-| src/services/requests/CategoryRequests.ts       | 18.2% |
-| src/services/requests/AuthRequests.ts           | 20.0% |
-| src/services/api.ts                             | 38.7% |
-| src/contexts/MeContext.tsx                      | 41.8% |
-| src/components/Forms/SignUpForm/index.tsx       | 45.9% |
-| src/components/Forms/ForgotPasswordForm/index.tsx | 50.0% |
-| src/components/Forms/ResetPasswordForm/index.tsx  | 50.0% |
-| src/components/Forms/SignInForm/index.tsx       | 50.0% |
-| src/components/GeneralUIElements/DataList/index.tsx | 50.4% |
+| File                                                  | Lines% |
+| ----------------------------------------------------- | ------ |
+| src/services/requests/CollectionManagementRequests.ts | 10.0%  |
+| src/services/requests/CategoryRequests.ts             | 18.2%  |
+| src/services/requests/AuthRequests.ts                 | 20.0%  |
+| src/services/api.ts                                   | 38.7%  |
+| src/contexts/MeContext.tsx                            | 41.8%  |
+| src/components/Forms/SignUpForm/index.tsx             | 45.9%  |
+| src/components/Forms/ForgotPasswordForm/index.tsx     | 50.0%  |
+| src/components/Forms/ResetPasswordForm/index.tsx      | 50.0%  |
+| src/components/Forms/SignInForm/index.tsx             | 50.0%  |
+| src/components/GeneralUIElements/DataList/index.tsx   | 50.4%  |
 
 The four form components in PR #2 (`SignInForm`, `SignUpForm`,
 `ForgotPasswordForm`, `ResetPasswordForm`) each had a one-line smoke

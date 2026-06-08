@@ -23,35 +23,35 @@ export type TemplateVariables = Record<string, unknown>;
  * data_get() semantics for dotted-path access into arrays + objects.
  */
 function resolvePath(variables: TemplateVariables, path: string): unknown {
-    const segments = path.split('.');
-    let current: unknown = variables;
-    for (const segment of segments) {
-        if (current === null || current === undefined) {
-            return undefined;
-        }
-        if (typeof current === 'object') {
-            const container = current as Container;
-            if (Array.isArray(container)) {
-                const idx = Number(segment);
-                if (Number.isInteger(idx) && idx >= 0 && idx < container.length) {
-                    current = container[idx];
-                    continue;
-                }
-                return undefined;
-            }
-            current = (container as Record<string, unknown>)[segment];
-        } else {
-            return undefined;
-        }
+  const segments = path.split('.');
+  let current: unknown = variables;
+  for (const segment of segments) {
+    if (current === null || current === undefined) {
+      return undefined;
     }
-    return current;
+    if (typeof current === 'object') {
+      const container = current as Container;
+      if (Array.isArray(container)) {
+        const idx = Number(segment);
+        if (Number.isInteger(idx) && idx >= 0 && idx < container.length) {
+          current = container[idx];
+          continue;
+        }
+        return undefined;
+      }
+      current = (container as Record<string, unknown>)[segment];
+    } else {
+      return undefined;
+    }
+  }
+  return current;
 }
 
 function coerce(value: unknown): string {
-    if (value === null || value === undefined) return '';
-    if (typeof value === 'boolean') return value ? '1' : '';
-    if (typeof value === 'number' || typeof value === 'string') return String(value);
-    return '';
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'boolean') return value ? '1' : '';
+  if (typeof value === 'number' || typeof value === 'string') return String(value);
+  return '';
 }
 
 /**
@@ -60,8 +60,8 @@ function coerce(value: unknown): string {
  * paths resolve to an empty string.
  */
 export function interpolateTemplate(template: string, variables: TemplateVariables): string {
-    return template.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_match, path: string) => {
-        const value: Primitive | Container = resolvePath(variables, path) as Primitive | Container;
-        return coerce(value);
-    });
+  return template.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_match, path: string) => {
+    const value: Primitive | Container = resolvePath(variables, path) as Primitive | Container;
+    return coerce(value);
+  });
 }

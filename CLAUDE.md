@@ -10,6 +10,7 @@ handles this automatically).
 ## What's in here
 
 Imported wholesale from PolisOS's `apps/web/src/`:
+
 - **services/** — `api.ts` (axios w/ JWT injection, 401 refresh, 429 backoff,
   GET dedup), `AuthManager.ts`, `requests/*` (per-resource HTTP wrappers).
 - **contexts/** — `MeContext` (auth state w/ auto-refresh, network error
@@ -17,7 +18,7 @@ Imported wholesale from PolisOS's `apps/web/src/`:
   everywhere), TimerContext, plus polis-domain contexts (Todo, Categories,
   Collections, UserPages, Search) that are reusable patterns but assume the
   matching API shape.
-- **components/** — AuthenticatedRoute, Errors/NetworkError, Forms/*, Menu,
+- **components/** — AuthenticatedRoute, Errors/NetworkError, Forms/\*, Menu,
   Modals, PageRenderer, Template/Page, ApplicationLogo, BottomStickySection,
   Footnote, InputWrapper, LoadingScreen, GeneralUIElements, PhoneNumberInput,
   PrivacyPolicyText, ServerAlert, TermsOfUseText, ContactUsForm, Browse,
@@ -46,6 +47,7 @@ reusable parts here without forcing a layout.
 
 For now PolisOS and VGR still have their own copies in `apps/web/src/`.
 Migration plan (later, separate work):
+
 1. Add `"@polis/react": "file:../../packages/polis-react"` to each consumer.
 2. Delete their copies of the moved files.
 3. Update imports from `'../../components/X'` to `'@polis/react/components/X'`.

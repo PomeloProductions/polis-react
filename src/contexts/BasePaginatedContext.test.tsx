@@ -27,7 +27,7 @@ describe('BasePaginatedContext', () => {
   describe('defaultBaseContext', () => {
     it('returns a default context state', () => {
       const defaultState = defaultBaseContext();
-      
+
       expect(defaultState).toEqual({
         hasAnotherPage: false,
         initialLoadComplete: false,
@@ -49,7 +49,7 @@ describe('BasePaginatedContext', () => {
         removeModel: expect.any(Function),
         setFilter: expect.any(Function),
         setOrder: expect.any(Function),
-        setSearch: expect.any(Function)
+        setSearch: expect.any(Function),
       });
     });
   });
@@ -60,7 +60,7 @@ describe('BasePaginatedContext', () => {
         const [state, setState] = useState(defaultBaseContext());
         return prepareContextState(setState, state, '/test-endpoint');
       });
-      
+
       // Test that the context state has all the required properties
       expect(result.current).toHaveProperty('hasAnotherPage');
       expect(result.current).toHaveProperty('initialLoadComplete');
@@ -84,4 +84,4 @@ describe('BasePaginatedContext', () => {
       expect(result.current).toHaveProperty('params');
     });
   });
-}); 
+});

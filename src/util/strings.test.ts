@@ -1,9 +1,9 @@
-import { 
-  ellipsisText, 
-  grammaticalList, 
-  addHttpPrefix, 
-  convertHexColorToBrightness, 
-  initialize 
+import {
+  ellipsisText,
+  grammaticalList,
+  addHttpPrefix,
+  convertHexColorToBrightness,
+  initialize,
 } from './strings';
 
 describe('strings utilities', () => {
@@ -97,4 +97,4 @@ describe('strings utilities', () => {
       expect(initialize('  John  Doe  ')).toBe('JD');
     });
   });
-}); 
+});

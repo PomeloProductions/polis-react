@@ -2,7 +2,7 @@
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -19,14 +19,14 @@ Object.defineProperty(window, 'navigator', {
   value: {
     userAgent: '',
     maxTouchPoints: 0,
-    msMaxTouchPoints: 0
-  }
+    msMaxTouchPoints: 0,
+  },
 });
 
 describe('platform-utils', () => {
   beforeEach(() => {
     jest.resetModules();
-    
+
     // Mock matchMedia before requiring the module
     window.matchMedia = jest.fn().mockImplementation((query) => ({
       matches: false,
@@ -38,23 +38,23 @@ describe('platform-utils', () => {
       removeEventListener: jest.fn(),
       dispatchEvent: jest.fn(),
     }));
-    
+
     // Reset navigator properties
     Object.defineProperty(navigator, 'platform', {
       value: '',
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(navigator, 'userAgent', {
       value: '',
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(navigator, 'maxTouchPoints', {
       value: 0,
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(navigator, 'msMaxTouchPoints', {
       value: 0,
-      configurable: true
+      configurable: true,
     });
   });
 
@@ -119,7 +119,8 @@ describe('platform-utils', () => {
   describe('isChrome', () => {
     it('should return true for Chrome browser', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        value:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         configurable: true,
       });
       const { isChrome } = require('./platform');
@@ -139,7 +140,8 @@ describe('platform-utils', () => {
   describe('isSafari', () => {
     it('should return true for Safari browser', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+        value:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
         configurable: true,
       });
       const { isSafari } = require('./platform');
@@ -148,7 +150,8 @@ describe('platform-utils', () => {
 
     it('should return false for Chrome browser', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        value:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         configurable: true,
       });
       const { isSafari } = require('./platform');
@@ -179,7 +182,8 @@ describe('platform-utils', () => {
   describe('isEdge', () => {
     it('should return true for Edge browser', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59',
+        value:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59',
         configurable: true,
       });
       const { isEdge } = require('./platform');
@@ -202,7 +206,7 @@ describe('platform-utils', () => {
       delete (window as any).ontouchstart;
       Object.defineProperty(navigator, 'maxTouchPoints', { value: 0 });
       Object.defineProperty(navigator, 'msMaxTouchPoints', { value: 0 });
-      
+
       const platform = require('./platform');
       expect(platform.isTouchDevice).toBe(false);
     });
@@ -273,11 +277,12 @@ describe('platform-utils', () => {
 
     it('should return false for regular browsers', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        value:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         configurable: true,
       });
       const { isBot } = require('./platform');
       expect(isBot).toBe(false);
     });
   });
-}); 
+});

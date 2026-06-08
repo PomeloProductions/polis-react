@@ -89,11 +89,11 @@ Swapping themes is a one-line consumer change.
 
 ```tsx
 import { PolisProvider } from '@polis/react';
-import { theme } from '@polis/theme-mantine';        // or '@polis/theme-bootstrap'
+import { theme } from '@polis/theme-mantine'; // or '@polis/theme-bootstrap'
 
 <PolisProvider theme={theme}>
   <App />
-</PolisProvider>
+</PolisProvider>;
 ```
 
 `PolisProvider` does three things:
@@ -148,12 +148,12 @@ CategoriesList. The `theme/elements.scss` baseline is also tokenized.
 Four render-prop forms are now shipped. The render-prop pattern lets
 consumers inject additional fields without forking the package.
 
-| Form                  | Endpoint                | Base fields                                          |
-|-----------------------|-------------------------|------------------------------------------------------|
-| `SignInForm`          | `POST /auth/login`      | email, password                                      |
-| `SignUpForm`          | `POST /auth/sign-up`    | email, password, password_confirmation, accept_terms |
-| `ForgotPasswordForm`  | `POST /forgot-password` | email                                                |
-| `ResetPasswordForm`   | `POST /reset-password`  | password, password_confirmation (+ token, email)     |
+| Form                 | Endpoint                | Base fields                                          |
+| -------------------- | ----------------------- | ---------------------------------------------------- |
+| `SignInForm`         | `POST /auth/login`      | email, password                                      |
+| `SignUpForm`         | `POST /auth/sign-up`    | email, password, password_confirmation, accept_terms |
+| `ForgotPasswordForm` | `POST /forgot-password` | email                                                |
+| `ResetPasswordForm`  | `POST /reset-password`  | password, password_confirmation (+ token, email)     |
 
 Each form (except SignInForm, which keeps the v0.1 API) accepts:
 
@@ -170,6 +170,7 @@ Each form (except SignInForm, which keeps the v0.1 API) accepts:
 - `onSuccessRedirect` — destination after success.
 
 Robustness applied uniformly:
+
 - 422 → server field errors lifted into Formik field errors
 - 429 → handled by the api.ts toast / backoff (form just no-ops)
 - Submission disables the button + shows a spinner
@@ -191,16 +192,16 @@ import SignUpForm from '@polis/react/components/Forms/SignUpForm';
     <>
       <input
         value={form.values.first_name as string}
-        onChange={e => form.setFieldValue('first_name', e.target.value)}
+        onChange={(e) => form.setFieldValue('first_name', e.target.value)}
       />
       <input
         value={form.values.last_name as string}
-        onChange={e => form.setFieldValue('last_name', e.target.value)}
+        onChange={(e) => form.setFieldValue('last_name', e.target.value)}
       />
     </>
   )}
   onSuccessRedirect="/welcome"
-/>
+/>;
 ```
 
 ## Default pages (v0.2)

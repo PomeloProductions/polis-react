@@ -35,59 +35,59 @@ export type TemplateSource = 'org' | 'global' | 'default';
  * A single email template entry in the admin API response.
  */
 export interface EmailTemplateEntry {
-    /** Stable identifier (e.g. "welcome", "renewal_reminder"). */
-    key: string;
-    /** Resolved subject (per the lookup hierarchy). */
-    subject: string;
-    /** Resolved HTML body. */
-    body_html: string;
-    /**
-     * The org this row is scoped to, or null when sourced from the global
-     * row or the in-code default.
-     */
-    organization_id: number | null;
-    /** Where the resolved values came from. */
-    source: TemplateSource;
-    /** In-code default subject (empty when no default exists). */
-    default_subject: string;
-    /** In-code default HTML body. */
-    default_body_html: string;
+  /** Stable identifier (e.g. "welcome", "renewal_reminder"). */
+  key: string;
+  /** Resolved subject (per the lookup hierarchy). */
+  subject: string;
+  /** Resolved HTML body. */
+  body_html: string;
+  /**
+   * The org this row is scoped to, or null when sourced from the global
+   * row or the in-code default.
+   */
+  organization_id: number | null;
+  /** Where the resolved values came from. */
+  source: TemplateSource;
+  /** In-code default subject (empty when no default exists). */
+  default_subject: string;
+  /** In-code default HTML body. */
+  default_body_html: string;
 }
 
 /**
  * A single push template entry in the admin API response.
  */
 export interface PushTemplateEntry {
-    key: string;
-    title: string;
-    body: string;
-    organization_id: number | null;
-    source: TemplateSource;
-    default_title: string;
-    default_body: string;
+  key: string;
+  title: string;
+  body: string;
+  organization_id: number | null;
+  source: TemplateSource;
+  default_title: string;
+  default_body: string;
 }
 
 /**
  * Request body for updating an email template.
  */
 export interface EmailTemplateUpdate {
-    subject: string;
-    body_html: string;
+  subject: string;
+  body_html: string;
 }
 
 /**
  * Request body for updating a push template.
  */
 export interface PushTemplateUpdate {
-    title: string;
-    body: string;
+  title: string;
+  body: string;
 }
 
 /**
  * Index endpoint response wrapper.
  */
 export interface TemplateListResponse<T> {
-    data: T[];
+  data: T[];
 }
 
 /**
@@ -98,24 +98,24 @@ export interface TemplateListResponse<T> {
  * directly.
  */
 export interface EmailTemplateClient {
-    list(organizationId: number): Promise<EmailTemplateEntry[]>;
-    show(organizationId: number, key: string): Promise<EmailTemplateEntry>;
-    update(
-        organizationId: number,
-        key: string,
-        payload: EmailTemplateUpdate,
-    ): Promise<EmailTemplateEntry>;
-    /** Revert: delete the org-scoped row, falling back to global/default. */
-    revert(organizationId: number, key: string): Promise<void>;
+  list(organizationId: number): Promise<EmailTemplateEntry[]>;
+  show(organizationId: number, key: string): Promise<EmailTemplateEntry>;
+  update(
+    organizationId: number,
+    key: string,
+    payload: EmailTemplateUpdate,
+  ): Promise<EmailTemplateEntry>;
+  /** Revert: delete the org-scoped row, falling back to global/default. */
+  revert(organizationId: number, key: string): Promise<void>;
 }
 
 export interface PushTemplateClient {
-    list(organizationId: number): Promise<PushTemplateEntry[]>;
-    show(organizationId: number, key: string): Promise<PushTemplateEntry>;
-    update(
-        organizationId: number,
-        key: string,
-        payload: PushTemplateUpdate,
-    ): Promise<PushTemplateEntry>;
-    revert(organizationId: number, key: string): Promise<void>;
+  list(organizationId: number): Promise<PushTemplateEntry[]>;
+  show(organizationId: number, key: string): Promise<PushTemplateEntry>;
+  update(
+    organizationId: number,
+    key: string,
+    payload: PushTemplateUpdate,
+  ): Promise<PushTemplateEntry>;
+  revert(organizationId: number, key: string): Promise<void>;
 }

@@ -8,65 +8,65 @@ import PageRenderer from '../../components/PageRenderer/index';
 import PageSettingsPanel from '../../components/PageRenderer/PageSettingsPanel';
 
 const DefaultDynamicPage: React.FC = () => {
-    const { pageSlug, param1 } = useParams<{ pageSlug?: string; param1?: string }>();
-    const slug = pageSlug || 'home';
-    const { pages, loading } = useContext(UserPagesContext);
-    const { me } = useContext(MeContext);
-    const [settingsOpen, setSettingsOpen] = useState(false);
+  const { pageSlug, param1 } = useParams<{ pageSlug?: string; param1?: string }>();
+  const slug = pageSlug || 'home';
+  const { pages, loading } = useContext(UserPagesContext);
+  const { me } = useContext(MeContext);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-    if (loading || !me?.id) {
-        return <Loader size="md" />;
+  if (loading || !me?.id) {
+    return <Loader size="md" />;
+  }
+
+  const page = pages.find((p) => p.slug === slug);
+
+  if (!page) {
+    return <Text c="red">Page not found: {slug}</Text>;
+  }
+
+  // Build pageParams from route params and the page's route_path pattern
+  const pageParams: Record<string, string> = {};
+  if (param1) {
+    const paramMatch = page.route_path.match(/:(\w+)/);
+    if (paramMatch) {
+      pageParams[paramMatch[1]] = param1;
     }
+  }
 
-    const page = pages.find((p) => p.slug === slug);
+  let displayTitle = page.name;
+  if (param1 && !page.is_nav_item) {
+    displayTitle = `${page.name} — ${param1}`;
+  }
 
-    if (!page) {
-        return <Text c="red">Page not found: {slug}</Text>;
-    }
+  return (
+    <Container size={page.page_type === 'dashboard' ? 'lg' : 'xl'} py="xl">
+      <Group justify="space-between" mb="md">
+        <Text size="xl" fw={700}>
+          {displayTitle}
+        </Text>
+        <ActionIcon
+          variant="subtle"
+          size="lg"
+          onClick={() => setSettingsOpen(true)}
+          title="Page settings"
+        >
+          <IconSettings size={20} />
+        </ActionIcon>
+      </Group>
+      <PageRenderer page={page} userId={me.id} pageParams={pageParams} />
 
-    // Build pageParams from route params and the page's route_path pattern
-    const pageParams: Record<string, string> = {};
-    if (param1) {
-        const paramMatch = page.route_path.match(/:(\w+)/);
-        if (paramMatch) {
-            pageParams[paramMatch[1]] = param1;
-        }
-    }
-
-    let displayTitle = page.name;
-    if (param1 && !page.is_nav_item) {
-        displayTitle = `${page.name} — ${param1}`;
-    }
-
-    return (
-        <Container size={page.page_type === 'dashboard' ? 'lg' : 'xl'} py="xl">
-            <Group justify="space-between" mb="md">
-                <Text size="xl" fw={700}>
-                    {displayTitle}
-                </Text>
-                <ActionIcon
-                    variant="subtle"
-                    size="lg"
-                    onClick={() => setSettingsOpen(true)}
-                    title="Page settings"
-                >
-                    <IconSettings size={20} />
-                </ActionIcon>
-            </Group>
-            <PageRenderer page={page} userId={me.id} pageParams={pageParams} />
-
-            <Drawer
-                opened={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-                title="Settings"
-                position="right"
-                size="lg"
-                styles={{ title: { fontSize: '1.25rem', fontWeight: 600 } }}
-            >
-                <PageSettingsPanel page={page} />
-            </Drawer>
-        </Container>
-    );
+      <Drawer
+        opened={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title="Settings"
+        position="right"
+        size="lg"
+        styles={{ title: { fontSize: '1.25rem', fontWeight: 600 } }}
+      >
+        <PageSettingsPanel page={page} />
+      </Drawer>
+    </Container>
+  );
 };
 
 export default DefaultDynamicPage;

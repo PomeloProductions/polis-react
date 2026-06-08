@@ -12,26 +12,26 @@ describe('view utilities', () => {
       Object.defineProperty(window, 'innerHeight', {
         writable: true,
         configurable: true,
-        value: VIEWPORT_HEIGHT
+        value: VIEWPORT_HEIGHT,
       });
 
       Object.defineProperty(window, 'innerWidth', {
         writable: true,
         configurable: true,
-        value: VIEWPORT_WIDTH
+        value: VIEWPORT_WIDTH,
       });
 
       // Mock document dimensions
       Object.defineProperty(document.documentElement, 'clientHeight', {
         writable: true,
         configurable: true,
-        value: VIEWPORT_HEIGHT
+        value: VIEWPORT_HEIGHT,
       });
 
       Object.defineProperty(document.documentElement, 'clientWidth', {
         writable: true,
         configurable: true,
-        value: VIEWPORT_WIDTH
+        value: VIEWPORT_WIDTH,
       });
     });
 
@@ -41,10 +41,10 @@ describe('view utilities', () => {
           top: 0,
           left: 0,
           bottom: VIEWPORT_HEIGHT / 2,
-          right: VIEWPORT_WIDTH / 2
-        })
+          right: VIEWPORT_WIDTH / 2,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(true);
     });
 
@@ -54,10 +54,10 @@ describe('view utilities', () => {
           top: -100,
           left: 0,
           bottom: VIEWPORT_HEIGHT / 2,
-          right: VIEWPORT_WIDTH / 2
-        })
+          right: VIEWPORT_WIDTH / 2,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -67,10 +67,10 @@ describe('view utilities', () => {
           top: -200,
           left: -200,
           bottom: -100,
-          right: -100
-        })
+          right: -100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -80,10 +80,10 @@ describe('view utilities', () => {
           top: 0,
           left: -200,
           bottom: 100,
-          right: -100
-        })
+          right: -100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -93,10 +93,10 @@ describe('view utilities', () => {
           top: 0,
           left: VIEWPORT_WIDTH + 100,
           bottom: 100,
-          right: VIEWPORT_WIDTH + 200
-        })
+          right: VIEWPORT_WIDTH + 200,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -106,10 +106,10 @@ describe('view utilities', () => {
           top: -200,
           left: 0,
           bottom: -100,
-          right: 100
-        })
+          right: 100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -119,10 +119,10 @@ describe('view utilities', () => {
           top: 0,
           left: 0,
           bottom: VIEWPORT_HEIGHT * 1.34, // This will make rect.bottom * 0.75 > VIEWPORT_HEIGHT
-          right: 100
-        })
+          right: 100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement)).toBe(false);
     });
 
@@ -133,35 +133,35 @@ describe('view utilities', () => {
           top: 0,
           left: 0,
           bottom: VIEWPORT_HEIGHT / 0.75, // This will make rect.bottom * 0.75 = VIEWPORT_HEIGHT
-          right: 100
-        })
+          right: 100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement1)).toBe(true);
-      
+
       // Test with bottom edge at maximum allowed value - should be visible
       const mockElement2 = {
         getBoundingClientRect: () => ({
           top: 0,
           left: 0,
           bottom: VIEWPORT_HEIGHT / 0.75, // This will make rect.bottom * 0.75 = VIEWPORT_HEIGHT
-          right: 100
-        })
+          right: 100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement2)).toBe(true);
-      
+
       // Test with bottom edge too far beyond viewport height - should not be visible
       const mockElement3 = {
         getBoundingClientRect: () => ({
           top: 0,
           left: 0,
-          bottom: (VIEWPORT_HEIGHT / 0.75) + 1, // This will make rect.bottom * 0.75 > VIEWPORT_HEIGHT
-          right: 100
-        })
+          bottom: VIEWPORT_HEIGHT / 0.75 + 1, // This will make rect.bottom * 0.75 > VIEWPORT_HEIGHT
+          right: 100,
+        }),
       } as HTMLElement;
-      
+
       expect(isElementInViewport(mockElement3)).toBe(false);
     });
   });
-}); 
+});

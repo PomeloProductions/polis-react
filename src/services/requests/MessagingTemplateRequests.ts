@@ -1,12 +1,12 @@
 import api from '../api';
 import type {
-    EmailTemplateClient,
-    EmailTemplateEntry,
-    EmailTemplateUpdate,
-    PushTemplateClient,
-    PushTemplateEntry,
-    PushTemplateUpdate,
-    TemplateListResponse,
+  EmailTemplateClient,
+  EmailTemplateEntry,
+  EmailTemplateUpdate,
+  PushTemplateClient,
+  PushTemplateEntry,
+  PushTemplateUpdate,
+  TemplateListResponse,
 } from '../../models/messaging-template';
 
 /**
@@ -21,69 +21,65 @@ import type {
  */
 
 export const emailTemplateRequests: EmailTemplateClient = {
-    async list(organizationId: number): Promise<EmailTemplateEntry[]> {
-        const { data } = await api.get<TemplateListResponse<EmailTemplateEntry>>(
-            `/organizations/${organizationId}/email-templates`,
-        );
-        return data.data;
-    },
+  async list(organizationId: number): Promise<EmailTemplateEntry[]> {
+    const { data } = await api.get<TemplateListResponse<EmailTemplateEntry>>(
+      `/organizations/${organizationId}/email-templates`,
+    );
+    return data.data;
+  },
 
-    async show(organizationId: number, key: string): Promise<EmailTemplateEntry> {
-        const { data } = await api.get<EmailTemplateEntry>(
-            `/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`,
-        );
-        return data;
-    },
+  async show(organizationId: number, key: string): Promise<EmailTemplateEntry> {
+    const { data } = await api.get<EmailTemplateEntry>(
+      `/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`,
+    );
+    return data;
+  },
 
-    async update(
-        organizationId: number,
-        key: string,
-        payload: EmailTemplateUpdate,
-    ): Promise<EmailTemplateEntry> {
-        const { data } = await api.put<EmailTemplateEntry>(
-            `/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`,
-            payload,
-        );
-        return data;
-    },
+  async update(
+    organizationId: number,
+    key: string,
+    payload: EmailTemplateUpdate,
+  ): Promise<EmailTemplateEntry> {
+    const { data } = await api.put<EmailTemplateEntry>(
+      `/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`,
+      payload,
+    );
+    return data;
+  },
 
-    async revert(organizationId: number, key: string): Promise<void> {
-        await api.delete(
-            `/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`,
-        );
-    },
+  async revert(organizationId: number, key: string): Promise<void> {
+    await api.delete(`/organizations/${organizationId}/email-templates/${encodeURIComponent(key)}`);
+  },
 };
 
 export const pushTemplateRequests: PushTemplateClient = {
-    async list(organizationId: number): Promise<PushTemplateEntry[]> {
-        const { data } = await api.get<TemplateListResponse<PushTemplateEntry>>(
-            `/organizations/${organizationId}/push-templates`,
-        );
-        return data.data;
-    },
+  async list(organizationId: number): Promise<PushTemplateEntry[]> {
+    const { data } = await api.get<TemplateListResponse<PushTemplateEntry>>(
+      `/organizations/${organizationId}/push-templates`,
+    );
+    return data.data;
+  },
 
-    async show(organizationId: number, key: string): Promise<PushTemplateEntry> {
-        const { data } = await api.get<PushTemplateEntry>(
-            `/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`,
-        );
-        return data;
-    },
+  async show(organizationId: number, key: string): Promise<PushTemplateEntry> {
+    const { data } = await api.get<PushTemplateEntry>(
+      `/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`,
+    );
+    return data;
+  },
 
-    async update(
-        organizationId: number,
-        key: string,
-        payload: PushTemplateUpdate,
-    ): Promise<PushTemplateEntry> {
-        const { data } = await api.put<PushTemplateEntry>(
-            `/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`,
-            payload,
-        );
-        return data;
-    },
+  async update(
+    organizationId: number,
+    key: string,
+    payload: PushTemplateUpdate,
+  ): Promise<PushTemplateEntry> {
+    const { data } = await api.put<PushTemplateEntry>(
+      `/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`,
+      payload,
+    );
+    return data;
+  },
 
-    async revert(organizationId: number, key: string): Promise<void> {
-        await api.delete(
-            `/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`,
-        );
-    },
+  async revert(organizationId: number, key: string): Promise<void> {
+    await api.delete(`/organizations/${organizationId}/push-templates/${encodeURIComponent(key)}`);
+  },
 };

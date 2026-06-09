@@ -23,6 +23,7 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./test-utils": "./src/test-utils/index.tsx",
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*/index.tsx",
     "./contexts": "./src/contexts/index.ts",

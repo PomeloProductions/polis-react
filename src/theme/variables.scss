@@ -1,10 +1,19 @@
 /*
- * Theme Variables
+ * Theme Variables (Legacy VGR palette)
  * ----------------------------------------------------------------------------
- * Custom variables for the application theme
+ * Legacy `--color-*` custom properties from the original VGR-orange theme.
+ * They are no longer the recommended tokens — new code should use the
+ * `--polis-color-*` properties injected by `<PolisProvider>` (see
+ * `PolisTheme` / `PolisProvider`).
+ *
+ * The block is scoped to `:where(.legacy-vgr-theme)` with zero specificity
+ * so that an app can opt in by adding `class="legacy-vgr-theme"` to a
+ * wrapper (typically `<body>`) without affecting any non-opted DOM. Once
+ * all consumers have migrated off `var(--color-*)`, this file (and the
+ * stylesheets that reference it) can be deleted outright.
  */
 
-:root {
+:where(.legacy-vgr-theme) {
   /* Primary Colors */
   --color-primary: #fe9024;
   --color-primary-rgb: 56, 128, 255;
@@ -146,8 +155,8 @@
   --color-navigation: #6600cc;
 }
 
-/* Dark Theme */
-body.dark {
+/* Dark Theme (legacy) */
+:where(.legacy-vgr-theme) body.dark {
   --color-primary: #428cff;
   --color-primary-rgb: 66, 140, 255;
   --color-primary-contrast: #ffffff;

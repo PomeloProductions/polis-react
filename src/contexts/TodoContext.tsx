@@ -67,7 +67,7 @@ export const TodoContextProvider: React.FC<Props> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [hierarchyCache, setHierarchyCache] = useState<Record<number, TodoHierarchy>>({});
 
-  const setPageFromResponse = useCallback((data: any) => {
+  const setPageFromResponse = useCallback((data: UserPage & { balances?: TodoBalance[] }) => {
     const { balances: pageBalances, ...page } = data;
     setCurrentPage(page as UserPage);
     if (pageBalances) setBalances(pageBalances);

@@ -6,7 +6,7 @@ import AuthRequests, { LoginReq } from '../../../services/requests/AuthRequests'
 import { useFormik } from 'formik';
 
 interface SignInFormProps {
-  defaultRedirect?: string;
+  onSuccessRedirect?: string;
 }
 
 interface ApiError {
@@ -14,7 +14,7 @@ interface ApiError {
   message?: string;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ defaultRedirect }) => {
+const SignInForm: React.FC<SignInFormProps> = ({ onSuccessRedirect }) => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ defaultRedirect }) => {
       if (await AuthRequests.signIn(userReq)) {
         const redirectUrl = localStorage.getItem('login_redirect');
         localStorage.removeItem('login_redirect');
-        navigate(redirectUrl ?? defaultRedirect ?? '/');
+        navigate(redirectUrl ?? onSuccessRedirect ?? '/');
       } else {
         setError('Unknown Error');
       }

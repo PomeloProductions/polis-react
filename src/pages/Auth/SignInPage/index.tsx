@@ -21,7 +21,7 @@ export interface SignInPageProps {
   branding?: AuthPageBranding;
   /**
    * Override the destination after a successful sign-in. Forwarded to
-   * `SignInForm` as `defaultRedirect`.
+   * `SignInForm` as `onSuccessRedirect`.
    */
   defaultRedirect?: string;
 }
@@ -43,7 +43,7 @@ const SignInPage: React.FC<SignInPageProps> = ({ branding, defaultRedirect }) =>
           <Text c="dimmed" size="sm">
             Enter your email and password to continue.
           </Text>
-          <SignInForm defaultRedirect={defaultRedirect} />
+          <SignInForm onSuccessRedirect={defaultRedirect} />
           <Stack gap="xs" mt="md">
             <Text size="sm">
               <Anchor component={Link} to="/forgot-password">

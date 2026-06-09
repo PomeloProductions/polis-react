@@ -19,7 +19,7 @@
     .create-collection-button {
       padding: 8px 16px;
       background-color: var(--polis-color-primary, #007bff);
-      color: #fff;
+      color: var(--polis-color-primary-contrast, #fff);
       border: none;
       border-radius: var(--polis-radius-md, 4px);
       font-size: 14px;

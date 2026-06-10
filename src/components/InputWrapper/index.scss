@@ -7,7 +7,7 @@
   }
   &.dark {
     input {
-      border-color: var(--polis-color-text-primary, var(--color-dark, #222428));
+      border-color: var(--polis-color-text-primary, #222428);
     }
   }
   label {
@@ -17,7 +17,7 @@
     display: block;
   }
   input {
-    border: 1px var(--polis-color-primary, var(--color-primary, #fe9024)) solid;
+    border: 1px var(--polis-color-primary, #fe9024) solid;
     --padding-start: 3.125vw;
   }
   .subtext {

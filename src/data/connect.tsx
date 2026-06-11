@@ -5,8 +5,7 @@ import { AllActions } from './combineReducers';
 
 // Type for functions in mapDispatchToProps: can return an action or a thunk
 type ThunkOrActionCreator = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...args: any[]
+  ...args: unknown[]
 ) => AllActions | ((dispatch: React.Dispatch<AllActions>) => void | Promise<void>);
 
 // Map of action creators or thunks

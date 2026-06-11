@@ -22,6 +22,12 @@ export interface PolisTheme {
     primary: string;
     primaryHover: string;
     primaryActive: string;
+    /** Light variant of primary (Mantine palette shade fallback). */
+    primaryTint: string;
+    /** Even lighter variant of primary (subtle backgrounds, hover hints). */
+    primarySubtle: string;
+    /** Text/icon color on primary backgrounds (typically white). */
+    primaryContrast: string;
     /** Background of cards / panels. */
     surface: string;
     /** Muted background (e.g. table-row hover, alt rows). */

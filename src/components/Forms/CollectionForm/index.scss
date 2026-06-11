@@ -101,7 +101,7 @@
       &.submit-button {
         background: var(--polis-color-primary, #007bff);
         border: none;
-        color: #fff;
+        color: var(--polis-color-primary-contrast, #fff);
 
         &:hover {
           background: var(--polis-color-primary-hover, #0069d9);

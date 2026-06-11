@@ -53,7 +53,7 @@ describe('SignInForm', () => {
 
   test('submits and navigates on success', async () => {
     signInMock.mockResolvedValueOnce(true);
-    const { container } = renderForm({ defaultRedirect: '/home' });
+    const { container } = renderForm({ onSuccessRedirect: '/home' });
     const inputs = container.querySelectorAll('input');
     fireEvent.input(inputs[0], { target: { value: 'a@b.com' } });
     fireEvent.input(inputs[1], { target: { value: 'pw' } });

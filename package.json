@@ -60,11 +60,11 @@
     "./util/template-interpolate": "./src/util/template-interpolate.ts"
   },
   "peerDependencies": {
-    "@mantine/core": ">=7",
-    "@mantine/dates": ">=7",
-    "@mantine/hooks": ">=7",
-    "@mantine/notifications": ">=7",
-    "@mantine/tiptap": ">=7",
+    "@mantine/core": "^7 || ^8",
+    "@mantine/dates": "^7 || ^8",
+    "@mantine/hooks": "^7 || ^8",
+    "@mantine/notifications": "^7 || ^8",
+    "@mantine/tiptap": "^7 || ^8",
     "bootstrap": ">=5",
     "formik": ">=2",
     "react": ">=18",

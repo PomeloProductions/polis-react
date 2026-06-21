@@ -3,8 +3,26 @@ name: Tests
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.cjs'
+      - 'jest.setup.ts'
+      - 'jest-transform.cjs'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.cjs'
+      - 'jest.setup.ts'
+      - 'jest-transform.cjs'
+      - '.github/workflows/tests.yml'
 
 jobs:
   test:

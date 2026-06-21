@@ -3,8 +3,22 @@ name: Code Checks
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'eslint.config.js'
+      - '.github/workflows/code-checks.yaml'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'eslint.config.js'
+      - '.github/workflows/code-checks.yaml'
 
 jobs:
   type-check:

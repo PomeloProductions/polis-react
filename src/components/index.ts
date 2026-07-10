@@ -19,6 +19,12 @@ export { default as PhoneNumberInput } from './PhoneNumberInput';
 export { default as PrivacyPolicyText } from './PrivacyPolicyText';
 export { default as TermsOfUseText } from './TermsOfUseText';
 
+// Generic recursive node-tree renderer + registries (domain-agnostic).
+export { default as NodeTreeRenderer } from './NodeTreeRenderer';
+export type { NodeTreeRendererProps, NodeRenderArgs, NodeRenderDelegate } from './NodeTreeRenderer';
+export { createComponentRegistry, defaultComponentRegistry } from './ComponentRegistry';
+export type { ComponentRegistry, ComponentProps, RegisterableComponent } from './ComponentRegistry';
+
 // Forms
 export { default as SignInForm } from './Forms/SignInForm';
 export { default as SignUpForm } from './Forms/SignUpForm';

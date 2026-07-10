@@ -14,3 +14,5 @@ export * from './view';
 export * from './const';
 export * from './types';
 export * from './api-errors';
+export * from './node-tree-utils';
+export * from './page-type-registry';

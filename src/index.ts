@@ -159,3 +159,17 @@ export {
 export type { TreeNode, NodePath } from './util/node-tree-utils';
 export { createPageTypeRegistry, defaultPageTypeRegistry } from './util/page-type-registry';
 export type { PageTypeRegistry, PageTypeConfig, PageTypeContext } from './util/page-type-registry';
+
+/*
+ * Stateful core modules. These carry module-level state (the AppContext
+ * store bridge, the shared axios instance, the Me context) and MUST be
+ * imported through this barrel: consumers deep-importing them by subpath
+ * while package-internal code imports them relatively can end up with two
+ * module instances under dev servers that mix optimized and raw source
+ * (e.g. Vite), splitting appState across copies and breaking auth.
+ */
+export { AppContext, AppContextProvider, appState } from './data/AppContext';
+export { MeContext, clearMeState, default as MeContextProvider } from './contexts/MeContext';
+export { default as api, dedupedGet } from './services/api';
+export { default as AuthRequests } from './services/requests/AuthRequests';
+export { setTokenData, logOut } from './data/persistent/persistent.actions';

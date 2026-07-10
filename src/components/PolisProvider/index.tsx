@@ -10,6 +10,12 @@ interface PolisProviderProps {
    * are dark-first (e.g. Card Collecting) pass "dark" here.
    */
   defaultColorScheme?: MantineColorScheme;
+  /**
+   * Forwarded to MantineProvider. Single-scheme apps use this instead of
+   * defaultColorScheme — it wins over any scheme persisted in the user's
+   * localStorage from earlier sessions.
+   */
+  forceColorScheme?: 'light' | 'dark';
   children: React.ReactNode;
 }
 
@@ -65,7 +71,7 @@ const tokenMap = (theme: PolisTheme): Record<string, string> => ({
  *  3. Exposes the active `PolisTheme` via React context for components
  *     that need JS access (see `usePolisTheme`).
  */
-export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, defaultColorScheme, children }) => {
+export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, defaultColorScheme, forceColorScheme, children }) => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
@@ -90,7 +96,7 @@ export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, defaultColo
   }, [theme]);
 
   return (
-    <MantineProvider theme={theme.mantineTheme} defaultColorScheme={defaultColorScheme}>
+    <MantineProvider theme={theme.mantineTheme} defaultColorScheme={defaultColorScheme} forceColorScheme={forceColorScheme}>
       <PolisThemeContext.Provider value={theme}>{children}</PolisThemeContext.Provider>
     </MantineProvider>
   );

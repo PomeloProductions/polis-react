@@ -36,6 +36,8 @@
     "./models/*": "./src/models/*.ts",
     "./data/*": "./src/data/*.ts",
     "./components/PolisProvider": "./src/components/PolisProvider/index.tsx",
+    "./components/LogViewer": "./src/components/LogViewer/index.tsx",
+    "./components/LogViewer/useLogStream": "./src/components/LogViewer/useLogStream.ts",
     "./theme": "./src/theme/index.ts",
     "./theme/PolisTheme": "./src/theme/PolisTheme.ts",
     "./theme/PolisThemeContext": "./src/theme/PolisThemeContext.tsx",

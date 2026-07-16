@@ -30,6 +30,17 @@ export { default as InputWrapper } from './components/InputWrapper';
 export { default as LoadingScreen } from './components/LoadingScreen';
 export { default as NetworkError } from './components/Errors/NetworkError';
 
+// ───── Live log viewer (SSE deployment logs) ─────
+export { default as LogViewer } from './components/LogViewer';
+export type { LogViewerProps } from './components/LogViewer';
+export { useLogStream, parseLogLine } from './components/LogViewer/useLogStream';
+export type {
+  LogLine,
+  LogStreamStatus,
+  UseLogStreamOptions,
+  UseLogStreamResult,
+} from './components/LogViewer/useLogStream';
+
 // ───── Auth forms (render-prop pattern) ─────
 export { default as SignInForm } from './components/Forms/SignInForm';
 export { default as SignUpForm } from './components/Forms/SignUpForm';

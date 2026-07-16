@@ -12,6 +12,15 @@ export { default as Footnote } from './Footnote';
 export { default as InputWrapper } from './InputWrapper';
 export { default as LoadingScreen } from './LoadingScreen';
 export { default as LoadingIndicator } from './LoadingIndicator';
+export { default as LogViewer } from './LogViewer';
+export type { LogViewerProps } from './LogViewer';
+export { useLogStream, parseLogLine } from './LogViewer/useLogStream';
+export type {
+  LogLine,
+  LogStreamStatus,
+  UseLogStreamOptions,
+  UseLogStreamResult,
+} from './LogViewer/useLogStream';
 export { default as Menu } from './Menu';
 export { default as NetworkError } from './Errors/NetworkError';
 export { default as ServerAlert } from './ServerAlert';

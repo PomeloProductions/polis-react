@@ -110,6 +110,17 @@ export function isSuperUser(user: User): boolean {
 }
 
 /**
+ * Whether the user is an app-level super admin. Unlike {@link isSuperUser},
+ * this null-safe variant accepts `null` / `undefined` so it can gate UI
+ * directly from a possibly-unloaded `me`. Requires `me.roles` to be populated
+ * (fetch with `AuthRequests.getMeWithOrganizations`, which expands `roles`).
+ * @param user the current user, or null/undefined if not loaded
+ */
+export function isSuperAdmin(user: User | null | undefined): boolean {
+  return !!user?.roles?.some((role) => role.id === AvailableRoles.SuperAdmin);
+}
+
+/**
  * tells us whether there is a bisection between the user, the organization, and the roles passed through
  * @param user
  * @param organization

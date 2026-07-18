@@ -45,6 +45,18 @@ export type {
   ResetPasswordValues,
 } from './components/Forms/ResetPasswordForm';
 
+// ───── Settings forms (presentational, behavior via onSubmit) ─────
+export { default as ChangePasswordForm } from './components/Forms/ChangePasswordForm';
+export type {
+  ChangePasswordFormProps,
+  ChangePasswordValues,
+} from './components/Forms/ChangePasswordForm';
+export { default as OrganizationForm } from './components/Forms/OrganizationForm';
+export type {
+  OrganizationFormProps,
+  OrganizationValues,
+} from './components/Forms/OrganizationForm';
+
 // ───── Default page compositions ─────
 export { default as SignInPage } from './pages/Auth/SignInPage';
 export type { SignInPageProps, AuthPageBranding } from './pages/Auth/SignInPage';
@@ -58,6 +70,33 @@ export { default as WelcomePage } from './pages/Welcome';
 export type { WelcomePageProps } from './pages/Welcome';
 export { default as DashboardPage } from './pages/Dashboard';
 export type { DashboardPageProps } from './pages/Dashboard';
+
+// ───── Settings pages (drop-in account/organization settings) ─────
+export { default as SettingsPage } from './pages/Settings/SettingsPage';
+// `SettingsLayout` is an alias for the same drop-in composition.
+export { default as SettingsLayout } from './pages/Settings/SettingsPage';
+export type { SettingsPageProps } from './pages/Settings/SettingsPage';
+export { default as AccountPage } from './pages/Settings/AccountPage';
+// `AccountSettings` is an alias for `AccountPage`.
+export { default as AccountSettings } from './pages/Settings/AccountPage';
+export type { AccountPageProps } from './pages/Settings/AccountPage';
+export { default as MyOrganizationPage } from './pages/Settings/MyOrganizationPage';
+// `OrganizationSettings` is an alias for `MyOrganizationPage`.
+export { default as OrganizationSettings } from './pages/Settings/MyOrganizationPage';
+export type { MyOrganizationPageProps } from './pages/Settings/MyOrganizationPage';
+export { default as OrganizationsAdminPage } from './pages/Settings/OrganizationsAdminPage';
+export type { OrganizationsAdminPageProps } from './pages/Settings/OrganizationsAdminPage';
+
+// ───── Settings request helpers + role gating ─────
+export { default as OrganizationRequests } from './services/requests/OrganizationRequests';
+export type {
+  OrganizationPayload,
+  ListOrganizationsParams,
+} from './services/requests/OrganizationRequests';
+export { isSuperAdmin, isSuperUser } from './models/user/user';
+export { SUPER_ADMIN_ROLE_ID, AvailableRoles } from './models/role';
+export type { default as Organization } from './models/organization/organization';
+export type { default as OrganizationManager } from './models/organization/organization-manager';
 
 // ───── Util helpers ─────
 export {
@@ -88,3 +127,6 @@ export {
   urlRegExp,
   validateRegexMatch,
 } from './util/regex';
+
+export { parseApiError, firstFieldErrors } from './util/api-errors';
+export type { FieldErrors, ParsedApiError } from './util/api-errors';

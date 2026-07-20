@@ -71,7 +71,12 @@ const tokenMap = (theme: PolisTheme): Record<string, string> => ({
  *  3. Exposes the active `PolisTheme` via React context for components
  *     that need JS access (see `usePolisTheme`).
  */
-export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, defaultColorScheme, forceColorScheme, children }) => {
+export const PolisProvider: React.FC<PolisProviderProps> = ({
+  theme,
+  defaultColorScheme,
+  forceColorScheme,
+  children,
+}) => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
@@ -96,7 +101,11 @@ export const PolisProvider: React.FC<PolisProviderProps> = ({ theme, defaultColo
   }, [theme]);
 
   return (
-    <MantineProvider theme={theme.mantineTheme} defaultColorScheme={defaultColorScheme} forceColorScheme={forceColorScheme}>
+    <MantineProvider
+      theme={theme.mantineTheme}
+      defaultColorScheme={defaultColorScheme}
+      forceColorScheme={forceColorScheme}
+    >
       <PolisThemeContext.Provider value={theme}>{children}</PolisThemeContext.Provider>
     </MantineProvider>
   );

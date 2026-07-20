@@ -9,3 +9,5 @@ export * from './AuthManager';
 export { default as AuthRequests } from './requests/AuthRequests';
 export type { LoginReq, SignUpData } from './requests/AuthRequests';
 export { default as ResetPasswordRequests } from './requests/ResetPasswordRequests';
+export { default as OrganizationRequests } from './requests/OrganizationRequests';
+export type { OrganizationPayload, ListOrganizationsParams } from './requests/OrganizationRequests';

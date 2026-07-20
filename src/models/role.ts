@@ -16,6 +16,14 @@ export default interface Role extends BaseModel {
   description?: string;
 }
 
+/**
+ * The `SUPER_ADMIN` role id from polis-laravel (`Polis\Models\Role::SUPER_ADMIN`).
+ * Roles are keyed by numeric id, not slug — SUPER_ADMIN is 2 (an alias of
+ * {@link AvailableRoles.SuperAdmin}). Used to gate the super-admin-only
+ * Organizations management section in the Settings scaffolding.
+ */
+export const SUPER_ADMIN_ROLE_ID: number = AvailableRoles.SuperAdmin;
+
 export const placeholderRole = (): Role => ({
   name: '',
 });

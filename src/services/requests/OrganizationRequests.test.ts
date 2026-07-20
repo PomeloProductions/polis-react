@@ -39,6 +39,30 @@ describe('OrganizationRequests', () => {
     expect(result).toEqual({ id: 2 });
   });
 
+  test('getOrganization GETs /organizations/:id', async () => {
+    getMock.mockResolvedValueOnce({ data: { id: 4, name: 'Acme' } });
+    const result = await OrganizationRequests.getOrganization(4);
+    expect(getMock).toHaveBeenCalledWith('/organizations/4');
+    expect(result).toEqual({ id: 4, name: 'Acme' });
+  });
+
+  test('updateOrganization PUTs /organizations/:id with payload', async () => {
+    putMock.mockResolvedValueOnce({ data: { id: 4, name: 'New' } });
+    const result = await OrganizationRequests.updateOrganization(4, { name: 'New' });
+    expect(putMock).toHaveBeenCalledWith('/organizations/4', { name: 'New' });
+    expect(result).toEqual({ id: 4, name: 'New' });
+  });
+
+  test('listOrganizations GETs /organizations with page/limit params', async () => {
+    getMock.mockResolvedValueOnce({
+      data: { data: [{ id: 1 }], total: 1, current_page: 1, per_page: 50, last_page: 1 },
+    });
+    const result = await OrganizationRequests.listOrganizations({ limit: 50, page: 1 });
+    expect(getMock).toHaveBeenCalledWith('/organizations', { params: { limit: 50, page: 1 } });
+    expect(result.data).toEqual([{ id: 1 }]);
+    expect(result.total).toBe(1);
+  });
+
   test('createOrganizationManager POSTs to /organizations/:id/organization-managers', async () => {
     postMock.mockResolvedValueOnce({ data: { id: 3 } });
     const result = await OrganizationRequests.createOrganizationManager(7, {

@@ -13,3 +13,4 @@ export * from './collection-utils';
 export * from './view';
 export * from './const';
 export * from './types';
+export * from './api-errors';

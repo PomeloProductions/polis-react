@@ -56,8 +56,16 @@
     "./components/Templates/TemplateEditor": "./src/components/Templates/TemplateEditor/index.tsx",
     "./pages/Admin/Templates": "./src/pages/Admin/Templates/index.tsx",
     "./services/MessagingTemplateRequests": "./src/services/requests/MessagingTemplateRequests.ts",
+    "./services/OrganizationRequests": "./src/services/requests/OrganizationRequests.ts",
     "./models/messaging-template": "./src/models/messaging-template.ts",
-    "./util/template-interpolate": "./src/util/template-interpolate.ts"
+    "./util/template-interpolate": "./src/util/template-interpolate.ts",
+    "./util/api-errors": "./src/util/api-errors.ts",
+    "./components/Forms/ChangePasswordForm": "./src/components/Forms/ChangePasswordForm/index.tsx",
+    "./components/Forms/OrganizationForm": "./src/components/Forms/OrganizationForm/index.tsx",
+    "./pages/Settings/SettingsPage": "./src/pages/Settings/SettingsPage/index.tsx",
+    "./pages/Settings/AccountPage": "./src/pages/Settings/AccountPage/index.tsx",
+    "./pages/Settings/MyOrganizationPage": "./src/pages/Settings/MyOrganizationPage/index.tsx",
+    "./pages/Settings/OrganizationsAdminPage": "./src/pages/Settings/OrganizationsAdminPage/index.tsx"
   },
   "peerDependencies": {
     "@mantine/core": "^7 || ^8",

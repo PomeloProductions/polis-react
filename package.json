@@ -65,7 +65,11 @@
     "./pages/Settings/SettingsPage": "./src/pages/Settings/SettingsPage/index.tsx",
     "./pages/Settings/AccountPage": "./src/pages/Settings/AccountPage/index.tsx",
     "./pages/Settings/MyOrganizationPage": "./src/pages/Settings/MyOrganizationPage/index.tsx",
-    "./pages/Settings/OrganizationsAdminPage": "./src/pages/Settings/OrganizationsAdminPage/index.tsx"
+    "./pages/Settings/OrganizationsAdminPage": "./src/pages/Settings/OrganizationsAdminPage/index.tsx",
+    "./util/node-tree-utils": "./src/util/node-tree-utils.ts",
+    "./util/page-type-registry": "./src/util/page-type-registry.ts",
+    "./components/NodeTreeRenderer": "./src/components/NodeTreeRenderer/index.tsx",
+    "./components/ComponentRegistry": "./src/components/ComponentRegistry/index.ts"
   },
   "peerDependencies": {
     "@mantine/core": "^7 || ^8",

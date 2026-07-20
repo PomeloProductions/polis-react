@@ -130,3 +130,32 @@ export {
 
 export { parseApiError, firstFieldErrors } from './util/api-errors';
 export type { FieldErrors, ParsedApiError } from './util/api-errors';
+
+// ───── Generic node-tree framework (domain-agnostic) ─────
+export { default as NodeTreeRenderer } from './components/NodeTreeRenderer';
+export type {
+  NodeTreeRendererProps,
+  NodeRenderArgs,
+  NodeRenderDelegate,
+} from './components/NodeTreeRenderer';
+export { createComponentRegistry, defaultComponentRegistry } from './components/ComponentRegistry';
+export type {
+  ComponentRegistry,
+  ComponentProps,
+  RegisterableComponent,
+} from './components/ComponentRegistry';
+export {
+  getNodeAtPath,
+  updateNodeAtPath,
+  removeNodeAtPath,
+  addChildAtPath,
+  findNodeById,
+  removeChildAtPath,
+  moveNode,
+  moveChildAtPath,
+  nestNodeInto,
+  makeId,
+} from './util/node-tree-utils';
+export type { TreeNode, NodePath } from './util/node-tree-utils';
+export { createPageTypeRegistry, defaultPageTypeRegistry } from './util/page-type-registry';
+export type { PageTypeRegistry, PageTypeConfig, PageTypeContext } from './util/page-type-registry';

@@ -4,12 +4,12 @@ import { IconPlus } from '@tabler/icons-react';
 import OrganizationRequests, {
   ListOrganizationsParams,
   OrganizationPayload,
-} from '../../../services/requests/OrganizationRequests';
-import Organization from '../../../models/organization/organization';
-import Page from '../../../models/page';
+} from '../../services/requests/OrganizationRequests';
+import Organization from '../../models/organization/organization';
+import Page from '../../models/page';
 import OrganizationModal from './OrganizationModal';
 
-export interface OrganizationsAdminPageProps {
+export interface OrganizationsPageProps {
   /**
    * Override the list call. Defaults to `OrganizationRequests.listOrganizations`.
    */
@@ -39,9 +39,10 @@ const formatDate = (value?: string | null): string =>
  * Super-admin-only page: manage ALL organizations (list / view-edit / create).
  * Lists every org via `GET /v1/organizations` (super-admin-authorized on the
  * backend). This component does NOT gate itself — the consumer decides whether
- * to render it (e.g. `isSuperAdmin(me) && <OrganizationsAdminPage />`).
+ * to render it (e.g. `isSuperAdmin(me) && <OrganizationsPage />`), and mounts it
+ * as a top-level (super-admin-gated) nav page rather than a Settings tab.
  */
-const OrganizationsAdminPage: React.FC<OrganizationsAdminPageProps> = ({
+const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
   onListOrganizations,
   onCreateOrganization,
   onUpdateOrganization,
@@ -151,4 +152,4 @@ const OrganizationsAdminPage: React.FC<OrganizationsAdminPageProps> = ({
   );
 };
 
-export default OrganizationsAdminPage;
+export default OrganizationsPage;

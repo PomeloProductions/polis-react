@@ -84,8 +84,15 @@ export { default as MyOrganizationPage } from './pages/Settings/MyOrganizationPa
 // `OrganizationSettings` is an alias for `MyOrganizationPage`.
 export { default as OrganizationSettings } from './pages/Settings/MyOrganizationPage';
 export type { MyOrganizationPageProps } from './pages/Settings/MyOrganizationPage';
-export { default as OrganizationsAdminPage } from './pages/Settings/OrganizationsAdminPage';
-export type { OrganizationsAdminPageProps } from './pages/Settings/OrganizationsAdminPage';
+
+// ───── Super-admin Organizations management (standalone top-level page) ─────
+// The "All organizations" surface is no longer a Settings tab; consumers mount
+// this as a super-admin-gated top-level nav page.
+export { default as OrganizationsPage } from './pages/OrganizationsPage';
+export type { OrganizationsPageProps } from './pages/OrganizationsPage';
+// `OrganizationsAdminPage` is a backward-compatible alias for `OrganizationsPage`.
+export { default as OrganizationsAdminPage } from './pages/OrganizationsPage';
+export type { OrganizationsPageProps as OrganizationsAdminPageProps } from './pages/OrganizationsPage';
 
 // ───── Settings request helpers + role gating ─────
 export { default as OrganizationRequests } from './services/requests/OrganizationRequests';

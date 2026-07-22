@@ -35,6 +35,8 @@
     "./models": "./src/models/index.ts",
     "./models/*": "./src/models/*.ts",
     "./data/*": "./src/data/*.ts",
+    "./data/AppContext": "./src/data/AppContext.tsx",
+    "./data/connect": "./src/data/connect.tsx",
     "./components/PolisProvider": "./src/components/PolisProvider/index.tsx",
     "./theme": "./src/theme/index.ts",
     "./theme/PolisTheme": "./src/theme/PolisTheme.ts",

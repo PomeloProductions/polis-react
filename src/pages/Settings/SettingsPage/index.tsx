@@ -1,10 +1,9 @@
 import React, { ReactNode, useState } from 'react';
 import { Group, Stack, Tabs, Title } from '@mantine/core';
-import { IconBuilding, IconSettings, IconShieldLock, IconUser } from '@tabler/icons-react';
+import { IconBuilding, IconSettings, IconUser } from '@tabler/icons-react';
 import User from '../../../models/user/user';
 import AccountPage from '../AccountPage';
 import MyOrganizationPage from '../MyOrganizationPage';
-import OrganizationsAdminPage from '../OrganizationsAdminPage';
 
 export interface SettingsPageProps {
   /**
@@ -13,11 +12,6 @@ export interface SettingsPageProps {
    * consumer so this page stays decoupled from the Redux-coupled MeContext.
    */
   me: Pick<User, 'id' | 'email' | 'organization_managers'>;
-  /**
-   * Whether to render the super-admin "Organizations" tab. The GATING decision
-   * is the consumer's — e.g. pass `isSuperAdmin(me)`. Defaults to `false`.
-   */
-  showOrganizationsAdmin?: boolean;
   /**
    * Page heading. Defaults to "Settings".
    */
@@ -30,20 +24,16 @@ export interface SettingsPageProps {
 }
 
 /**
- * Drop-in Settings composition: Account (change password) + My organization +
- * (optional) super-admin Organizations, as Mantine tabs. Mount one component
- * and pass the injected `me`. The super-admin tab is shown only when the
- * consumer passes `showOrganizationsAdmin` (the gating decision is theirs — the
- * backend enforces its own gate on `GET /v1/organizations`).
+ * Drop-in Settings composition: Account (change password) + My organization,
+ * as Mantine tabs. Mount one component and pass the injected `me`.
+ *
+ * The super-admin "All organizations" management surface is NOT part of
+ * Settings — it lives in the standalone `OrganizationsPage` component, which
+ * consumers mount as a top-level (super-admin-gated) nav page.
  *
  * Exported both as `SettingsPage` and `SettingsLayout`.
  */
-const SettingsPage: React.FC<SettingsPageProps> = ({
-  me,
-  showOrganizationsAdmin = false,
-  title = 'Settings',
-  headerIcon,
-}) => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ me, title = 'Settings', headerIcon }) => {
   const [tab, setTab] = useState<string | null>('account');
 
   return (
@@ -61,11 +51,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           <Tabs.Tab value="organization" leftSection={<IconBuilding size={16} />}>
             My organization
           </Tabs.Tab>
-          {showOrganizationsAdmin && (
-            <Tabs.Tab value="organizations" leftSection={<IconShieldLock size={16} />}>
-              Organizations
-            </Tabs.Tab>
-          )}
         </Tabs.List>
 
         <Tabs.Panel value="account" pt="md">
@@ -74,11 +59,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <Tabs.Panel value="organization" pt="md">
           <MyOrganizationPage me={me} />
         </Tabs.Panel>
-        {showOrganizationsAdmin && (
-          <Tabs.Panel value="organizations" pt="md">
-            <OrganizationsAdminPage />
-          </Tabs.Panel>
-        )}
       </Tabs>
     </Stack>
   );

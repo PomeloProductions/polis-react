@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import OrganizationForm from '../../../components/Forms/OrganizationForm';
-import { OrganizationPayload } from '../../../services/requests/OrganizationRequests';
-import Organization from '../../../models/organization/organization';
+import OrganizationForm from '../../components/Forms/OrganizationForm';
+import { OrganizationPayload } from '../../services/requests/OrganizationRequests';
+import Organization from '../../models/organization/organization';
 
 export interface OrganizationModalProps {
   opened: boolean;

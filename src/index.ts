@@ -56,6 +56,14 @@ export type {
   OrganizationFormProps,
   OrganizationValues,
 } from './components/Forms/OrganizationForm';
+export {
+  default as InviteMemberForm,
+  DEFAULT_INVITE_ROLES,
+} from './components/Forms/InviteMemberForm';
+export type {
+  InviteMemberFormProps,
+  InviteMemberValues,
+} from './components/Forms/InviteMemberForm';
 
 // ───── Default page compositions ─────
 export { default as SignInPage } from './pages/Auth/SignInPage';
@@ -66,6 +74,8 @@ export { default as ForgotPasswordPage } from './pages/Auth/ForgotPasswordPage';
 export type { ForgotPasswordPageProps } from './pages/Auth/ForgotPasswordPage';
 export { default as ResetPasswordPage } from './pages/Auth/ResetPasswordPage';
 export type { ResetPasswordPageProps } from './pages/Auth/ResetPasswordPage';
+export { default as AcceptInvitationPage } from './pages/Auth/AcceptInvitationPage';
+export type { AcceptInvitationPageProps } from './pages/Auth/AcceptInvitationPage';
 export { default as WelcomePage } from './pages/Welcome';
 export type { WelcomePageProps } from './pages/Welcome';
 export { default as DashboardPage } from './pages/Dashboard';
@@ -94,16 +104,36 @@ export type { OrganizationsPageProps } from './pages/OrganizationsPage';
 export { default as OrganizationsAdminPage } from './pages/OrganizationsPage';
 export type { OrganizationsPageProps as OrganizationsAdminPageProps } from './pages/OrganizationsPage';
 
+// ───── Organization detail (tabbed Users / Contracts / Invoices) ─────
+// Consumers mount this scoped to an org the user may view, injecting any
+// app-specific tabs (e.g. client-driver's "Services") via `extraTabs`.
+export { default as OrganizationDetailPage } from './pages/OrganizationDetailPage';
+export type {
+  OrganizationDetailPageProps,
+  OrganizationDetailExtraTab,
+} from './pages/OrganizationDetailPage';
+
 // ───── Settings request helpers + role gating ─────
 export { default as OrganizationRequests } from './services/requests/OrganizationRequests';
 export type {
   OrganizationPayload,
   ListOrganizationsParams,
+  InviteOrganizationManagerPayload,
 } from './services/requests/OrganizationRequests';
-export { isSuperAdmin, isSuperUser } from './models/user/user';
-export { SUPER_ADMIN_ROLE_ID, AvailableRoles } from './models/role';
+export {
+  isSuperAdmin,
+  isSuperUser,
+  canFillRole,
+  canManageOrganization,
+  canInviteMembers,
+  managedOrganizationIds,
+} from './models/user/user';
+export type { UserRoleScope } from './models/user/user';
+export { SUPER_ADMIN_ROLE_ID, AvailableRoles, getRoleName } from './models/role';
 export type { default as Organization } from './models/organization/organization';
 export type { default as OrganizationManager } from './models/organization/organization-manager';
+export type { default as OrganizationArticle } from './models/organization/organization-article';
+export type { default as OrganizationPayment } from './models/organization/organization-payment';
 
 // ───── Util helpers ─────
 export {

@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from 'react';
-import { Button, Form, FormControl, FormLabel, Spinner } from 'react-bootstrap';
+import { Button, Form, FormControl, FormGroup, FormLabel, Spinner } from 'react-bootstrap';
 import { FormikErrors, FormikProps, useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -131,53 +131,57 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     form.submitCount > 0 && Boolean(form.errors[field]);
 
   return (
-    <Form onSubmit={(e) => form.handleSubmit(e)}>
-      <FormLabel htmlFor="change-password">
-        {showFieldError('password') ? (
-          <p className="error">{form.errors.password as string}</p>
-        ) : (
-          <p>New Password</p>
-        )}
-      </FormLabel>
-      <FormControl
-        id="change-password"
-        type="password"
-        autoComplete="new-password"
-        value={form.values.password}
-        disabled={form.isSubmitting}
-        onInput={(e) => form.setFieldValue('password', e.currentTarget.value)}
-      />
+    <Form onSubmit={(e) => form.handleSubmit(e)} className="d-flex flex-column gap-3">
+      <FormGroup controlId="change-password">
+        <FormLabel className="mb-1">
+          {showFieldError('password') ? (
+            <span className="error">{form.errors.password as string}</span>
+          ) : (
+            'New Password'
+          )}
+        </FormLabel>
+        <FormControl
+          type="password"
+          autoComplete="new-password"
+          value={form.values.password}
+          disabled={form.isSubmitting}
+          onInput={(e) => form.setFieldValue('password', e.currentTarget.value)}
+        />
+      </FormGroup>
 
-      <FormLabel htmlFor="change-password-confirm">
-        {showFieldError('password_confirmation') ? (
-          <p className="error">{form.errors.password_confirmation as string}</p>
-        ) : (
-          <p>Confirm New Password</p>
-        )}
-      </FormLabel>
-      <FormControl
-        id="change-password-confirm"
-        type="password"
-        autoComplete="new-password"
-        value={form.values.password_confirmation}
-        disabled={form.isSubmitting}
-        onInput={(e) => form.setFieldValue('password_confirmation', e.currentTarget.value)}
-      />
+      <FormGroup controlId="change-password-confirm">
+        <FormLabel className="mb-1">
+          {showFieldError('password_confirmation') ? (
+            <span className="error">{form.errors.password_confirmation as string}</span>
+          ) : (
+            'Confirm New Password'
+          )}
+        </FormLabel>
+        <FormControl
+          type="password"
+          autoComplete="new-password"
+          value={form.values.password_confirmation}
+          disabled={form.isSubmitting}
+          onInput={(e) => form.setFieldValue('password_confirmation', e.currentTarget.value)}
+        />
+      </FormGroup>
 
       {additionalFields ? additionalFields(form) : null}
 
-      <Button type="submit" disabled={form.isSubmitting}>
-        {form.isSubmitting ? (
-          <>
-            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />{' '}
-            Updating…
-          </>
-        ) : (
-          (submitLabel ?? 'Update password')
-        )}
-      </Button>
+      <div className="d-flex justify-content-end">
+        <Button type="submit" disabled={form.isSubmitting}>
+          {form.isSubmitting ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />{' '}
+              Updating…
+            </>
+          ) : (
+            (submitLabel ?? 'Update password')
+          )}
+        </Button>
+      </div>
 
-      {generalError && <p className="error">{generalError}</p>}
+      {generalError && <p className="error mb-0">{generalError}</p>}
     </Form>
   );
 };

@@ -23,6 +23,12 @@ export interface OrganizationsPageProps {
    */
   onUpdateOrganization?: (orgId: number, payload: OrganizationPayload) => Promise<Organization>;
   /**
+   * When provided, each row becomes clickable and a "View" action is shown,
+   * invoking this with the selected organization — e.g. to navigate to an
+   * `OrganizationDetailPage` route. When omitted, rows only offer "Edit".
+   */
+  onSelectOrganization?: (org: Organization) => void;
+  /**
    * Page size for the org list. Defaults to 50.
    */
   pageSize?: number;
@@ -46,6 +52,7 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
   onListOrganizations,
   onCreateOrganization,
   onUpdateOrganization,
+  onSelectOrganization,
   pageSize = 50,
   title = 'All organizations',
 }) => {
@@ -118,14 +125,39 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
               </Table.Thead>
               <Table.Tbody>
                 {orgs.map((org) => (
-                  <Table.Tr key={org.id}>
+                  <Table.Tr
+                    key={org.id}
+                    onClick={onSelectOrganization ? () => onSelectOrganization(org) : undefined}
+                    style={onSelectOrganization ? { cursor: 'pointer' } : undefined}
+                  >
                     <Table.Td>{org.id}</Table.Td>
                     <Table.Td>{org.name}</Table.Td>
                     <Table.Td>{formatDate(org.created_at)}</Table.Td>
                     <Table.Td>
-                      <Button size="xs" variant="subtle" onClick={() => openEdit(org)}>
-                        Edit
-                      </Button>
+                      <Group gap="xs" justify="flex-end" wrap="nowrap">
+                        {onSelectOrganization && (
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectOrganization(org);
+                            }}
+                          >
+                            View
+                          </Button>
+                        )}
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(org);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ))}

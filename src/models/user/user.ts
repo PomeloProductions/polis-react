@@ -110,13 +110,20 @@ export function isSuperUser(user: User): boolean {
 }
 
 /**
+ * The subset of `User` the null-safe UI role-gates read. Lets callers pass a
+ * partially-loaded `me` (e.g. `Pick<User, 'roles' | 'organization_managers'>`)
+ * rather than a full user model.
+ */
+export type UserRoleScope = Pick<User, 'roles' | 'organization_managers'>;
+
+/**
  * Whether the user is an app-level super admin. Unlike {@link isSuperUser},
  * this null-safe variant accepts `null` / `undefined` so it can gate UI
  * directly from a possibly-unloaded `me`. Requires `me.roles` to be populated
  * (fetch with `AuthRequests.getMeWithOrganizations`, which expands `roles`).
  * @param user the current user, or null/undefined if not loaded
  */
-export function isSuperAdmin(user: User | null | undefined): boolean {
+export function isSuperAdmin(user: Pick<User, 'roles'> | null | undefined): boolean {
   return !!user?.roles?.some((role) => role.id === AvailableRoles.SuperAdmin);
 }
 
@@ -139,6 +146,63 @@ export function canFillRole(
     isSuperUser(user) ||
     relatedOrganizationManagers.find((i) => roles.indexOf(i.role_id) !== -1) !== undefined
   );
+}
+
+/**
+ * Whether the user can manage the given organization at all — i.e. is a
+ * super admin, or is an organization manager of that org in any role
+ * (ADMINISTRATOR or MANAGER). Null-safe so it can gate UI directly from a
+ * possibly-unloaded `me`. Requires `me.roles` + `me.organization_managers`
+ * to be populated (fetch via `AuthRequests.getMeWithOrganizations`).
+ *
+ * @param user the current user, or null/undefined if not loaded
+ * @param organizationId the organization to check management of
+ */
+export function canManageOrganization(
+  user: UserRoleScope | null | undefined,
+  organizationId: number,
+): boolean {
+  if (!user) return false;
+  if (isSuperAdmin(user)) return true;
+  return !!user.organization_managers?.some((m) => m.organization_id === organizationId);
+}
+
+/**
+ * Whether the user can invite/remove members of the given organization. Only
+ * super admins and ADMINISTRATORs of that org may manage membership; plain
+ * MANAGERs may not. Null-safe. Requires `me.roles` +
+ * `me.organization_managers` (fetch via `AuthRequests.getMeWithOrganizations`).
+ *
+ * @param user the current user, or null/undefined if not loaded
+ * @param organizationId the organization to check invite rights for
+ */
+export function canInviteMembers(
+  user: UserRoleScope | null | undefined,
+  organizationId: number,
+): boolean {
+  if (!user) return false;
+  if (isSuperAdmin(user)) return true;
+  return !!user.organization_managers?.some(
+    (m) => m.organization_id === organizationId && m.role_id === AvailableRoles.Administrator,
+  );
+}
+
+/**
+ * The distinct set of organization ids the user manages. Super admins may see
+ * any org (callers should check `isSuperAdmin` first); everyone else is scoped
+ * to the orgs returned here. Null-safe.
+ *
+ * @param user the current user, or null/undefined if not loaded
+ */
+export function managedOrganizationIds(
+  user: Pick<User, 'organization_managers'> | null | undefined,
+): number[] {
+  if (!user?.organization_managers) return [];
+  const ids = new Set<number>();
+  for (const m of user.organization_managers) {
+    if (m.organization_id != null) ids.add(m.organization_id);
+  }
+  return Array.from(ids);
 }
 
 /**

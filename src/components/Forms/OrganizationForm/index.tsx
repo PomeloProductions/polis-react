@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { Button, Form, FormControl, FormLabel, Spinner } from 'react-bootstrap';
+import { Button, Form, FormControl, FormGroup, FormLabel, Spinner } from 'react-bootstrap';
 import { FormikErrors, FormikProps, useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -127,37 +127,40 @@ function OrganizationForm<TExtra extends Record<string, unknown> = Record<string
     form.submitCount > 0 && Boolean(form.errors[field]);
 
   return (
-    <Form onSubmit={(e) => form.handleSubmit(e)}>
-      <FormLabel htmlFor="organization-name">
-        {showFieldError('name') ? (
-          <p className="error">{form.errors.name as string}</p>
-        ) : (
-          <p>Organization Name</p>
-        )}
-      </FormLabel>
-      <FormControl
-        id="organization-name"
-        type="text"
-        maxLength={nameMaxLength}
-        value={form.values.name}
-        disabled={form.isSubmitting}
-        onInput={(e) => form.setFieldValue('name', e.currentTarget.value)}
-      />
+    <Form onSubmit={(e) => form.handleSubmit(e)} className="d-flex flex-column gap-3">
+      <FormGroup controlId="organization-name">
+        <FormLabel className="mb-1">
+          {showFieldError('name') ? (
+            <span className="error">{form.errors.name as string}</span>
+          ) : (
+            'Organization Name'
+          )}
+        </FormLabel>
+        <FormControl
+          type="text"
+          maxLength={nameMaxLength}
+          value={form.values.name}
+          disabled={form.isSubmitting}
+          onInput={(e) => form.setFieldValue('name', e.currentTarget.value)}
+        />
+      </FormGroup>
 
       {additionalFields ? additionalFields(form) : null}
 
-      <Button type="submit" disabled={form.isSubmitting}>
-        {form.isSubmitting ? (
-          <>
-            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />{' '}
-            Saving…
-          </>
-        ) : (
-          (submitLabel ?? 'Save')
-        )}
-      </Button>
+      <div className="d-flex justify-content-end">
+        <Button type="submit" disabled={form.isSubmitting}>
+          {form.isSubmitting ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />{' '}
+              Saving…
+            </>
+          ) : (
+            (submitLabel ?? 'Save')
+          )}
+        </Button>
+      </div>
 
-      {generalError && <p className="error">{generalError}</p>}
+      {generalError && <p className="error mb-0">{generalError}</p>}
     </Form>
   );
 }

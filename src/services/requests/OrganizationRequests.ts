@@ -1,7 +1,27 @@
 import api from '../api';
 import Organization from '../../models/organization/organization';
 import OrganizationManager from '../../models/organization/organization-manager';
+import OrganizationArticle from '../../models/organization/organization-article';
+import OrganizationPayment from '../../models/organization/organization-payment';
 import Page from '../../models/page';
+
+/**
+ * Body for {@link OrganizationRequests.inviteOrganizationManager}. Invites a
+ * user (by email) to manage an organization at a given role. If no account
+ * exists for the email yet the backend sends an invitation email carrying an
+ * `invitation_token` link; the invitee activates via the accept-invitation
+ * page (which signs them up with that token).
+ */
+export interface InviteOrganizationManagerPayload {
+  /**
+   * The email address to invite.
+   */
+  email: string;
+  /**
+   * The role id to grant (ADMINISTRATOR = 10, MANAGER = 11).
+   */
+  role_id: number;
+}
 
 /**
  * Editable fields on an organization the Settings scaffolding writes.
@@ -162,5 +182,82 @@ export default class OrganizationRequests {
         '/organization-managers/' +
         organizationManager.id,
     );
+  }
+
+  /**
+   * Lists the managers (members) of an organization for the Users tab of the
+   * Organization detail page.
+   *
+   * Backend endpoint: GET /v1/organizations/{organization}/organization-managers
+   * — returns the Athenia paginated envelope. Authorized for managers of that
+   * org / super admins (OrganizationManagerPolicy).
+   *
+   * @param organizationId the organization whose managers to list
+   */
+  static async listOrganizationManagers(
+    organizationId: number,
+  ): Promise<Page<OrganizationManager>> {
+    const { data } = await api.get('/organizations/' + organizationId + '/organization-managers', {
+      params: {
+        'expand[user]': '*',
+      },
+    });
+    return data as Page<OrganizationManager>;
+  }
+
+  /**
+   * Invites a user (by email) to manage an organization at a given role.
+   *
+   * Backend endpoint: POST /v1/organizations/{organization}/organization-managers
+   * with `{ email, role_id }`. When the email has no account yet the backend
+   * sends an invitation email carrying an `invitation_token` link; the invitee
+   * activates by signing up with that token via the accept-invitation page.
+   *
+   * @param organizationId the organization to invite into
+   * @param payload the invitee email + role id
+   */
+  static async inviteOrganizationManager(
+    organizationId: number,
+    payload: InviteOrganizationManagerPayload,
+  ): Promise<OrganizationManager> {
+    const { data } = await api.post(
+      '/organizations/' + organizationId + '/organization-managers',
+      payload,
+    );
+    return data as OrganizationManager;
+  }
+
+  /**
+   * Lists an organization's articles (surfaced as "Contracts" in the
+   * Organization detail page).
+   *
+   * Backend endpoint: GET /v1/organizations/{organization}/articles — returns
+   * the Athenia paginated envelope. Authorized for managers of that org /
+   * super admins (OrganizationArticlePolicy).
+   *
+   * @param organizationId the organization whose articles to list
+   */
+  static async listOrganizationArticles(
+    organizationId: number,
+  ): Promise<Page<OrganizationArticle>> {
+    const { data } = await api.get('/organizations/' + organizationId + '/articles');
+    return data as Page<OrganizationArticle>;
+  }
+
+  /**
+   * Lists an organization's payments (surfaced as "Invoices" in the
+   * Organization detail page).
+   *
+   * Backend endpoint: GET /v1/organizations/{organization}/payments — returns
+   * the Athenia paginated envelope. Authorized for managers of that org /
+   * super admins.
+   *
+   * @param organizationId the organization whose payments to list
+   */
+  static async listOrganizationPayments(
+    organizationId: number,
+  ): Promise<Page<OrganizationPayment>> {
+    const { data } = await api.get('/organizations/' + organizationId + '/payments');
+    return data as Page<OrganizationPayment>;
   }
 }

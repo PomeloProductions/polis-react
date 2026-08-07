@@ -11,8 +11,9 @@ export interface ComponentProps {
 }
 
 type LazyComponent = React.LazyExoticComponent<React.FC<ComponentProps>>;
+export type RegistrableComponent = LazyComponent | React.ComponentType<ComponentProps>;
 
-const registry: Record<string, LazyComponent> = {
+const registry: Record<string, RegistrableComponent> = {
   day_summary: lazy(() => import('./widgets/DaySummaryWidget')),
   stats_cards: lazy(() => import('./widgets/StatsCardsWidget')),
   settings_panel: lazy(() => import('./widgets/SettingsPanelWidget')),
@@ -22,7 +23,16 @@ const registry: Record<string, LazyComponent> = {
   todo_bullet_list: lazy(() => import('./widgets/TodoBulletListWidget')),
 };
 
-export function getComponent(componentType: string): LazyComponent | null {
+/**
+ * Register app-specific page components. Polis-family apps call this at
+ * startup so DynamicPage can render their widgets; app entries override
+ * built-ins with the same type.
+ */
+export function registerComponents(components: Record<string, RegistrableComponent>): void {
+  Object.assign(registry, components);
+}
+
+export function getComponent(componentType: string): RegistrableComponent | null {
   return registry[componentType] ?? null;
 }
 

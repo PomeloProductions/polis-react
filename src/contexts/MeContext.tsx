@@ -83,6 +83,20 @@ const setPersistedState = (me: User) => {
   Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
 };
 
+/**
+ * Nothing to load (no token on an optional route): leave the loading state
+ * so children render. Unlike clearMeState this does NOT mark auth as failed.
+ */
+const markLoadIdle = () => {
+  if (!persistedState.isLoading) return;
+  persistedState = {
+    ...persistedState,
+    isLoggedIn: false,
+    isLoading: false,
+  };
+  Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
+};
+
 const setNetworkError = () => {
   persistedState = {
     ...persistedState,
@@ -220,6 +234,11 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
     } else if (!tokenData?.token && !optional) {
       // No token at all — redirect to sign-in
       goToSignIn();
+    } else if (!tokenData?.token) {
+      // Optional route with no token (e.g. the sign-in page itself):
+      // there is nothing to load, so the initial isLoading must clear or
+      // the provider renders the "Getting Ready" screen forever.
+      markLoadIdle();
     }
 
     return () => {

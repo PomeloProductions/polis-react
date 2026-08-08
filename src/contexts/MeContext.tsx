@@ -229,6 +229,13 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
   useEffect(() => {
     meSubscriptions[instanceKey] = setMeContext;
 
+    // A fresh token arriving after an auth failure (e.g. user just re-signed in
+    // after a 401/logout) must be allowed to load. Reset the stale flag so
+    // loadInfo() isn't blocked by a previous session's failure.
+    if (tokenData?.token && authFailed && !meContext.me.id) {
+      authFailed = false;
+    }
+
     if (!meContext.me.id && tokenData?.token && !authFailed) {
       loadInfo();
     } else if (!tokenData?.token && !optional) {

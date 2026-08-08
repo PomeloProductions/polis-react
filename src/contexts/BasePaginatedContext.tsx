@@ -486,7 +486,9 @@ export function prepareContextState<Model extends BaseModel>(
   if (shouldLoad) {
     baseContext.initiated = true;
     baseContext.initialLoadComplete = false;
-    baseContext.loadNext().catch(console.error);
+    // Defer past the current render so setState fires after mount, not during render
+    const loadFn = baseContext.loadNext;
+    Promise.resolve().then(() => loadFn().catch(console.error));
   }
   return baseContext;
 }

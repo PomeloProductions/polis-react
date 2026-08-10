@@ -37,9 +37,6 @@ export interface CollectionItemsContextProviderProps extends BasePaginatedContex
 export const CollectionItemsContextProvider: React.FC<
   PropsWithChildren<CollectionItemsContextProviderProps>
 > = ({ collectionIds, skipCache, children }) => {
-  // Use a ref to track if this is the first render
-  const isFirstRender = useRef(true);
-
   // Initialize state from the global persistent state
   const [collectionItemsState, setCollectionItemsState] = useState<CollectionItemsContextState>(
     () => {
@@ -53,64 +50,67 @@ export const CollectionItemsContextProvider: React.FC<
     },
   );
 
+  // Callers typically pass a fresh array literal each render, so key the
+  // effect on the VALUE of the ids. Depending on the state object itself (or
+  // setting state unconditionally) re-triggers the effect on every commit --
+  // that was an infinite update loop.
+  const collectionIdsKey = collectionIds.join(',');
+
   useEffect(() => {
-    // Create a new state object with all collection states
-    const newState = { ...collectionItemsState };
+    setCollectionItemsState((prevState) => {
+      const newState = { ...prevState };
 
-    collectionIds.forEach((collectionId) => {
-      if (!newState[collectionId]) {
-        // Initialize state for this collection if it doesn't exist
-        newState[collectionId] = {
-          ...defaultBaseContext<CollectionItem>(),
-          expands: ['item', 'collectionItemCategories', 'collectionItemCategories.category'],
-          loadAll: true,
-          order: {
-            created_at: 'desc',
-          },
-          limit: 50,
-          loadedData: [],
-        };
-      }
-
-      // Prepare the context state for this collection
-      const collectionState = prepareContextState(
-        (state) => {
-          // Update both the local state and the global persistent state
-          const updatedState = {
-            ...collectionItemsState,
-            [collectionId]: state as CollectionItemContextState,
+      collectionIds.forEach((collectionId) => {
+        if (!newState[collectionId]) {
+          // Initialize state for this collection if it doesn't exist
+          newState[collectionId] = {
+            ...defaultBaseContext<CollectionItem>(),
+            expands: ['item', 'collectionItemCategories', 'collectionItemCategories.category'],
+            loadAll: true,
+            order: {
+              created_at: 'desc',
+            },
+            limit: 50,
+            loadedData: [],
           };
+        }
 
-          setCollectionItemsState(updatedState);
+        // Prepare the context state for this collection
+        const collectionState = prepareContextState(
+          (state) => {
+            // Functional update: the closure must not capture a stale
+            // snapshot of the surrounding state
+            setCollectionItemsState((prev) => ({
+              ...prev,
+              [collectionId]: state as CollectionItemContextState,
+            }));
 
-          // Update the global persistent state
-          if (!skipCache) {
-            globalPersistentState[collectionId] = state as CollectionItemContextState;
-          }
-        },
-        newState[collectionId],
-        '/collections/' + collectionId + '/items',
-      );
+            // Update the global persistent state
+            if (!skipCache) {
+              globalPersistentState[collectionId] = state as CollectionItemContextState;
+            }
+          },
+          newState[collectionId],
+          '/collections/' + collectionId + '/items',
+        );
 
-      newState[collectionId] = collectionState;
-    });
+        newState[collectionId] = collectionState;
+      });
 
-    setCollectionItemsState({ ...newState });
-    // Only update the state on first render or when collectionIds change
-    if (isFirstRender.current || collectionIds.length > 0) {
       // Update the global persistent state
       if (!skipCache) {
         Object.keys(newState).forEach((key) => {
-          const collectionId = parseInt(key, 10);
-          if (!isNaN(collectionId)) {
-            globalPersistentState[collectionId] = newState[collectionId];
+          const parsedId = parseInt(key, 10);
+          if (!isNaN(parsedId)) {
+            globalPersistentState[parsedId] = newState[parsedId];
           }
         });
       }
 
-      isFirstRender.current = false;
-    }
-  }, [collectionIds, collectionItemsState, skipCache]); // Re-run when dependencies change
+      return newState;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionIdsKey, skipCache]);
 
   return (
     <CollectionItemsContext.Provider value={collectionItemsState}>

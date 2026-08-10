@@ -4,7 +4,7 @@ import {
   defaultBaseContext,
   prepareContextState,
 } from './BasePaginatedContext';
-import React, { PropsWithChildren, useEffect, useState, useRef } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import CollectionItem from '../models/user/collection-items';
 
 export interface CollectionItemContextState extends BasePaginatedContextState<CollectionItem> {}

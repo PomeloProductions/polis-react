@@ -481,14 +481,29 @@ export function prepareContextState<Model extends BaseModel>(
 ): BasePaginatedContextState<Model> {
   baseContext.params = params;
   baseContext = createCallbacks<Model>(setContext, baseContext, endpoint);
-  // Better recovery from corrupted state - reload if no data and not refreshing
-  const shouldLoad = baseContext.loadedData.length === 0 && !baseContext.refreshing;
+  // Only load on the very first call (initiated=false). Checking `!initiated` prevents
+  // an infinite retry loop: the error handler below calls setContext, which re-runs the
+  // consumer's useEffect, which calls prepareContextState again — if we used
+  // `loadedData.length === 0` as the condition we'd loop forever on every request failure.
+  const shouldLoad = !baseContext.initiated && !baseContext.refreshing;
   if (shouldLoad) {
     baseContext.initiated = true;
     baseContext.initialLoadComplete = false;
-    // Defer past the current render so setState fires after mount, not during render
+    // Defer with setTimeout (not a microtask) so setState fires after React commits.
+    // Promise.resolve().then() is a microtask that can fire before the commit in
+    // concurrent-mode renders, triggering "state update on not yet mounted" warnings.
     const loadFn = baseContext.loadNext;
-    Promise.resolve().then(() => loadFn().catch(console.error));
+    setTimeout(() =>
+      loadFn().catch((error) => {
+        console.error(error);
+        // Unblock the page — leave it empty rather than hanging on the loader forever.
+        // initiated stays true so prepareContextState won't loop; consumers can call
+        // refreshData() to retry explicitly.
+        baseContext.initialLoadComplete = true;
+        baseContext.noResults = true;
+        setContext({ ...baseContext });
+      }),
+    0);
   }
   return baseContext;
 }

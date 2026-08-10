@@ -96,6 +96,21 @@ if (typeof document !== 'undefined') {
   });
 }
 
+// Background refresh timer: check every minute and refresh if the token is
+// due. This covers idle sessions where the user stays on one tab without
+// making any requests (the request-interceptor refresh only triggers on API
+// calls, and visibilitychange only triggers on tab switches).
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (appState) {
+      const tokenData = appState.state.persistent.tokenData;
+      if (tokenData?.token && tokenNeedsRefresh(tokenData)) {
+        attemptRefresh(tokenData.token);
+      }
+    }
+  }, 60 * 1000);
+}
+
 // ============================================================================
 // Concurrency queue helpers
 // ============================================================================

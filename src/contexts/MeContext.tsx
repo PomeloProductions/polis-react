@@ -168,6 +168,10 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       } catch (e) {
         // logOut may fail if store is in an unexpected state
       }
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath && currentPath !== '/sign-in') {
+        localStorage.setItem('login_redirect', currentPath);
+      }
       navigate('/sign-in', { replace: true });
     }
   }, [optional, logOut, navigate]);

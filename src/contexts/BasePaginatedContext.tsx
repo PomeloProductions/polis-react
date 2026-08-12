@@ -194,8 +194,13 @@ function runRequest<Model extends BaseModel>(
     .then((response: AxiosResponse) => {
       return Promise.resolve(response.data as Page<Model>);
     })
-    .catch((error: AxiosError) => {
-      if (error.name === 'CanceledError') {
+    .catch((error: AxiosError | undefined) => {
+      // A canceled request (AbortController) rejects with a CanceledError, but
+      // depending on the environment the rejection value can be undefined or a
+      // non-Error. Read `name` defensively so a canceled/leaked request never
+      // throws a secondary "Cannot read properties of undefined" that escapes as
+      // an unhandled rejection and crashes the Jest worker.
+      if (error?.name === 'CanceledError' || controller.signal.aborted) {
         delete pendingRequests[endpoint]?.[page];
         return Promise.resolve(createDummyPage<Model>());
       }
@@ -238,7 +243,7 @@ function loadPage<Model extends BaseModel>(
     }
 
     baseContext.loadedData = [
-      ...(replace ? page.data : mergePageData(page, baseContext.loadedData)),
+      ...(replace ? (page.data ?? []) : mergePageData(page, baseContext.loadedData)),
     ];
     baseContext.total = page.total;
     baseContext.lastLoadedPage = page;
@@ -255,7 +260,10 @@ function loadPage<Model extends BaseModel>(
       setContext(newContext);
     }
     if (baseContext.loadAll) {
-      newContext.loadNext();
+      // Fire-and-forget auto-advance for loadAll. Swallow rejections so a failed
+      // or canceled follow-up page (e.g. after the consumer unmounts) can't
+      // surface as an unhandled promise rejection and crash the Jest worker.
+      newContext.loadNext().catch(console.error);
     }
     return Promise.resolve(page);
   });
@@ -481,12 +489,31 @@ export function prepareContextState<Model extends BaseModel>(
 ): BasePaginatedContextState<Model> {
   baseContext.params = params;
   baseContext = createCallbacks<Model>(setContext, baseContext, endpoint);
-  // Better recovery from corrupted state - reload if no data and not refreshing
-  const shouldLoad = baseContext.loadedData.length === 0 && !baseContext.refreshing;
+  // Only load on the very first call (initiated=false). Checking `!initiated` prevents
+  // an infinite retry loop: the error handler below calls setContext, which re-runs the
+  // consumer's useEffect, which calls prepareContextState again — if we used
+  // `loadedData.length === 0` as the condition we'd loop forever on every request failure.
+  const shouldLoad = !baseContext.initiated && !baseContext.refreshing;
   if (shouldLoad) {
     baseContext.initiated = true;
     baseContext.initialLoadComplete = false;
-    baseContext.loadNext().catch(console.error);
+    // Defer with setTimeout (not a microtask) so setState fires after React commits.
+    // Promise.resolve().then() is a microtask that can fire before the commit in
+    // concurrent-mode renders, triggering "state update on not yet mounted" warnings.
+    const loadFn = baseContext.loadNext;
+    setTimeout(
+      () =>
+        loadFn().catch((error) => {
+          console.error(error);
+          // Unblock the page — leave it empty rather than hanging on the loader forever.
+          // initiated stays true so prepareContextState won't loop; consumers can call
+          // refreshData() to retry explicitly.
+          baseContext.initialLoadComplete = true;
+          baseContext.noResults = true;
+          setContext({ ...baseContext });
+        }),
+      0,
+    );
   }
   return baseContext;
 }

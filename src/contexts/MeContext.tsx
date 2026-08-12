@@ -168,6 +168,10 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       } catch (e) {
         // logOut may fail if store is in an unexpected state
       }
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath && currentPath !== '/sign-in') {
+        localStorage.setItem('login_redirect', currentPath);
+      }
       navigate('/sign-in', { replace: true });
     }
   }, [optional, logOut, navigate]);
@@ -228,6 +232,13 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
 
   useEffect(() => {
     meSubscriptions[instanceKey] = setMeContext;
+
+    // A fresh token arriving after an auth failure (e.g. user just re-signed in
+    // after a 401/logout) must be allowed to load. Reset the stale flag so
+    // loadInfo() isn't blocked by a previous session's failure.
+    if (tokenData?.token && authFailed && !meContext.me.id) {
+      authFailed = false;
+    }
 
     if (!meContext.me.id && tokenData?.token && !authFailed) {
       loadInfo();

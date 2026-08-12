@@ -19,6 +19,27 @@ jest.mock('../../../services/requests/CategoryRequests', () => ({
   createCategory: jest.fn(),
 }));
 
+// Mock the api module so the real CategoriesContextProvider (mounted by
+// renderWithRouter) never fires a real XHR. Without this, the deferred initial
+// `/categories` load hits jsdom's XHR, rejects asynchronously with an
+// AggregateError, and that leaked rejection lands during a *later* test —
+// which jest-circus reports as `thrown: undefined` against whichever test is
+// active, flakily failing the clearInput / prioritizes cases in CI.
+jest.mock('../../../services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn().mockResolvedValue({
+      data: {
+        data: [],
+        meta: { current_page: 1, last_page: 1, per_page: 100, total: 0 },
+      },
+    }),
+    post: jest.fn().mockResolvedValue({ data: null }),
+    put: jest.fn().mockResolvedValue({ data: null }),
+    delete: jest.fn().mockResolvedValue({ data: { success: true } }),
+  },
+}));
+
 describe('CategoryAutocomplete', () => {
   jest.setTimeout(10000); // Add a 10-second timeout for all tests in this suite
 

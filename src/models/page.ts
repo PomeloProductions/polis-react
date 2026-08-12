@@ -43,7 +43,11 @@ export function createDummyPage<Model>(): Page<Model> {
  * @param existingEntries
  */
 export function mergePageData<M extends BaseModel>(page: Page<M>, existingEntries: M[]): M[] {
-  const data = page.data;
+  // A malformed or empty API response can arrive without a `data` array. Treat
+  // it as "no new entries" rather than throwing, so a single bad response can't
+  // crash the whole paginated context (and, in tests, leak an error into an
+  // unrelated test via the deferred load timer).
+  const data = page.data ?? [];
   data.forEach((entry) => {
     const index = existingEntries.findIndex((i) => i.id === entry.id);
     if (index !== -1) {

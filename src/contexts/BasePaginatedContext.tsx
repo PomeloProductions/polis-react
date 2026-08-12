@@ -194,8 +194,13 @@ function runRequest<Model extends BaseModel>(
     .then((response: AxiosResponse) => {
       return Promise.resolve(response.data as Page<Model>);
     })
-    .catch((error: AxiosError) => {
-      if (error.name === 'CanceledError') {
+    .catch((error: AxiosError | undefined) => {
+      // A canceled request (AbortController) rejects with a CanceledError, but
+      // depending on the environment the rejection value can be undefined or a
+      // non-Error. Read `name` defensively so a canceled/leaked request never
+      // throws a secondary "Cannot read properties of undefined" that escapes as
+      // an unhandled rejection and crashes the Jest worker.
+      if (error?.name === 'CanceledError' || controller.signal.aborted) {
         delete pendingRequests[endpoint]?.[page];
         return Promise.resolve(createDummyPage<Model>());
       }
@@ -255,7 +260,10 @@ function loadPage<Model extends BaseModel>(
       setContext(newContext);
     }
     if (baseContext.loadAll) {
-      newContext.loadNext();
+      // Fire-and-forget auto-advance for loadAll. Swallow rejections so a failed
+      // or canceled follow-up page (e.g. after the consumer unmounts) can't
+      // surface as an unhandled promise rejection and crash the Jest worker.
+      newContext.loadNext().catch(console.error);
     }
     return Promise.resolve(page);
   });

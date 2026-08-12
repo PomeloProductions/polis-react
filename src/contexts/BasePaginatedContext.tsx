@@ -238,7 +238,7 @@ function loadPage<Model extends BaseModel>(
     }
 
     baseContext.loadedData = [
-      ...(replace ? page.data : mergePageData(page, baseContext.loadedData)),
+      ...(replace ? (page.data ?? []) : mergePageData(page, baseContext.loadedData)),
     ];
     baseContext.total = page.total;
     baseContext.lastLoadedPage = page;
@@ -493,17 +493,19 @@ export function prepareContextState<Model extends BaseModel>(
     // Promise.resolve().then() is a microtask that can fire before the commit in
     // concurrent-mode renders, triggering "state update on not yet mounted" warnings.
     const loadFn = baseContext.loadNext;
-    setTimeout(() =>
-      loadFn().catch((error) => {
-        console.error(error);
-        // Unblock the page — leave it empty rather than hanging on the loader forever.
-        // initiated stays true so prepareContextState won't loop; consumers can call
-        // refreshData() to retry explicitly.
-        baseContext.initialLoadComplete = true;
-        baseContext.noResults = true;
-        setContext({ ...baseContext });
-      }),
-    0);
+    setTimeout(
+      () =>
+        loadFn().catch((error) => {
+          console.error(error);
+          // Unblock the page — leave it empty rather than hanging on the loader forever.
+          // initiated stays true so prepareContextState won't loop; consumers can call
+          // refreshData() to retry explicitly.
+          baseContext.initialLoadComplete = true;
+          baseContext.noResults = true;
+          setContext({ ...baseContext });
+        }),
+      0,
+    );
   }
   return baseContext;
 }

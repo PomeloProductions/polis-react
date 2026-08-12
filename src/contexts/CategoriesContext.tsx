@@ -26,6 +26,14 @@ function createDefaultState(): CategoriesContextState {
 }
 
 /**
+ * Test-only: resets the module-level persistent state so each test starts from
+ * a clean, un-initiated context. Never call this in application code.
+ */
+export function __resetCategoriesStateForTests(): void {
+  persistentStateRef.current = createDefaultState();
+}
+
+/**
  * The actual context component
  */
 export const CategoriesContext = React.createContext<CategoriesContextState>(createDefaultState());

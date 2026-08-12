@@ -1,8 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { CategoriesContext, CategoriesContextProvider } from './CategoriesContext';
+import { render, screen, waitFor } from '@testing-library/react';
+import {
+  CategoriesContext,
+  CategoriesContextProvider,
+  __resetCategoriesStateForTests,
+} from './CategoriesContext';
 
-// Mock the api module
+// Mock the api module. Categories are returned under `data.data` with paging in `meta`.
 jest.mock('../services/api', () => ({
   __esModule: true,
   default: {
@@ -24,6 +28,13 @@ jest.mock('../services/api', () => ({
 }));
 
 describe('CategoriesContext', () => {
+  // CategoriesContext keeps a module-level persistent state shared across
+  // provider instances. Reset it between tests so one test's (now deferred)
+  // initial load can't leave `initiated=true` with no data and block the next.
+  beforeEach(() => {
+    __resetCategoriesStateForTests();
+  });
+
   const TestComponent = () => {
     const context = React.useContext(CategoriesContext);
     return (
@@ -47,6 +58,8 @@ describe('CategoriesContext', () => {
     );
 
     expect(screen.getByTestId('has-another-page')).toHaveTextContent('false');
+    // The initial load is deferred (setTimeout), so on the synchronous first
+    // render it has not completed yet.
     expect(screen.getByTestId('initial-load-complete')).toHaveTextContent('false');
     expect(screen.getByTestId('initiated')).toHaveTextContent('true');
     expect(screen.getByTestId('no-results')).toHaveTextContent('false');
@@ -54,15 +67,18 @@ describe('CategoriesContext', () => {
     expect(screen.getByTestId('expands')).toHaveTextContent('');
   });
 
-  it('persists state across multiple instances', () => {
+  it('persists state across multiple instances', async () => {
     const { rerender } = render(
       <CategoriesContextProvider>
         <TestComponent />
       </CategoriesContextProvider>,
     );
 
-    // Initial render should have 2 items in loadedData
-    expect(screen.getByTestId('loaded-data-count')).toHaveTextContent('2');
+    // The initial load is deferred (setTimeout) so the two mocked categories
+    // arrive asynchronously; wait for them rather than assuming a synchronous load.
+    await waitFor(() => {
+      expect(screen.getByTestId('loaded-data-count')).toHaveTextContent('2');
+    });
 
     // Re-render with a new provider
     rerender(
@@ -72,6 +88,8 @@ describe('CategoriesContext', () => {
     );
 
     // The state should be persisted
-    expect(screen.getByTestId('loaded-data-count')).toHaveTextContent('2');
+    await waitFor(() => {
+      expect(screen.getByTestId('loaded-data-count')).toHaveTextContent('2');
+    });
   });
 });

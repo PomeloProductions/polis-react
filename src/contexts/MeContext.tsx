@@ -162,13 +162,17 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
 
   const [instanceKey, _] = useState(Math.random() + '-' + Date.now());
   const navigate = useNavigate();
-  // useNavigate() returns a NEW identity on every location change (react-router v6 resolves
-  // relative paths against the current location). Depending on it from goToSignIn made the
-  // redirect self-perpetuating: navigate('/sign-in') -> new navigate -> new goToSignIn ->
-  // effect re-runs -> navigate again... an infinite update loop whenever the provider mounts
-  // non-optional with no token. Route through a ref so callback identities stay stable.
+  // Unstable-identity guards: useNavigate() returns a NEW function on every location change,
+  // and connect() binds a NEW logOut on every store dispatch. Depending on either from
+  // goToSignIn made the redirect self-perpetuating — goToSignIn's own logOut() dispatch
+  // re-rendered the tree through connect, handing this component a fresh logOut, recreating
+  // goToSignIn, re-running the effect, dispatching again... an infinite update loop
+  // ("Maximum update depth exceeded", 100% CPU) whenever the provider mounted non-optional
+  // with no token. Route both through refs so callback identities stay stable.
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const logOutRef = useRef(logOut);
+  logOutRef.current = logOut;
 
   const goToSignIn = useCallback(() => {
     if (!optional) {
@@ -188,7 +192,7 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
       try {
         clearCurrentTokenData();
-        logOut();
+        logOutRef.current();
       } catch (e) {
         // logOut may fail if store is in an unexpected state
       }
@@ -198,7 +202,7 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       }
       navigateRef.current('/sign-in', { replace: true });
     }
-  }, [optional, logOut, tokenData]);
+  }, [optional, tokenData]);
 
   const loadInfo = useCallback(async () => {
     // Skip only if a fetch is in flight or we're actually authenticated. Guarding on me.id

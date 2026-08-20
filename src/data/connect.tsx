@@ -33,6 +33,14 @@ export function connect<
 }: ConnectParams<TOwnProps, TStateProps, TDispatchProps>): React.FunctionComponent<TOwnProps> {
   const Connect: React.FC<TOwnProps> = (ownProps) => {
     const context = useContext(AppContext);
+    // useReducer's dispatch is stable; the context VALUE object is new on every store update.
+    // Memoizing the wrapped action creators on the whole context handed every connected
+    // component fresh function props after each dispatch — any consumer that keyed a
+    // useCallback/useEffect on an injected action (e.g. MeContext's logOut) re-armed itself
+    // per dispatch, and one observed case looped to "Maximum update depth exceeded". Depend
+    // on the stable dispatch alone so injected actions keep their identity for the
+    // component's lifetime.
+    const dispatch = context.dispatch;
 
     const dispatchFuncs = useMemo(() => {
       const funcs = {} as WrappedActionCreators<TDispatchProps>;
@@ -48,15 +56,15 @@ export function connect<
             const thunk = resultOrThunk as (
               dispatch: React.Dispatch<AllActions>,
             ) => void | Promise<void>;
-            thunk(context.dispatch);
+            thunk(dispatch);
           } else {
-            context.dispatch(resultOrThunk as AllActions);
+            dispatch(resultOrThunk as AllActions);
           }
         };
       }
       return funcs;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mapDispatchToProps, context]);
+    }, [mapDispatchToProps, dispatch]);
 
     const stateProps = useMemo(() => {
       return mapStateToProps(context.state, ownProps);

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback } from 'react';
+import React, { useContext, useState, useCallback, useRef } from 'react';
 import { Stack, Group, Select, ActionIcon } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { ComponentProps } from '../ComponentRegistry';
@@ -25,27 +25,49 @@ const TodoTaskWidget: React.FC<ComponentProps> = ({
   const { me } = useContext(MeContext);
   const { refreshBalances, silentRefresh } = useContext(TodoContext);
 
+  // Ref to always have the latest config — prevents stale closures in timer callbacks
+  const configRef = useRef(config);
+  configRef.current = config;
+  const onDisplayUpdateRef = useRef(onDisplayUpdate);
+  onDisplayUpdateRef.current = onDisplayUpdate;
+
   const handleUpdate = useCallback(
     (path: number[], patch: Partial<TodoTaskNode>) => {
-      if (!rootNode || !me?.id) return;
+      // Read the LATEST config from the ref, not from the closure
+      const currentConfig = configRef.current;
+      const currentRoot = (currentConfig.root as TodoTaskNode) ?? null;
+      if (!currentRoot || !me?.id) return;
 
       // Resolve the target node's client_id BEFORE optimistic update
-      const targetNode = path.length === 0 ? rootNode : getNodeAtPath(rootNode, path);
+      const targetNode = path.length === 0 ? currentRoot : getNodeAtPath(currentRoot, path);
       if (!targetNode?.id) return;
 
       // Optimistic display update — no config_json PUT
-      const updated = updateNodeAtPath(rootNode, path, patch);
-      onDisplayUpdate({ ...config, root: updated });
+      const updated = updateNodeAtPath(currentRoot, path, patch);
+      onDisplayUpdateRef.current({ ...currentConfig, root: updated });
 
       // PATCH directly to the relational tables
       patchTodoNode(me.id, targetNode.id, componentId, patch as Record<string, unknown>)
         .then(() => {
-          // Refresh balances after balance-affecting changes
-          if ('_manual_balance_edit' in patch || 'tally' in patch) {
+          // Refresh balances after balance-affecting changes. Mark-offs arrive as children
+          // patches flagged _mark_off — do NOT key on 'children' itself, or every drawer
+          // edit would fire a refresh mid-typing.
+          if (
+            '_manual_balance_edit' in patch ||
+            '_allotment_change_today' in patch ||
+            'tally' in patch ||
+            '_mark_off' in patch ||
+            'last_date' in patch
+          ) {
             void refreshBalances();
           }
-          // Only do a full page refresh for manual balance edits (not mark-done/groups)
-          if ('_manual_balance_edit' in patch) {
+          // Full page refresh to sync Day Summary and other computed displays
+          if (
+            '_manual_balance_edit' in patch ||
+            '_allotment_change_today' in patch ||
+            '_mark_off' in patch ||
+            'last_date' in patch
+          ) {
             void silentRefresh();
           }
         })
@@ -53,7 +75,7 @@ const TodoTaskWidget: React.FC<ComponentProps> = ({
           console.error('Failed to patch node', e);
         });
     },
-    [rootNode, config, onDisplayUpdate, me?.id, componentId, refreshBalances, silentRefresh],
+    [me?.id, componentId, refreshBalances, silentRefresh],
   );
 
   const handleRemove = useCallback(

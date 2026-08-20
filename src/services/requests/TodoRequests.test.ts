@@ -87,11 +87,18 @@ describe('TodoRequests', () => {
     });
   });
 
-  test('stopRunningTimer DELETEs the timer endpoint', () => {
-    Todo.stopRunningTimer(7, { session_elapsed_seconds: 5 });
+  test('stopRunningTimer DELETEs the timer endpoint with the stop target as params', () => {
+    // Targeted stop: identifies the entry so a stop racing the next task's start
+    // can never close the freshly-created entry.
+    Todo.stopRunningTimer(7, { entry_id: 42, item_id: 'node-1' });
     expect(deleteMock).toHaveBeenCalledWith('/users/7/todos/timer', {
-      data: { session_elapsed_seconds: 5 },
+      params: { entry_id: 42, item_id: 'node-1' },
     });
+  });
+
+  test('stopRunningTimer without a target falls back to legacy stop-whatever-is-running', () => {
+    Todo.stopRunningTimer(7);
+    expect(deleteMock).toHaveBeenCalledWith('/users/7/todos/timer', { params: undefined });
   });
 
   test('todo template CRUD endpoints', () => {

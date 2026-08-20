@@ -8,9 +8,17 @@ import { UserPagesContext } from '../../contexts/UserPagesContext';
 import { TodoContext } from '../../contexts/TodoContext';
 import { getComponentGuide } from '../../pages/ComponentGuide/componentMetadata';
 import ConfigEditor from '../../pages/ComponentGuide/ConfigEditor';
-import { TodoTaskNode, moveNode, updateNodeAtPath, getNodeAtPath } from '../Todo/todoTaskUtils';
+import {
+  TodoTaskNode,
+  moveNode,
+  updateNodeAtPath,
+  getNodeAtPath,
+  findNodeById,
+  nestNodeInto,
+} from '../Todo/todoTaskUtils';
 import { MeContext } from '../../contexts/MeContext';
 import { patchTodoNode } from '../../services/requests/TodoRequests';
+import WelcomeEmptyState from './WelcomeEmptyState';
 
 /** Parse a widget-level droppable ID like "comp:123:drop:0.1" */
 function parseWidgetDropId(id: string): { compId: number; path: number[] } | null {
@@ -67,8 +75,84 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
     [components, localConfigs],
   );
 
+  // Compact tall rows BEFORE rbd captures dimensions (sub-item blocks make giant combine
+  // dead-zones and lurching placeholders). Must happen in onBeforeCapture — mutating heights
+  // after capture desyncs every placeholder position.
+  const handleBeforeCapture = useCallback(() => {
+    document.body.classList.add('todo-dnd-active');
+  }, []);
+
   const handleDragEnd = useCallback(
     (result: DropResult) => {
+      document.body.classList.remove('todo-dnd-active');
+      // Handle combine (drag onto item to nest)
+      if (result.combine) {
+        const { source, combine } = result;
+        const srcWidget = parseWidgetDropId(source.droppableId);
+        const dstWidget = parseWidgetDropId(combine.droppableId);
+        if (srcWidget && dstWidget && srcWidget.compId === dstWidget.compId) {
+          const config = getCompConfig(srcWidget.compId);
+          const root = config.root as TodoTaskNode | undefined;
+          if (!root) return;
+
+          // Find the dragged node
+          const srcParent =
+            srcWidget.path.length === 0 ? root : getNodeAtPath(root, srcWidget.path);
+          if (!srcParent?.children || source.index >= srcParent.children.length) return;
+          const draggedNode = srcParent.children[source.index];
+
+          // Don't nest into self OR into the dragged node's own subtree — the pointer
+          // can combine with a descendant row of the very card being dragged, which
+          // would create a parent cycle (and the optimistic nest would drop the node
+          // from the tree entirely, since the target vanishes along with it).
+          if (draggedNode.id === combine.draggableId) return;
+          if (findNodeById(draggedNode, combine.draggableId)) return;
+
+          // Remove dragged node from source
+          const newSrcChildren = srcParent.children.filter((_, i) => i !== source.index);
+          let updated = updateNodeAtPath(root, srcWidget.path, { children: newSrcChildren });
+
+          // Nest into target (converts to category if needed)
+          updated = nestNodeInto(updated, combine.draggableId, draggedNode);
+
+          const newConfig = { ...config, root: updated };
+          setLocalConfigs((prev) => ({ ...prev, [srcWidget.compId]: newConfig }));
+
+          // Persist via the ATOMIC _move op — never two children patches (removing the
+          // node from its source parent first would let the sync's stale-delete destroy
+          // the moved subtree before the second patch could re-home it).
+          if (me?.id && draggedNode.id) {
+            const targetBefore = findNodeById(root, combine.draggableId);
+            const ensureContainer =
+              targetBefore && targetBefore.node.task_type === 'line_item'
+                ? patchTodoNode(me.id, combine.draggableId, dstWidget.compId, {
+                    task_type: 'category',
+                  })
+                : Promise.resolve(null);
+            ensureContainer
+              .then(() =>
+                patchTodoNode(me.id!, draggedNode.id, srcWidget.compId, {
+                  _move: {
+                    target_component_id: dstWidget.compId,
+                    target_parent_client_id: combine.draggableId,
+                    target_sort_order: (targetBefore?.node.children ?? []).length,
+                  },
+                }),
+              )
+              .then(() => {
+                void silentRefresh();
+              })
+              .catch((e) => {
+                console.error(e);
+                // Persistence failed — resync the optimistic view to server truth
+                // so the node never appears "gone".
+                void silentRefresh();
+              });
+          }
+        }
+        return;
+      }
+
       if (!result.destination) return;
       const { source, destination } = result;
       if (source.droppableId === destination.droppableId && source.index === destination.index)
@@ -125,29 +209,43 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
           const newConfig = { ...config, root: updated };
           setLocalConfigs((prev) => ({ ...prev, [srcWidget.compId]: newConfig }));
 
-          // PATCH the reordered children on the source parent
           if (me?.id) {
-            const srcParent =
-              srcWidget.path.length === 0 ? root : getNodeAtPath(root, srcWidget.path);
-            if (srcParent?.id) {
-              const updatedParent =
-                srcWidget.path.length === 0 ? updated : getNodeAtPath(updated, srcWidget.path);
-              patchTodoNode(me.id, srcParent.id, srcWidget.compId, {
-                children: (updatedParent.children ?? []).map((c: TodoTaskNode) => ({ id: c.id })),
-              }).catch(console.error);
-            }
-            // If cross-parent within same component, also patch destination parent
-            if (srcWidget.path.join('.') !== dstWidget.path.join('.')) {
+            const isSameParent = srcWidget.path.join('.') === dstWidget.path.join('.');
+            if (isSameParent) {
+              // Pure reorder — a single children patch (all ids present) is safe
+              const srcParent =
+                srcWidget.path.length === 0 ? root : getNodeAtPath(root, srcWidget.path);
+              if (srcParent?.id) {
+                const updatedParent =
+                  srcWidget.path.length === 0 ? updated : getNodeAtPath(updated, srcWidget.path);
+                patchTodoNode(me.id, srcParent.id, srcWidget.compId, {
+                  children: (updatedParent.children ?? []).map((c: TodoTaskNode) => ({ id: c.id })),
+                }).catch(console.error);
+              }
+            } else {
+              // Cross-parent: use the ATOMIC _move op. Two children patches would
+              // let the sync's stale-delete destroy the moved subtree (absent from
+              // the source-parent payload) before the destination patch re-homed it.
+              const srcParent =
+                srcWidget.path.length === 0 ? root : getNodeAtPath(root, srcWidget.path);
+              const movedChild = (srcParent?.children ?? [])[source.index];
               const dstParent =
                 dstWidget.path.length === 0 ? root : getNodeAtPath(root, dstWidget.path);
-              if (dstParent?.id) {
-                const updatedDstParent =
-                  dstWidget.path.length === 0 ? updated : getNodeAtPath(updated, dstWidget.path);
-                patchTodoNode(me.id, dstParent.id, dstWidget.compId, {
-                  children: (updatedDstParent.children ?? []).map((c: TodoTaskNode) => ({
-                    id: c.id,
-                  })),
-                }).catch(console.error);
+              if (movedChild?.id) {
+                patchTodoNode(me.id, movedChild.id, srcWidget.compId, {
+                  _move: {
+                    target_component_id: dstWidget.compId,
+                    target_parent_client_id: dstParent?.id ?? null,
+                    target_sort_order: destination.index,
+                  },
+                })
+                  .then(() => {
+                    void silentRefresh();
+                  })
+                  .catch((e) => {
+                    console.error(e);
+                    void silentRefresh(); // resync optimistic view on failure
+                  });
               }
             }
           }
@@ -264,6 +362,10 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
   );
 
   if (components.length === 0) {
+    // An empty dashboard greets the user and routes to key pages instead of a dead end.
+    if (page.page_type === 'dashboard') {
+      return <WelcomeEmptyState />;
+    }
     return (
       <Alert color="gray" title="Empty Page">
         This page has no components yet. Use the page manager to add components.
@@ -376,7 +478,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
   return (
     <>
       {isTodoPage ? (
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext onDragEnd={handleDragEnd} onBeforeCapture={handleBeforeCapture}>
           <Droppable droppableId="page-components" type="TODO_NODE">
             {(provided) => (
               <Stack gap="md" ref={provided.innerRef} {...provided.droppableProps}>

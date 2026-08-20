@@ -103,17 +103,7 @@ const TodoHierarchyNav: React.FC<TodoHierarchyNavProps> = ({ page }) => {
     navigate(`/todos/date/${formatDate(d)}`);
   };
 
-  const isToday = (() => {
-    if (!todoDate) return false;
-    const d = new Date(todoDate + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return d.getTime() === today.getTime();
-  })();
-
   const dateValue = todoDate ? new Date(todoDate + 'T00:00:00') : undefined;
-  const maxDate = new Date();
-  maxDate.setHours(0, 0, 0, 0);
 
   return (
     <Paper p="sm" radius="md" withBorder mb="md">
@@ -147,12 +137,7 @@ const TodoHierarchyNav: React.FC<TodoHierarchyNavProps> = ({ page }) => {
             )}
           </Breadcrumbs>
           {todoLevel === 'day' && (
-            <ActionIcon
-              variant="subtle"
-              onClick={handleNextDay}
-              title="Next day"
-              disabled={isToday}
-            >
+            <ActionIcon variant="subtle" onClick={handleNextDay} title="Next day">
               <IconChevronRight size={18} />
             </ActionIcon>
           )}
@@ -163,7 +148,6 @@ const TodoHierarchyNav: React.FC<TodoHierarchyNavProps> = ({ page }) => {
             if (!date) return;
             navigate(`/todos/date/${formatDate(date)}`);
           }}
-          maxDate={maxDate}
           leftSection={<IconCalendar size={16} />}
           size="xs"
           w={160}

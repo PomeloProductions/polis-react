@@ -33,3 +33,9 @@
     height: 100%;
   }
 }
+
+// While a todo tree drag is active (body class set in PageRenderer onBeforeCapture),
+// hide bulky row content so rows measure compact — small combine zones, stable placeholders.
+body.todo-dnd-active .todo-dnd-compact {
+  display: none;
+}

@@ -12,8 +12,9 @@ import {
   getRunningTimer,
   startRunningTimer,
   stopRunningTimer,
+  updateRunningTimer,
 } from '../services/requests/TodoRequests';
-import { TimeEntry } from '../models/user/todo';
+import { TimeEntry, TimerSessionData } from '../models/user/todo';
 
 export interface TimerTarget {
   componentId: number;
@@ -22,9 +23,9 @@ export interface TimerTarget {
   budgetHours: number;
   sessionBudgetHours?: number;
   preLoggedHours?: number;
-  balanceHours?: number; // current hour balance for hours-mode tasks
-  dailyTargetHours?: number; // daily allotment for hours-mode progress bar
-  todoBalanceId?: number; // FK to todo_balances for live balance reads
+  balanceHours?: number;
+  dailyTargetHours?: number;
+  todoBalanceId?: number;
   onStop: (elapsedHours: number) => void;
   onUpdateBalance?: (newBalance: number) => void;
 }
@@ -34,10 +35,9 @@ export interface TimerSession {
   label: string;
   completed: boolean;
   progressPct: number;
-  surplusSeconds?: number; // seconds over budget
+  surplusSeconds?: number;
 }
 
-/** Local runtime state derived from the running time_entry in the DB */
 interface RunningTimer {
   entryId: number;
   componentId: number;
@@ -46,9 +46,10 @@ interface RunningTimer {
   budgetHours: number;
   sessionBudgetHours?: number;
   preLoggedHours: number;
-  sessionElapsedSeconds: number; // accumulated session time from prior stop/starts
+  sessionTotalElapsed: number; // total elapsed from prior entries in this session (from API)
+  sessionBudgetSeconds: number;
   sessionLabels: Record<number, string>;
-  startTime: number; // epoch ms
+  startTime: number;
   balanceHours?: number;
   dailyTargetHours?: number;
   todoBalanceId?: number;
@@ -57,9 +58,7 @@ interface RunningTimer {
 interface TimerContextValue {
   activeTimer: { target: TimerTarget; startTime: number } | null;
   elapsedSeconds: number;
-  /** Session elapsed in seconds (survives stop/start, resets on mark-done) */
   sessionSeconds: number;
-  /** Total time today in seconds: preLogged + elapsed */
   totalTodaySeconds: number;
   sessions: TimerSession[];
   startTimer: (target: TimerTarget) => void;
@@ -103,7 +102,11 @@ const defaultValue: TimerContextValue = {
 
 export const TimerContext = createContext<TimerContextValue>(defaultValue);
 
-function timeEntryToRunning(entry: TimeEntry): RunningTimer | null {
+function entryToRunning(
+  entry: TimeEntry,
+  sessionData: TimerSessionData | null,
+  balance?: number | null,
+): RunningTimer | null {
   const startTime = new Date(entry.started_at).getTime();
   if (isNaN(startTime)) return null;
   return {
@@ -114,10 +117,15 @@ function timeEntryToRunning(entry: TimeEntry): RunningTimer | null {
     budgetHours: entry.budget_hours ?? 0,
     sessionBudgetHours: entry.session_budget_hours ?? undefined,
     preLoggedHours: 0,
-    sessionElapsedSeconds: entry.session_elapsed_seconds ?? 0,
+    sessionTotalElapsed: sessionData?.total_elapsed_seconds ?? 0,
+    sessionBudgetSeconds:
+      sessionData?.session_budget_seconds ?? (entry.session_budget_hours ?? 0) * 3600,
     sessionLabels: {},
     startTime,
     todoBalanceId: entry.todo_balance_id ?? undefined,
+    // Rebuild balanceHours for hours-mode tasks (balance = -balanceHours). The API only sends
+    // `balance` for hours-mode balances, so units tasks stay undefined (no balance bar).
+    balanceHours: balance != null ? -balance : undefined,
   };
 }
 
@@ -128,12 +136,6 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loaded, setLoaded] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onStopRef = useRef<((elapsedHours: number) => void) | null>(null);
-  // Preserves session progress between stop and start for the same task
-  const lastSessionRef = useRef<{
-    componentId: number;
-    itemId: string;
-    sessionElapsedSeconds: number;
-  } | null>(null);
 
   const clearTick = useCallback(() => {
     if (intervalRef.current) {
@@ -147,8 +149,21 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!me?.id) return;
     getRunningTimer(me.id)
       .then((res) => {
-        if (res.data && res.data.started_at && !res.data.stopped_at) {
-          const r = timeEntryToRunning(res.data);
+        const data = res.data;
+        if (data && 'entry' in data && data.entry?.started_at && !data.entry?.stopped_at) {
+          const r = entryToRunning(
+            data.entry,
+            data.session,
+            (data as { balance?: number | null }).balance,
+          );
+          if (r) setRunning(r);
+        } else if (
+          data &&
+          (data as Partial<TimeEntry>).started_at &&
+          !(data as Partial<TimeEntry>).stopped_at
+        ) {
+          // Backward compat: old response shape (plain TimeEntry)
+          const r = entryToRunning(data as unknown as TimeEntry, null);
           if (r) setRunning(r);
         }
       })
@@ -171,39 +186,35 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return clearTick;
   }, [running, clearTick]);
 
-  // Session elapsed = accumulated from prior stops + current entry elapsed
-  const sessionSeconds = running ? running.sessionElapsedSeconds + elapsedSeconds : 0;
+  // Session elapsed = prior entries in session + current entry elapsed
+  const sessionSeconds = running ? running.sessionTotalElapsed + elapsedSeconds : 0;
 
-  // Total time today = pre-logged hours + elapsed (but reset pre-logged on day rollover)
+  // Total time today
   const totalTodaySeconds = useMemo(() => {
     if (!running) return 0;
-
     const startDate = new Date(running.startTime);
     const now = new Date();
     const sameDay =
       startDate.getFullYear() === now.getFullYear() &&
       startDate.getMonth() === now.getMonth() &&
       startDate.getDate() === now.getDate();
-
     if (sameDay) {
       return Math.floor(running.preLoggedHours * 3600) + elapsedSeconds;
     }
-
-    // Day rolled over: only count time since midnight
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     return Math.max(0, Math.floor((Date.now() - midnight) / 1000));
   }, [running, elapsedSeconds]);
 
-  // Single-session model: one session that shows surplus when over budget
+  // Single-session model
   const sessions = useMemo((): TimerSession[] => {
     if (!running) return [];
-    const sessionBudgetSec = (running.sessionBudgetHours ?? 0) * 3600;
-    if (sessionBudgetSec <= 0) return [];
+    const budgetSec = running.sessionBudgetSeconds;
+    if (budgetSec <= 0) return [];
 
-    const totalSec = running.sessionElapsedSeconds + elapsedSeconds;
-    const completed = totalSec >= sessionBudgetSec;
-    const pct = (totalSec / sessionBudgetSec) * 100;
-    const surplus = completed ? totalSec - sessionBudgetSec : 0;
+    const totalSec = running.sessionTotalElapsed + elapsedSeconds;
+    const completed = totalSec >= budgetSec;
+    const pct = (totalSec / budgetSec) * 100;
+    const surplus = completed ? totalSec - budgetSec : 0;
 
     return [
       {
@@ -284,73 +295,79 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const onAfterStopRef = useRef<(() => void) | null>(null);
 
+  // Serialize timer network ops. Start and stop are independent requests; when the user
+  // stops one task and immediately starts another, the server may process the START first —
+  // an untargeted stop then closed the freshly-created entry at ~0s and its time silently
+  // vanished (below the balance-logging threshold). Queueing guarantees arrival order.
+  const timerOpRef = useRef<Promise<unknown>>(Promise.resolve());
+  const enqueueTimerOp = useCallback(<T,>(op: () => Promise<T>): Promise<T> => {
+    const next = timerOpRef.current.then(op, op);
+    timerOpRef.current = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
+  }, []);
+
   const stopTimer = useCallback(() => {
+    // Capture WHICH entry this stop is for — the server must never stop anything else.
+    // entryId is 0 while the start response is still in flight; item_id covers that case
+    // (the op queue ensures the start has landed by the time the stop is sent).
+    let target: { entry_id?: number; item_id?: string } | undefined;
     if (running) {
       const elapsedHours = (Date.now() - running.startTime) / 3_600_000;
       onStopRef.current?.(elapsedHours);
       onStopRef.current = null;
-      // Preserve session progress for resume
-      const entryElapsed = Math.floor((Date.now() - running.startTime) / 1000);
-      lastSessionRef.current = {
-        componentId: running.componentId,
-        itemId: running.itemId,
-        sessionElapsedSeconds: running.sessionElapsedSeconds + entryElapsed,
+      target = {
+        ...(running.entryId ? { entry_id: running.entryId } : {}),
+        ...(running.itemId ? { item_id: running.itemId } : {}),
       };
     }
     const afterStop = onAfterStopRef.current;
     onAfterStopRef.current = null;
-    const totalSession = lastSessionRef.current?.sessionElapsedSeconds;
     setRunning(null);
     if (me?.id) {
-      stopRunningTimer(
-        me.id,
-        totalSession != null ? { session_elapsed_seconds: totalSession } : undefined,
-      )
+      const userId = me.id;
+      enqueueTimerOp(() => stopRunningTimer(userId, target))
         .then(() => {
           afterStop?.();
         })
         .catch((e) => console.error('Failed to stop timer', e));
     }
-  }, [running, me?.id]);
+  }, [running, me?.id, enqueueTimerOp]);
 
   const startTimer = useCallback(
     (target: TimerTarget) => {
-      // Auto-stop current timer first (local callback only; backend handles stopping existing)
+      // Auto-stop current timer first
       if (running) {
         const elapsedHours = (Date.now() - running.startTime) / 3_600_000;
         onStopRef.current?.(elapsedHours);
         onStopRef.current = null;
       }
 
-      // Restore session progress if resuming the same task
-      const prior = lastSessionRef.current;
-      const sessionElapsed =
-        prior && prior.componentId === target.componentId && prior.itemId === target.itemId
-          ? prior.sessionElapsedSeconds
-          : 0;
-      lastSessionRef.current = null;
-
       const startTime = Date.now();
       onStopRef.current = target.onStop;
 
       if (me?.id) {
-        startRunningTimer(me.id, {
-          label: target.label,
-          component_id: target.componentId,
-          item_id: target.itemId,
-          started_at: new Date(startTime).toISOString(),
-          budget_hours: target.budgetHours,
-          session_budget_hours: target.sessionBudgetHours,
-          todo_balance_id: target.todoBalanceId,
-          session_elapsed_seconds: sessionElapsed,
-        })
+        const userId = me.id;
+        enqueueTimerOp(() =>
+          startRunningTimer(userId, {
+            label: target.label,
+            component_id: target.componentId,
+            item_id: target.itemId,
+            started_at: new Date(startTime).toISOString(),
+            budget_hours: target.budgetHours,
+            session_budget_hours: target.sessionBudgetHours,
+            todo_balance_id: target.todoBalanceId,
+          }),
+        )
           .then((res) => {
-            const r = timeEntryToRunning(res.data);
+            const data = res.data;
+            const r = entryToRunning(data.entry, data.session);
             if (r) {
               r.preLoggedHours = target.preLoggedHours ?? 0;
               r.balanceHours = target.balanceHours;
               r.dailyTargetHours = target.dailyTargetHours;
-              r.sessionElapsedSeconds = sessionElapsed;
               setRunning(r);
             }
           })
@@ -359,7 +376,7 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       onUpdateBalanceRef.current = target.onUpdateBalance ?? null;
 
-      // Optimistically set local state
+      // Optimistic local state (session data will be updated from server response)
       setRunning({
         entryId: 0,
         componentId: target.componentId,
@@ -368,7 +385,8 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         budgetHours: target.budgetHours,
         sessionBudgetHours: target.sessionBudgetHours,
         preLoggedHours: target.preLoggedHours ?? 0,
-        sessionElapsedSeconds: sessionElapsed,
+        sessionTotalElapsed: 0, // will be updated from server
+        sessionBudgetSeconds: (target.sessionBudgetHours ?? 0) * 3600,
         sessionLabels: {},
         startTime,
         balanceHours: target.balanceHours,
@@ -376,49 +394,33 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         todoBalanceId: target.todoBalanceId,
       });
     },
-    [running, me?.id],
+    [running, me?.id, enqueueTimerOp],
   );
 
   const resetSession = useCallback(() => {
+    // Called from markDone when the timer is on THIS node. The BACKEND performs the actual
+    // split atomically inside the mark-off PATCH (stop+log the running entry, complete the
+    // session, bank/reset logged time, continue into a fresh session+entry) — issuing our own
+    // stop/start here raced that PATCH and re-credited already-banked time or attached the
+    // continuation entry to the just-completed session. Only reset the local display.
     if (running) {
-      // Timer is running: log current entry time, restart with fresh session
-      const elapsedHours = (Date.now() - running.startTime) / 3_600_000;
-      onStopRef.current?.(elapsedHours);
-
       const startTime = Date.now();
       setRunning((prev) => {
         if (!prev) return prev;
-        return { ...prev, sessionElapsedSeconds: 0, sessionLabels: {}, startTime };
+        return {
+          ...prev,
+          sessionTotalElapsed: 0,
+          sessionBudgetSeconds: prev.sessionBudgetSeconds,
+          sessionLabels: {},
+          startTime,
+        };
       });
-
-      if (me?.id) {
-        startRunningTimer(me.id, {
-          label: running.label,
-          component_id: running.componentId,
-          item_id: running.itemId,
-          started_at: new Date(startTime).toISOString(),
-          budget_hours: running.budgetHours,
-          session_budget_hours: running.sessionBudgetHours,
-          todo_balance_id: running.todoBalanceId,
-          session_elapsed_seconds: 0,
-        })
-          .then((res) => {
-            const r = timeEntryToRunning(res.data);
-            if (r) {
-              r.preLoggedHours = running.preLoggedHours;
-              r.balanceHours = running.balanceHours;
-              r.dailyTargetHours = running.dailyTargetHours;
-              r.sessionElapsedSeconds = 0;
-              setRunning(r);
-            }
-          })
-          .catch((e) => console.error('Failed to reset session', e));
-      }
-    } else {
-      // Timer not running: clear stored session so next start is fresh
-      lastSessionRef.current = null;
+      // Don't fire the old onStop patch either — the backend logs the entry itself.
+      onStopRef.current = null;
     }
-  }, [running, me?.id]);
+    // If not running: the session completion happens server-side via the groups/last_date PATCH
+    // Next startTimer will create a new session automatically
+  }, [running]);
 
   const updateStartTime = useCallback(
     (newStartTime: number) => {
@@ -426,39 +428,24 @@ export const TimerContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (!prev) return prev;
         return { ...prev, startTime: newStartTime };
       });
-      if (me?.id && running) {
-        startRunningTimer(me.id, {
-          label: running.label,
-          component_id: running.componentId,
-          item_id: running.itemId,
-          started_at: new Date(newStartTime).toISOString(),
-          budget_hours: running.budgetHours,
-          session_budget_hours: running.sessionBudgetHours,
-          todo_balance_id: running.todoBalanceId,
-          session_elapsed_seconds: running.sessionElapsedSeconds,
-        })
-          .then((res) => {
-            const r = timeEntryToRunning(res.data);
-            if (r) {
-              r.preLoggedHours = running.preLoggedHours;
-              r.sessionLabels = running.sessionLabels;
-              r.sessionBudgetHours = running.sessionBudgetHours;
-              r.balanceHours = running.balanceHours;
-              r.dailyTargetHours = running.dailyTargetHours;
-              r.todoBalanceId = running.todoBalanceId;
-              r.sessionElapsedSeconds = running.sessionElapsedSeconds;
-              setRunning(r);
-            }
-          })
-          .catch((e) => console.error('Failed to update timer start time', e));
+      if (me?.id) {
+        const userId = me.id;
+        enqueueTimerOp(() =>
+          updateRunningTimer(userId, {
+            started_at: new Date(newStartTime).toISOString(),
+          }),
+        ).catch((e) => console.error('Failed to update timer start time', e));
       }
     },
-    [me?.id, running],
+    [me?.id, enqueueTimerOp],
   );
 
   const isTracking = useCallback(
-    (componentId: number, itemId: string) => {
-      return running?.componentId === componentId && running?.itemId === itemId;
+    // Match on item_id only. component_id is per-day-page and changes when the day rolls over
+    // mid-session, so requiring it would make the new day's copy of the task stop recognizing
+    // the still-running timer (wrong Play/Stop button, deficit ignoring the live session).
+    (_componentId: number, itemId: string) => {
+      return !!running && running.itemId === itemId;
     },
     [running],
   );

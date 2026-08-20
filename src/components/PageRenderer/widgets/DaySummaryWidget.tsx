@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useCallback, useRef } from 'react';
+import React, { useContext, useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import { Paper, SimpleGrid, Stack, Text, Group, Badge, Divider, Tooltip } from '@mantine/core';
 import { RichTextEditor, Link } from '@mantine/tiptap';
 import { useEditor } from '@tiptap/react';
@@ -8,15 +8,23 @@ import { ComponentProps } from '../ComponentRegistry';
 import { TodoContext } from '../../../contexts/TodoContext';
 import { TimerContext } from '../../../contexts/TimerContext';
 import { MeContext } from '../../../contexts/MeContext';
-import { TodoBalance } from '../../../models/user/todo';
+import { TodoBalance, TimeEntry } from '../../../models/user/todo';
 import { UserPage } from '../../../models/user/user-page';
 import {
   formatHoursHHMM,
   TodoTaskNode,
   computeTotals,
   buildBalanceMap,
+  getTrackingMode,
 } from '../../Todo/todoTaskUtils';
-import { patchTodoNode } from '../../../services/requests/TodoRequests';
+import {
+  patchTodoNode,
+  getTimeEntries,
+  getCalendars,
+  getVacationStatus,
+  TodoCalendar,
+} from '../../../services/requests/TodoRequests';
+import VacationControl from '../../Todo/VacationControl';
 import '@mantine/tiptap/styles.css';
 
 interface RemainingItem {
@@ -29,18 +37,107 @@ interface RemainingItem {
 interface DayStats {
   hoursBalance: number;
   newHoursToday: number;
-  loggedToday: number;
   newHoursRemaining: number;
   remainingItems: RemainingItem[];
 }
 
-function computeStats(balances: TodoBalance[], page: UserPage | null, today: Date): DayStats {
+// Returns true if `date` is included by this calendar.
+// specific_dates entries prefixed with "!" are exclusions and override the day-of-week pattern.
+function calendarIncludesDate(cal: TodoCalendar, ymd: string, dayOfWeek: number): boolean {
+  if (cal.specific_dates && cal.specific_dates.includes(`!${ymd}`)) return false;
+  if (cal.days_of_week && cal.days_of_week.includes(dayOfWeek)) return true;
+  if (cal.specific_dates && cal.specific_dates.includes(ymd)) return true;
+  return false;
+}
+
+function isNodeScheduledOnDate(
+  node: TodoTaskNode,
+  ymd: string,
+  dayOfWeek: number,
+  calendarsById: Map<number, TodoCalendar>,
+): boolean {
+  const rules = node.calendar_rules;
+  if (rules && rules.length > 0) {
+    let included = false;
+    for (const r of rules) {
+      if (r.mode === 'add') {
+        const cal = calendarsById.get(r.calendar_id);
+        if (cal && calendarIncludesDate(cal, ymd, dayOfWeek)) {
+          included = true;
+          break;
+        }
+      }
+    }
+    if (!included) return false;
+    for (const r of rules) {
+      if (r.mode === 'subtract') {
+        const cal = calendarsById.get(r.calendar_id);
+        if (cal && calendarIncludesDate(cal, ymd, dayOfWeek)) return false;
+      }
+    }
+    return true;
+  }
+  const schedule = node.schedule;
+  return !schedule || schedule.includes(dayOfWeek);
+}
+
+/**
+ * Whether a node actually accrues new hours on the given date — scheduled AND (on a vacation day)
+ * governed by at least one calendar that stays active on vacation. Mirrors the daily-increment
+ * cron: calendars marked "paused on vacation" don't accrue on vacation days. Schedule-only nodes
+ * (no calendars) are unaffected — vacation is a per-calendar setting.
+ */
+function nodeAccruesOnDate(
+  node: TodoTaskNode,
+  ymd: string,
+  dayOfWeek: number,
+  calendarsById: Map<number, TodoCalendar>,
+  isVacationDay: boolean,
+): boolean {
+  if (!isNodeScheduledOnDate(node, ymd, dayOfWeek, calendarsById)) return false;
+  if (!isVacationDay) return true;
+  const rules = node.calendar_rules;
+  if (!rules || rules.length === 0) return true; // schedule-only: vacation doesn't pause it
+  for (const r of rules) {
+    if (r.mode === 'add') {
+      const cal = calendarsById.get(r.calendar_id);
+      if (cal && cal.active_on_vacation && calendarIncludesDate(cal, ymd, dayOfWeek)) return true;
+    }
+  }
+  return false; // all calendars scheduling this date are paused on vacation
+}
+
+function computeStats(
+  balances: TodoBalance[],
+  balancesAsOf: Record<number, number>,
+  page: UserPage | null,
+  today: Date,
+  calendarsById: Map<number, TodoCalendar>,
+  isVacationDay: boolean,
+): DayStats {
   const dayOfWeek = today.getDay();
-  const bMap = buildBalanceMap(balances);
+  const todayYMDForSchedule = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  // On historical day pages, use the snapshot (node.tally) — not the live balance.
+  const now = new Date();
+  const realTodayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const pageDate = (page?.config_json as Record<string, unknown> | undefined)?.todo_date as
+    | string
+    | undefined;
+  const pageLevel = (page?.config_json as Record<string, unknown> | undefined)?.todo_level as
+    | string
+    | undefined;
+  const isPastDay = pageLevel === 'day' && !!pageDate && pageDate < realTodayYMD;
+  // Historical days derive from the balance log (balancesAsOf), not the per-node tally snapshot;
+  // today derives from the live balances. Both avoid the unreliable snapshot.
+  const bMap = isPastDay
+    ? new Map<number, number>(
+        Object.entries(balancesAsOf ?? {}).map(([k, v]) => [Number(k), Number(v)]),
+      )
+    : buildBalanceMap(balances);
 
   let hoursBalance = 0;
   let newHoursToday = 0;
-  let loggedToday = 0;
   let newHoursRemaining = 0;
   const remainingItems: RemainingItem[] = [];
 
@@ -53,12 +150,11 @@ function computeStats(balances: TodoBalance[], page: UserPage | null, today: Dat
 
     const totals = computeTotals(root, undefined, bMap);
     hoursBalance += totals.totalDeficit;
-    loggedToday += totals.totalLoggedHours;
 
-    // Per-item: compute new hours and remaining
+    // Per-item: compute new hours, remaining, and logged-on-today-items
     const walkForNew = (node: TodoTaskNode) => {
       const nodeHasOwnTracking =
-        node.tracking_mode === 'hours' ||
+        getTrackingMode(node) === 'hours' ||
         ((node.tally_step ?? 0) > 0 && (node.time_budget_hours ?? 0) > 0);
       if (node.task_type === 'category' && node.children) {
         node.children.forEach(walkForNew);
@@ -66,11 +162,10 @@ function computeStats(balances: TodoBalance[], page: UserPage | null, today: Dat
         // Fall through to count the category's own allotment
       }
 
-      const schedule = node.schedule;
-      const isScheduled = !schedule || schedule.includes(dayOfWeek);
-      if (!isScheduled) return;
+      if (!nodeAccruesOnDate(node, todayYMDForSchedule, dayOfWeek, calendarsById, isVacationDay))
+        return;
 
-      const trackingMode = node.tracking_mode ?? 'units';
+      const trackingMode = getTrackingMode(node);
       const itemLogged = Number(node.logged_hours ?? 0) + Number(node.logged_time ?? 0);
 
       let allotment = 0;
@@ -91,11 +186,11 @@ function computeStats(balances: TodoBalance[], page: UserPage | null, today: Dat
           if (ld.includes('T')) return ld.startsWith(todayYMD);
           return ld === todayMD;
         };
+        // Any slot or descendant item marked today counts the rotating node as done
+        const markedToday = (n: TodoTaskNode): boolean =>
+          isToday(n.last_date) || (n.children ?? []).some(markedToday);
         const wasMarkedDone =
-          node.task_type === 'rotating' &&
-          node.groups?.some(
-            (g) => g.children.some((c) => isToday(c.last_date)) || isToday(g.last_date),
-          );
+          node.task_type === 'rotating' && (node.children ?? []).some(markedToday);
         const itemRemaining = wasMarkedDone
           ? 0 // Completed by marking done — no time remaining
           : itemLogged > 0
@@ -116,12 +211,12 @@ function computeStats(balances: TodoBalance[], page: UserPage | null, today: Dat
     walkForNew(root);
   }
 
-  return { hoursBalance, newHoursToday, loggedToday, newHoursRemaining, remainingItems };
+  return { hoursBalance, newHoursToday, newHoursRemaining, remainingItems };
 }
 
 const DaySummaryWidget: React.FC<ComponentProps> = ({ componentId, config, onDisplayUpdate }) => {
-  const { balances, currentPage } = useContext(TodoContext);
-  const { totalTodaySeconds, activeTimer } = useContext(TimerContext);
+  const { balances, balancesAsOf, currentPage } = useContext(TodoContext);
+  const { elapsedSeconds, activeTimer } = useContext(TimerContext);
   const { me } = useContext(MeContext);
 
   const todoDate = (currentPage?.config_json as Record<string, unknown>)?.todo_date as
@@ -134,16 +229,117 @@ const DaySummaryWidget: React.FC<ComponentProps> = ({ componentId, config, onDis
     day: 'numeric',
   });
 
+  const [calendars, setCalendars] = useState<TodoCalendar[]>([]);
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    getCalendars(me.id)
+      .then((res) => {
+        if (!cancelled) setCalendars(res.data?.data ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
+  const calendarsById = useMemo(() => {
+    const m = new Map<number, TodoCalendar>();
+    for (const c of calendars) m.set(c.id, c);
+    return m;
+  }, [calendars]);
+
+  // Vacation period in effect (if any), so "new hours" excludes calendars paused on vacation.
+  const [vacationPeriod, setVacationPeriod] = useState<{
+    start_date: string;
+    end_date: string | null;
+  } | null>(null);
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    getVacationStatus(me.id)
+      .then((res) => {
+        if (!cancelled) setVacationPeriod(res.data.current_period ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
+
+  const pageYMD = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const isVacationDay =
+    !!vacationPeriod &&
+    pageYMD >= vacationPeriod.start_date.slice(0, 10) &&
+    (vacationPeriod.end_date === null || pageYMD <= vacationPeriod.end_date.slice(0, 10));
+
   const baseStats = useMemo(
-    () => computeStats(balances, currentPage, today),
-    [balances, currentPage, today.getTime()],
+    () => computeStats(balances, balancesAsOf, currentPage, today, calendarsById, isVacationDay),
+    [balances, balancesAsOf, currentPage, today.getTime(), calendarsById, isVacationDay],
   );
 
-  // Add active timer's today-only portion to logged (resets at midnight)
-  const activeElapsedHours = activeTimer ? totalTodaySeconds / 3600 : 0;
+  // Fetch today's time entries — ground truth for "logged today"
+  const todayYMD = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const [todayEntries, setTodayEntries] = useState<TimeEntry[]>([]);
+  const activeItemId = activeTimer?.target.itemId ?? null;
+  const prevActiveItemIdRef = useRef<string | null>(activeItemId);
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    const dayStart = `${todayYMD}T00:00:00`;
+    const dayEnd = `${todayYMD}T23:59:59`;
+
+    const fetchEntries = () => {
+      getTimeEntries(me.id!, dayStart, dayEnd, 500)
+        .then((res) => {
+          if (!cancelled) setTodayEntries(res.data?.data ?? []);
+        })
+        .catch(() => {});
+    };
+
+    const wasActive = prevActiveItemIdRef.current !== null;
+    const isActive = activeItemId !== null;
+    prevActiveItemIdRef.current = activeItemId;
+
+    // Always do an immediate fetch
+    fetchEntries();
+
+    // If a timer just stopped (active → null), the backend write isn't visible yet —
+    // do follow-up fetches to pick up the newly persisted entry.
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    if (wasActive && !isActive) {
+      timeouts.push(setTimeout(fetchEntries, 500));
+      timeouts.push(setTimeout(fetchEntries, 1500));
+    }
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach(clearTimeout);
+    };
+  }, [me?.id, todayYMD, activeItemId]);
+
+  // Build per-task logged breakdown from real entries + active timer's current entry elapsed
+  const activeEntryElapsedHours = activeTimer ? elapsedSeconds / 3600 : 0;
+  const activeTimerLabel = activeTimer?.target.label;
+  const loggedItemsForTooltip = useMemo(() => {
+    const byLabel = new Map<string, number>();
+    for (const e of todayEntries) {
+      // Skip the currently-running entry — we'll add its live elapsed below
+      if (e.stopped_at === null) continue;
+      byLabel.set(e.label, (byLabel.get(e.label) ?? 0) + e.duration_seconds / 3600);
+    }
+    if (activeTimer && activeEntryElapsedHours > 0 && activeTimerLabel) {
+      byLabel.set(activeTimerLabel, (byLabel.get(activeTimerLabel) ?? 0) + activeEntryElapsedHours);
+    }
+    return [...byLabel.entries()]
+      .map(([label, logged]) => ({ label, logged }))
+      .filter((i) => i.logged > 0)
+      .sort((a, b) => b.logged - a.logged);
+  }, [todayEntries, activeTimer, activeEntryElapsedHours, activeTimerLabel]);
+
+  const loggedTotalHours = loggedItemsForTooltip.reduce((sum, i) => sum + i.logged, 0);
   const stats = {
     ...baseStats,
-    loggedToday: baseStats.loggedToday + activeElapsedHours,
+    loggedToday: loggedTotalHours,
   };
 
   // Notes via tiptap
@@ -217,9 +413,24 @@ const DaySummaryWidget: React.FC<ComponentProps> = ({ componentId, config, onDis
             <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
               Logged Today
             </Text>
-            <Text fw={700} size="lg" c="teal">
-              {formatHoursHHMM(stats.loggedToday)}
-            </Text>
+            <Tooltip
+              multiline
+              w={300}
+              position="bottom"
+              withArrow
+              label={
+                loggedItemsForTooltip.length > 0
+                  ? loggedItemsForTooltip
+                      .map((li) => `${li.label}: ${formatHoursHHMM(li.logged)}`)
+                      .join('\n')
+                  : 'Nothing logged yet today.'
+              }
+              styles={{ tooltip: { whiteSpace: 'pre-line', fontSize: 12 } }}
+            >
+              <Text fw={700} size="lg" c="teal" style={{ cursor: 'default' }}>
+                {formatHoursHHMM(stats.loggedToday)}
+              </Text>
+            </Tooltip>
           </Paper>
           <Paper p="sm" radius="sm" withBorder>
             <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
@@ -250,6 +461,8 @@ const DaySummaryWidget: React.FC<ComponentProps> = ({ componentId, config, onDis
             </Tooltip>
           </Paper>
         </SimpleGrid>
+
+        <VacationControl />
 
         <Divider />
 

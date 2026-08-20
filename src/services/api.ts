@@ -1,5 +1,10 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { storeReceivedToken, tokenNeedsRefresh } from './AuthManager';
+import {
+  storeReceivedToken,
+  tokenNeedsRefresh,
+  getCurrentTokenData,
+  clearCurrentTokenData,
+} from './AuthManager';
 import { appState } from '../data/AppContext';
 import { TokenState } from '../data/persistent/persistent.state';
 import { decrementLoadingCount, incrementLoadingCount } from '../data/session/session.actions';
@@ -51,16 +56,23 @@ let invalidatedToken: string | null = null;
 function invalidateSession(badToken: string) {
   if (invalidatedToken === badToken) return; // already handling this token
   invalidatedToken = badToken;
+  clearCurrentTokenData();
   if (appState) {
     appState.dispatch(logOut());
   }
-  clearMeState();
+  // Pass the failed token so a fresh sign-in (new token) isn't blocked by this failure.
+  clearMeState(badToken);
 }
 
 /**
  * Attempt to refresh the token. Returns null if refresh fails.
  */
 function attemptRefresh(currentToken: string): Promise<TokenState | null> {
+  // Never fire a refresh without a token (observed post-logout race sending "Bearer <empty>",
+  // which 401s and re-triggers the session-expired path).
+  if (!currentToken) {
+    return Promise.resolve(null);
+  }
   if (!refreshPromise) {
     refreshPromise = refreshApi
       .post('/auth/refresh', null, {
@@ -88,7 +100,7 @@ function attemptRefresh(currentToken: string): Promise<TokenState | null> {
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && appState) {
-      const tokenData = appState.state.persistent.tokenData;
+      const tokenData = getCurrentTokenData();
       if (tokenData && tokenNeedsRefresh(tokenData)) {
         attemptRefresh(tokenData.token);
       }
@@ -200,10 +212,17 @@ export const requestInterceptor = async (
   // Wait for a slot to prevent overwhelming the API
   await waitForSlot();
 
+  // Unauthenticated auth endpoints never need the stored token, and a stale/expired token
+  // must NOT trigger refresh or invalidated-token handling here — otherwise a failed refresh
+  // would reject the login/sign-up request itself and leave the user stuck on the sign-in page.
+  const url = config.url ?? '';
+  const isUnauthenticatedAuthCall =
+    /\/auth\/(login|sign-up|refresh|forgot-password|reset-password)/.test(url);
+
   // If a bad token was invalidated, block any request still carrying it
   // until React rehydrates state with a cleared/new token.
-  if (invalidatedToken) {
-    const currentToken = appState?.state?.persistent?.tokenData?.token;
+  if (invalidatedToken && !isUnauthenticatedAuthCall) {
+    const currentToken = getCurrentTokenData()?.token;
     if (currentToken === invalidatedToken) {
       releaseSlot();
       if (appState) appState.dispatch(decrementLoadingCount());
@@ -220,9 +239,9 @@ export const requestInterceptor = async (
     if (appState) {
       appState.dispatch(incrementLoadingCount());
 
-      let tokenData = appState.state.persistent.tokenData;
+      let tokenData = getCurrentTokenData();
 
-      if (tokenData) {
+      if (tokenData && !isUnauthenticatedAuthCall) {
         if (tokenNeedsRefresh(tokenData)) {
           const refreshed = await attemptRefresh(tokenData.token);
           if (refreshed) {
@@ -282,20 +301,30 @@ export const responseErrorInterceptor = (error: AxiosError): Promise<AxiosRespon
   if (error.response?.status === 401 && error.config) {
     const alreadyRetried = (error.config as unknown as Record<string, unknown>)._authRetried;
     if (!alreadyRetried) {
-      const tokenData = appState?.state?.persistent?.tokenData;
+      const retryWith = (refreshed: TokenState | null) => {
+        if (refreshed) {
+          const config = error.config!;
+          (config as unknown as Record<string, unknown>)._authRetried = true;
+          config.headers['Authorization'] = `Bearer ${refreshed.token}`;
+          return api.request(config);
+        }
+        // Refresh failed — invalidateSession was already called
+        return Promise.reject({ status: 401, data: error.response?.data });
+      };
+
+      const tokenData = getCurrentTokenData();
       if (tokenData?.token) {
         releaseSlot();
         if (appState) appState.dispatch(decrementLoadingCount());
-        return attemptRefresh(tokenData.token).then((refreshed) => {
-          if (refreshed) {
-            const config = error.config!;
-            (config as unknown as Record<string, unknown>)._authRetried = true;
-            config.headers['Authorization'] = `Bearer ${refreshed.token}`;
-            return api.request(config);
-          }
-          // Refresh failed — invalidateSession was already called
-          return Promise.reject({ status: 401, data: error.response?.data });
-        });
+        return attemptRefresh(tokenData.token).then(retryWith);
+      }
+      // No token visible at this instant, but a refresh may already be in flight (started
+      // by another 401 or the visibility handler). A transiently-empty read must NOT be
+      // treated as a dead session — that signed the user out while a refresh was succeeding.
+      if (refreshPromise) {
+        releaseSlot();
+        if (appState) appState.dispatch(decrementLoadingCount());
+        return refreshPromise.then(retryWith);
       }
     }
     // Already retried or no token — invalidate and reject

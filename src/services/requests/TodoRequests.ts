@@ -7,6 +7,8 @@ import {
   TodoHierarchy,
   TimeEntry,
   TodoBalance,
+  TimerResponse,
+  TimerSessionData,
 } from '../../models/user/todo';
 
 export function getTodoToday(userId: number): Promise<AxiosResponse<UserPage>> {
@@ -62,7 +64,7 @@ export function getBalances(userId: number): Promise<AxiosResponse<{ data: TodoB
   return dedupedGet(`/users/${userId}/todos/balances`);
 }
 
-export function getRunningTimer(userId: number): Promise<AxiosResponse<TimeEntry | null>> {
+export function getRunningTimer(userId: number): Promise<AxiosResponse<TimerResponse | null>> {
   return dedupedGet(`/users/${userId}/todos/timer`);
 }
 
@@ -76,17 +78,25 @@ export function startRunningTimer(
     budget_hours?: number;
     session_budget_hours?: number;
     todo_balance_id?: number;
-    session_elapsed_seconds?: number;
   },
-): Promise<AxiosResponse<TimeEntry>> {
+): Promise<AxiosResponse<TimerResponse>> {
   return api.post(`/users/${userId}/todos/timer`, data);
+}
+
+export function updateRunningTimer(
+  userId: number,
+  data: { started_at?: string; label?: string; component_id?: number; item_id?: string },
+): Promise<AxiosResponse<TimerResponse>> {
+  return api.patch(`/users/${userId}/todos/timer`, data);
 }
 
 export function stopRunningTimer(
   userId: number,
-  data?: { session_elapsed_seconds?: number },
-): Promise<AxiosResponse<TimeEntry | void>> {
-  return api.delete(`/users/${userId}/todos/timer`, { data });
+  // Identifies the entry the client means to stop, so a stop racing the next task's start
+  // can never close the freshly-created entry. Omitted = legacy stop-whatever-is-running.
+  target?: { entry_id?: number; item_id?: string },
+): Promise<AxiosResponse<{ entry: TimeEntry; session: TimerSessionData | null } | void>> {
+  return api.delete(`/users/${userId}/todos/timer`, { params: target });
 }
 
 export function getTodoTemplates(userId: number): Promise<AxiosResponse<{ data: TodoTemplate[] }>> {
@@ -128,9 +138,10 @@ export function getTimeEntries(
   userId: number,
   from?: string,
   to?: string,
+  limit?: number,
 ): Promise<AxiosResponse<{ data: TimeEntry[] }>> {
   return dedupedGet(`/users/${userId}/todos/time-entries`, {
-    params: { from, to },
+    params: { from, to, limit },
   });
 }
 
@@ -165,4 +176,59 @@ export function updateTimeEntry(
 
 export function deleteTimeEntry(userId: number, entryId: number): Promise<AxiosResponse<void>> {
   return api.delete(`/users/${userId}/todos/time-entries/${entryId}`);
+}
+
+// Calendars
+export interface TodoCalendar {
+  id: number;
+  user_id: number;
+  name: string;
+  days_of_week: number[] | null;
+  specific_dates: string[] | null;
+  is_exclusion: boolean;
+  /** When false, tasks scheduled solely by this calendar don't accrue their daily increment on vacation days. */
+  active_on_vacation: boolean;
+}
+
+export interface VacationStatus {
+  on_vacation: boolean;
+  current_period: { id: number; start_date: string; end_date: string | null } | null;
+}
+
+export function getCalendars(userId: number): Promise<AxiosResponse<{ data: TodoCalendar[] }>> {
+  return dedupedGet(`/users/${userId}/todos/calendars`);
+}
+
+export function createCalendar(
+  userId: number,
+  data: Partial<TodoCalendar>,
+): Promise<AxiosResponse<TodoCalendar>> {
+  return api.post(`/users/${userId}/todos/calendars`, data);
+}
+
+export function updateCalendar(
+  userId: number,
+  calId: number,
+  data: Partial<TodoCalendar>,
+): Promise<AxiosResponse<TodoCalendar>> {
+  return api.put(`/users/${userId}/todos/calendars/${calId}`, data);
+}
+
+export function deleteCalendar(userId: number, calId: number): Promise<AxiosResponse<void>> {
+  return api.delete(`/users/${userId}/todos/calendars/${calId}`);
+}
+
+export function getVacationStatus(userId: number): Promise<AxiosResponse<VacationStatus>> {
+  return dedupedGet(`/users/${userId}/todos/vacation`);
+}
+
+export function setVacationStatus(
+  userId: number,
+  onVacation: boolean,
+  endDate?: string | null,
+): Promise<AxiosResponse<VacationStatus>> {
+  const body: Record<string, unknown> = { on_vacation: onVacation };
+  // Only include end_date when the caller explicitly passes it (null = open-ended).
+  if (endDate !== undefined) body.end_date = endDate;
+  return api.put(`/users/${userId}/todos/vacation`, body);
 }

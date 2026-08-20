@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Paper,
   Text,
@@ -9,10 +9,23 @@ import {
   TextInput,
   Stack,
   ScrollArea,
+  Menu,
+  Modal,
+  Autocomplete,
+  Button,
 } from '@mantine/core';
-import { IconPlayerStop, IconCheck } from '@tabler/icons-react';
+import {
+  IconPlayerStop,
+  IconCheck,
+  IconSettings,
+  IconArrowsHorizontal,
+  IconExchange,
+} from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { getTimeEntries, updateRunningTimer } from '../../services/requests/TodoRequests';
 import { TimerContext, TimerSession } from '../../contexts/TimerContext';
 import { MeContext } from '../../contexts/MeContext';
+import { TodoContext } from '../../contexts/TodoContext';
 
 function formatTime(totalSeconds: number): string {
   const abs = Math.abs(totalSeconds);
@@ -79,6 +92,83 @@ const FloatingTimer: React.FC = () => {
   const [editingStart, setEditingStart] = useState(false);
   const [startText, setStartText] = useState('');
 
+  const [taskChangeOpen, setTaskChangeOpen] = useState(false);
+  const [newTaskLabel, setNewTaskLabel] = useState('');
+  const [recentLabels, setRecentLabels] = useState<string[]>([]);
+  const { currentPage } = useContext(TodoContext);
+
+  const useLastEndAsStart = async () => {
+    if (!me?.id || !activeTimer) return;
+    try {
+      const today = new Date();
+      const to = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const fromDate = new Date(today.getTime() - 7 * 86400000);
+      const from = `${fromDate.getFullYear()}-${String(fromDate.getMonth() + 1).padStart(2, '0')}-${String(fromDate.getDate()).padStart(2, '0')}`;
+      const res = await getTimeEntries(me.id, from, to, 100);
+      const entries = res.data.data;
+      // Find the most recent stopped entry (any task) before the current timer's start
+      const currentStart = activeTimer.startTime;
+      const candidates = entries
+        .filter((e) => e.stopped_at)
+        .filter((e) => new Date(e.stopped_at!).getTime() < currentStart)
+        .sort((a, b) => new Date(b.stopped_at!).getTime() - new Date(a.stopped_at!).getTime());
+      const last = candidates[0];
+      if (last?.stopped_at) {
+        const ts = new Date(last.stopped_at).getTime();
+        updateStartTime(ts);
+        notifications.show({
+          message: `Start time set to ${new Date(ts).toLocaleTimeString()}`,
+          color: 'blue',
+          autoClose: 2500,
+        });
+      } else {
+        notifications.show({ message: 'No prior entry found', color: 'gray', autoClose: 2500 });
+      }
+    } catch (e) {
+      console.error('Failed to find last end time', e);
+      notifications.show({ title: 'Error', message: 'Failed to load entries', color: 'red' });
+    }
+  };
+
+  const openTaskChange = () => {
+    if (!activeTimer) return;
+    // Collect labels from current page components + recent entries
+    const labels = new Set<string>();
+    if (currentPage?.components) {
+      const walk = (n: Record<string, unknown>, parentLabel?: string) => {
+        const type = n.task_type as string;
+        const lbl = n.label as string;
+        if (type === 'category') {
+          const children = (n.children as Record<string, unknown>[]) ?? [];
+          children.forEach((c) => walk(c, lbl));
+        } else if (lbl) {
+          labels.add(parentLabel ? `${parentLabel} — ${lbl}` : lbl);
+        }
+      };
+      for (const comp of currentPage.components) {
+        if (comp.component_type === 'todo_task') {
+          const config = comp.config_json as Record<string, unknown>;
+          if (config?.root) walk(config.root as Record<string, unknown>);
+        }
+      }
+    }
+    setRecentLabels([...labels].sort());
+    setNewTaskLabel(activeTimer.target.label);
+    setTaskChangeOpen(true);
+  };
+
+  const submitTaskChange = async () => {
+    if (!me?.id || !newTaskLabel.trim()) return;
+    try {
+      await updateRunningTimer(me.id, { label: newTaskLabel.trim() });
+      notifications.show({ message: 'Task updated', color: 'green', autoClose: 2000 });
+      setTaskChangeOpen(false);
+    } catch (e) {
+      console.error('Failed to change task', e);
+      notifications.show({ title: 'Error', message: 'Failed to update task', color: 'red' });
+    }
+  };
+
   const isActive = !!activeTimer;
   const sessionBudgetHours = activeTimer?.target.sessionBudgetHours ?? 0;
   const sessionBudgetSeconds = sessionBudgetHours * 3600;
@@ -99,7 +189,10 @@ const FloatingTimer: React.FC = () => {
   const balanceRemainingSeconds = Math.round(Math.abs(effectiveBalanceHours) * 3600);
 
   // Units-mode total budget balance — only counts current session (capped at session budget)
-  const hasUnitsBudget = !hasBalance && budgetHours > 0;
+  // Hide the total budget bar when it would show the same values as the session bar
+  const sessionMatchesTotal =
+    sessionBudgetSeconds > 0 && sessionBudgetSeconds === budgetHours * 3600;
+  const hasUnitsBudget = !hasBalance && budgetHours > 0 && !sessionMatchesTotal;
   const totalBudgetSeconds = budgetHours * 3600;
   const cappedSessionSeconds =
     sessionBudgetSeconds > 0 ? Math.min(sessionSeconds, sessionBudgetSeconds) : sessionSeconds;
@@ -144,23 +237,13 @@ const FloatingTimer: React.FC = () => {
     setEditingStart(false);
   };
 
-  const timerRef = useRef<HTMLDivElement>(null);
-  const [timerHeight, setTimerHeight] = useState(0);
-  useEffect(() => {
-    if (timerRef.current) {
-      setTimerHeight(timerRef.current.offsetHeight);
-    }
-  });
-
   const hasAnyBar = hasSessions || hasBalance || hasUnitsBudget;
 
   return (
     <>
-      {isActive && <div style={{ height: timerHeight + 48 }} />}
       <Transition mounted={isActive} transition="slide-up" duration={200}>
         {(styles) => (
           <Paper
-            ref={timerRef}
             shadow="lg"
             p="md"
             radius="md"
@@ -179,15 +262,35 @@ const FloatingTimer: React.FC = () => {
               <Text fw={600} size="sm" lineClamp={1} style={{ maxWidth: 220 }}>
                 {activeTimer?.target.label}
               </Text>
-              <ActionIcon
-                variant="filled"
-                color="red"
-                size="sm"
-                onClick={stopTimer}
-                title="Stop timer"
-              >
-                <IconPlayerStop size={14} />
-              </ActionIcon>
+              <Group gap="xs" wrap="nowrap">
+                <Menu shadow="md" width={220} position="bottom-end" withinPortal zIndex={1100}>
+                  <Menu.Target>
+                    <ActionIcon variant="light" size="sm" title="Timer options">
+                      <IconSettings size={14} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconArrowsHorizontal size={14} />}
+                      onClick={useLastEndAsStart}
+                    >
+                      Start at last end time
+                    </Menu.Item>
+                    <Menu.Item leftSection={<IconExchange size={14} />} onClick={openTaskChange}>
+                      Change task
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                <ActionIcon
+                  variant="filled"
+                  color="red"
+                  size="sm"
+                  onClick={stopTimer}
+                  title="Stop timer"
+                >
+                  <IconPlayerStop size={14} />
+                </ActionIcon>
+              </Group>
             </Group>
             <Group justify="space-between" mb={hasAnyBar ? 'xs' : 0}>
               <Text size="xs" c="dimmed">
@@ -315,6 +418,32 @@ const FloatingTimer: React.FC = () => {
           </Paper>
         )}
       </Transition>
+      <Modal
+        opened={taskChangeOpen}
+        onClose={() => setTaskChangeOpen(false)}
+        title="Change Task"
+        size="md"
+        zIndex={1100}
+      >
+        <Stack gap="md">
+          <Autocomplete
+            label="Task"
+            placeholder="Type or select a task..."
+            data={recentLabels}
+            value={newTaskLabel}
+            onChange={setNewTaskLabel}
+            autoFocus
+          />
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setTaskChangeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitTaskChange} disabled={!newTaskLabel.trim()}>
+              Update
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 };

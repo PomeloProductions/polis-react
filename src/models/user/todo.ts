@@ -28,6 +28,19 @@ export interface TimeEntry extends BaseModel {
   session_budget_hours?: number;
   todo_balance_id?: number;
   session_elapsed_seconds?: number;
+  timer_session_id?: number;
+}
+
+export interface TimerSessionData {
+  id: number;
+  total_elapsed_seconds: number;
+  session_budget_seconds: number;
+  status: 'active' | 'completed';
+}
+
+export interface TimerResponse {
+  entry: TimeEntry;
+  session: TimerSessionData | null;
 }
 
 export interface SectionDefinition {

@@ -15,6 +15,9 @@ import { MeContext } from './MeContext';
 interface TodoContextState {
   currentPage: UserPage | null;
   balances: TodoBalance[];
+  /** Balance "as of" the current day page's date (keyed by balance id), from the balance log.
+   *  Used to render historical hours-mode values instead of the unreliable per-node tally snapshot. */
+  balancesAsOf: Record<number, number>;
   hierarchy: TodoHierarchy | null;
   settings: TodoSetting | null;
   loading: boolean;
@@ -32,6 +35,7 @@ interface TodoContextState {
 const defaultState: TodoContextState = {
   currentPage: null,
   balances: [],
+  balancesAsOf: {},
   hierarchy: null,
   silentRefresh: async () => {},
   settings: null,
@@ -62,16 +66,21 @@ export const TodoContextProvider: React.FC<Props> = ({ children }) => {
   const { me } = useContext(MeContext);
   const [currentPage, setCurrentPage] = useState<UserPage | null>(null);
   const [balances, setBalances] = useState<TodoBalance[]>([]);
+  const [balancesAsOf, setBalancesAsOf] = useState<Record<number, number>>({});
   const [hierarchy, setHierarchy] = useState<TodoHierarchy | null>(null);
   const [settings, setSettings] = useState<TodoSetting | null>(null);
   const [loading, setLoading] = useState(true);
   const [hierarchyCache, setHierarchyCache] = useState<Record<number, TodoHierarchy>>({});
 
-  const setPageFromResponse = useCallback((data: UserPage & { balances?: TodoBalance[] }) => {
-    const { balances: pageBalances, ...page } = data;
-    setCurrentPage(page as UserPage);
-    if (pageBalances) setBalances(pageBalances);
-  }, []);
+  const setPageFromResponse = useCallback(
+    (data: UserPage & { balances?: TodoBalance[]; balances_asof?: Record<number, number> }) => {
+      const { balances: pageBalances, balances_asof: pageAsOf, ...page } = data;
+      setCurrentPage(page as UserPage);
+      if (pageBalances) setBalances(pageBalances);
+      setBalancesAsOf(pageAsOf ?? {});
+    },
+    [],
+  );
 
   const refreshToday = useCallback(async () => {
     if (!me?.id) return;
@@ -136,7 +145,8 @@ export const TodoContextProvider: React.FC<Props> = ({ children }) => {
       // If we're on a day page and the day has changed, load today instead
       const pageConfig = currentPage?.config_json as Record<string, unknown> | undefined;
       const pageDate = pageConfig?.todo_date as string | undefined;
-      const todayStr = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       if (pageDate && pageDate !== todayStr && pageConfig?.todo_level === 'day') {
         const response = await getTodoNavigate(me.id, 'day', todayStr);
         setPageFromResponse(response.data);
@@ -209,6 +219,7 @@ export const TodoContextProvider: React.FC<Props> = ({ children }) => {
       value={{
         currentPage,
         balances,
+        balancesAsOf,
         hierarchy,
         settings,
         loading,

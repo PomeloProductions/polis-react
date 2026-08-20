@@ -4,28 +4,14 @@ export interface SubItem {
   completed?: boolean;
 }
 
-export interface RotatingItem {
-  id: string;
-  text: string;
-  last_date?: string;
-  on_copy?: string;
-  count?: number; // per-item counter
-}
-
-export interface RotatingGroup {
-  group_number: number;
-  label?: string;
-  count_this_group: number;
-  on_copy?: 'preserve' | 'increment';
-  children: TodoTaskNode[]; // child nodes — can be line_items, rotating (nested priority), or categories
-  last_date?: string;
-  mark_done_on_group?: boolean;
-  cascade_ratio?: number; // default 2 — base for cascade reset within this group
-}
-
 export interface TodoTaskNode {
   id: string;
-  task_type: 'category' | 'rotating' | 'line_item';
+  /**
+   * priority_group: a rotation slot under a rotating node — an ordinary child that groups
+   * items. Any direct child of a rotating node acts as a slot (priority_group, bare
+   * line_item task, or a nested rotating).
+   */
+  task_type: 'category' | 'rotating' | 'line_item' | 'priority_group';
   label: string;
   description?: string;
   collapsed?: boolean;
@@ -39,14 +25,15 @@ export interface TodoTaskNode {
   logged_hours?: number;
   deficit?: number;
 
-  // Category fields
+  // Container fields (categories, rotating slots, priority_group items)
   children?: TodoTaskNode[];
 
   // Rotating fields
-  groups?: RotatingGroup[];
-  custom_groups?: boolean;
   logged_time?: number;
   cascade_ratio?: number; // default 2 — base for cascade reset (2^n pattern becomes ratio^n)
+  /** Rotation-cycle count for a slot (any direct child of a rotating node). Signed —
+   *  cascade resets legitimately drive it negative. */
+  count_this_group?: number;
 
   // Line item fields
   completed?: boolean;
@@ -58,8 +45,18 @@ export interface TodoTaskNode {
   decrement_on_done?: boolean; // default true — if false, mark-done won't reduce tally
   time_tracking_mode?: 'reset' | 'accumulative'; // default 'reset' — reset each session or accumulate
 
+  // Display options
+  show_checkmark?: boolean; // Show mark-done checkmark and last_date on line items
+
   // Balance FK — links hours-mode nodes to their authoritative TodoBalance record
   todo_balance_id?: number;
+
+  // Calendar rules — named calendars with add/subtract composition
+  calendar_rules?: { calendar_id: number; calendar_name: string; mode: 'add' | 'subtract' }[];
+
+  /** Transient PATCH flag (never a persisted field): marks this children-patch as a mark-off,
+   *  triggering the server's atomic timer-split / session-complete / bank sequence. */
+  _mark_off?: boolean;
 }
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -109,6 +106,59 @@ export function addChildAtPath(
   return { ...root, children };
 }
 
+/** Find a node by its id (client_id) anywhere in the tree. Returns the node and its real path —
+ *  slots and slot items are ordinary children now, so every node has an addressable path. */
+export function findNodeById(
+  root: TodoTaskNode,
+  id: string,
+  currentPath: number[] = [],
+): { node: TodoTaskNode; path: number[] } | null {
+  if (root.id === id) return { node: root, path: currentPath };
+  if (root.children) {
+    for (let i = 0; i < root.children.length; i++) {
+      const result = findNodeById(root.children[i], id, [...currentPath, i]);
+      if (result) return result;
+    }
+  }
+  return null;
+}
+
+/** Remove a child at the given index from the parent at the given path, returning the updated root and removed node. */
+export function removeChildAtPath(
+  root: TodoTaskNode,
+  parentPath: number[],
+  childIndex: number,
+): { root: TodoTaskNode; removed: TodoTaskNode } | null {
+  const parent = parentPath.length === 0 ? root : getNodeAtPath(root, parentPath);
+  if (!parent?.children || childIndex < 0 || childIndex >= parent.children.length) return null;
+  const removed = parent.children[childIndex];
+  const newChildren = parent.children.filter((_, i) => i !== childIndex);
+  const updatedRoot = updateNodeAtPath(root, parentPath, { children: newChildren });
+  return { root: updatedRoot, removed };
+}
+
+/** Nest a node into a target node by ID — converts target to category if needed, appends node as child. */
+export function nestNodeInto(
+  root: TodoTaskNode,
+  targetId: string,
+  nodeToNest: TodoTaskNode,
+): TodoTaskNode {
+  const transform = (n: TodoTaskNode): TodoTaskNode => {
+    if (n.id === targetId) {
+      return {
+        ...n,
+        task_type: 'category',
+        children: [...(n.children ?? []), nodeToNest],
+      };
+    }
+    if (n.children) {
+      return { ...n, children: n.children.map(transform) };
+    }
+    return n;
+  };
+  return transform(root);
+}
+
 export function moveChildAtPath(
   root: TodoTaskNode,
   path: number[],
@@ -133,10 +183,25 @@ export function moveChildAtPath(
   return updateNodeAtPath(root, parentPath, { children } as Partial<TodoTaskNode>);
 }
 
+/**
+ * The single source of truth for a node's tracking mode when it isn't explicitly set.
+ * Backend, renderer, drawer and summaries must all agree on this — historically the drawer
+ * defaulted undefined to 'hours' while everything else treated undefined as 'units', which made
+ * the settings drawer misrepresent units nodes as hours.
+ */
+export const DEFAULT_TRACKING_MODE: 'units' | 'hours' = 'hours';
+
+/** Resolve a node's tracking mode, applying the shared default when unset. Use everywhere. */
+export function getTrackingMode(node: {
+  tracking_mode?: 'units' | 'hours' | null;
+}): 'units' | 'hours' {
+  return node.tracking_mode ?? DEFAULT_TRACKING_MODE;
+}
+
 /** Whether a node has its own tracking configured (not just a pure container). */
 export function hasOwnTracking(node: TodoTaskNode): boolean {
   return (
-    node.tracking_mode === 'hours' ||
+    getTrackingMode(node) === 'hours' ||
     ((node.tally_step ?? 0) > 0 && (node.time_budget_hours ?? 0) > 0)
   );
 }
@@ -155,14 +220,14 @@ export function computeDailyBudget(node: TodoTaskNode): number {
   if (node.task_type === 'category' && node.children && node.children.length > 0) {
     const childSum = node.children.reduce((sum, child) => sum + computeDailyBudget(child), 0);
     const ownBudget = hasOwnTracking(node)
-      ? node.tracking_mode === 'hours'
+      ? getTrackingMode(node) === 'hours'
         ? (node.tally_step ?? 0)
         : (node.time_budget_hours ?? 0)
       : 0;
     return ownBudget + childSum;
   }
   // Hours mode: tally_step IS the daily hours
-  if (node.tracking_mode === 'hours') return node.tally_step ?? 0;
+  if (getTrackingMode(node) === 'hours') return node.tally_step ?? 0;
   return node.time_budget_hours ?? 0;
 }
 
@@ -185,17 +250,28 @@ export function computeTotals(
   totalBudgetHours: number;
   totalLoggedHours: number;
   totalDeficit: number;
+  /**
+   * Logged time that should CREDIT a budget-based deficit, summed per-child per-mode:
+   *  - hours-mode nodes contribute 0 — their deficit is the balance, which already includes
+   *    logged time (adding it again double-counts, e.g. a parent showing -0:17 while its
+   *    children summed to -0:28).
+   *  - units/rotating nodes contribute their logged time capped at the per-session allotment
+   *    (time_budget_hours), so over-allotment time never credits the balance.
+   */
+  totalSpentCredit: number;
 } {
   // Step 1: Aggregate children totals for categories
   let childBudget = 0,
     childLogged = 0,
-    childDeficit = 0;
+    childDeficit = 0,
+    childCredit = 0;
   if (node.task_type === 'category' && node.children && node.children.length > 0) {
     for (const child of node.children) {
       const ct = computeTotals(child, undefined, balanceMap);
       childBudget += ct.totalBudgetHours;
       childLogged += ct.totalLoggedHours;
       childDeficit += ct.totalDeficit;
+      childCredit += ct.totalSpentCredit;
     }
   }
 
@@ -205,27 +281,37 @@ export function computeTotals(
       totalBudgetHours: childBudget,
       totalLoggedHours: childLogged,
       totalDeficit: childDeficit,
+      totalSpentCredit: childCredit,
     };
   }
 
   // Step 3: Compute own totals
-  const isHoursMode = node.tracking_mode === 'hours';
+  const isHoursMode = getTrackingMode(node) === 'hours';
   const effectiveTally =
     overrideTally ??
     (isHoursMode && node.todo_balance_id && balanceMap?.has(node.todo_balance_id)
       ? balanceMap.get(node.todo_balance_id)!
       : (node.tally ?? 0));
 
+  // Rotating nodes store logged time in logged_time; everything else in logged_hours. Using
+  // `logged_hours ?? logged_time` breaks for rotating nodes (logged_hours is 0, not null, so it
+  // shadows logged_time) — which made category totals omit rotating children's logged time.
+  const ownLogged =
+    node.task_type === 'rotating' ? (node.logged_time ?? 0) : (node.logged_hours ?? 0);
+  const perSessionAllotment = node.time_budget_hours ?? 0;
+  const ownCredit = isHoursMode
+    ? 0
+    : perSessionAllotment > 0
+      ? Math.min(ownLogged, perSessionAllotment)
+      : ownLogged;
+
   let ownBudget = 0,
-    ownLogged = 0,
     ownDeficit = 0;
   if (isHoursMode) {
-    ownLogged = node.logged_hours ?? node.logged_time ?? 0;
     ownDeficit = -effectiveTally;
   } else {
     const budgetPerUnit = node.time_budget_hours ?? 0;
     ownBudget = effectiveTally * budgetPerUnit;
-    ownLogged = node.logged_hours ?? node.logged_time ?? 0;
     ownDeficit = -ownBudget;
   }
 
@@ -235,13 +321,30 @@ export function computeTotals(
       totalBudgetHours: ownBudget + childBudget,
       totalLoggedHours: ownLogged + childLogged,
       totalDeficit: ownDeficit + childDeficit,
+      totalSpentCredit: ownCredit + childCredit,
     };
   }
 
-  return { totalBudgetHours: ownBudget, totalLoggedHours: ownLogged, totalDeficit: ownDeficit };
+  return {
+    totalBudgetHours: ownBudget,
+    totalLoggedHours: ownLogged,
+    totalDeficit: ownDeficit,
+    totalSpentCredit: ownCredit,
+  };
 }
 
-export function scheduleToString(schedule?: number[]): string {
+export function scheduleToString(
+  schedule?: number[],
+  calendarRules?: TodoTaskNode['calendar_rules'],
+): string {
+  // If calendar rules exist, show calendar names
+  if (calendarRules && calendarRules.length > 0) {
+    const parts: string[] = [];
+    for (const rule of calendarRules) {
+      parts.push(rule.mode === 'subtract' ? `- ${rule.calendar_name}` : rule.calendar_name);
+    }
+    return parts.join(', ');
+  }
   if (!schedule || schedule.length === 0) return '';
   const sorted = [...schedule].sort((a, b) => a - b);
   if (sorted.length === 7) return 'everyday';
@@ -252,9 +355,9 @@ export function scheduleToString(schedule?: number[]): string {
 
 /** Format decimal hours as h:mm (e.g., 12.54 → "12:32", 0.25 → "0:15") */
 export function formatHoursHHMM(hours: number): string {
-  const abs = Math.abs(hours);
-  const h = Math.floor(abs);
-  const m = Math.round((abs - h) * 60);
+  const totalMinutes = Math.round(Math.abs(hours) * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
   const sign = hours < 0 ? '-' : '';
   return `${sign}${h}:${String(m).padStart(2, '0')}`;
 }
@@ -269,16 +372,22 @@ export function formatHoursHHMM(hours: number): string {
  */
 export function formatLastDate(lastDate?: string | null): string {
   if (!lastDate) return '—';
+  const currentYear = new Date().getFullYear();
   // ISO timestamp (contains 'T')
   if (lastDate.includes('T')) {
     const d = new Date(lastDate);
     if (isNaN(d.getTime())) return lastDate;
-    return `${d.getMonth() + 1}-${d.getDate()}`;
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    return d.getFullYear() !== currentYear ? `${m}-${day}-${d.getFullYear()}` : `${m}-${day}`;
   }
   // YYYY-MM-DD format
   if (/^\d{4}-\d{2}-\d{2}$/.test(lastDate)) {
     const parts = lastDate.split('-');
-    return `${parseInt(parts[1], 10)}-${parseInt(parts[2], 10)}`;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    return y !== currentYear ? `${m}-${day}-${y}` : `${m}-${day}`;
   }
   // Legacy M-D format
   return lastDate;
@@ -331,7 +440,7 @@ export function makeId(prefix: string): string {
 }
 
 export function createEmptyNode(
-  taskType: 'category' | 'rotating' | 'line_item',
+  taskType: 'category' | 'rotating' | 'line_item' | 'priority_group',
   label = 'New Task',
 ): TodoTaskNode {
   const base: TodoTaskNode = {
@@ -344,16 +453,19 @@ export function createEmptyNode(
   if (taskType === 'category') {
     base.children = [];
   } else if (taskType === 'rotating') {
-    base.groups = [
+    // Slots are ordinary children: start with two priority groups
+    base.children = [
       {
-        group_number: 1,
+        id: makeId('pg'),
+        task_type: 'priority_group',
         label: 'Priority',
         count_this_group: 0,
         on_copy: 'preserve',
         children: [],
       },
       {
-        group_number: 2,
+        id: makeId('pg'),
+        task_type: 'priority_group',
         label: 'Priority',
         count_this_group: 0,
         on_copy: 'preserve',
@@ -362,10 +474,14 @@ export function createEmptyNode(
     ];
     base.tally = 0;
     base.tally_step = 1;
-    base.custom_groups = false;
+  } else if (taskType === 'priority_group') {
+    base.children = [];
+    base.count_this_group = 0;
+    base.on_copy = 'preserve';
   } else {
     base.completed = false;
     base.sub_items = [];
+    base.tracking_mode = DEFAULT_TRACKING_MODE;
   }
 
   return base;
@@ -425,134 +541,204 @@ export function moveNode(
   return updated;
 }
 
+// ============================================================================
+// Rotation slots — a rotating node's slots are its direct children, in order.
+// Each slot is a priority_group (items inside), a bare task, or a nested rotating.
+// ============================================================================
+
 /**
- * Distribute items evenly across N groups, preserving existing group metadata.
+ * Normalize slot rotation counts under the (possibly new) quota structure. Call whenever the
+ * NUMBER of slots changes: count_this_group values are cycle positions relative to quotas of
+ * ratio^(n-1-i), so a different n re-defines what they mean.
+ *
+ * Cycles that are ALREADY COMPLETE under the new structure play out (the cascade reset that
+ * "would have marked off before"); genuine mid-cycle progress is preserved unchanged — e.g.
+ * (1,0) stays (1,0), while leftover (4,2) under 2-slot quotas (2,1) resolves to (0,0).
  */
-export function distributeIntoGroups(
-  items: TodoTaskNode[],
-  numGroups: number,
-  existingGroups: RotatingGroup[],
-  defaultLabel: string,
-): RotatingGroup[] {
-  const n = Math.max(1, numGroups);
-  const perGroup = Math.floor(items.length / n);
-  const remainder = items.length % n;
-  const result: RotatingGroup[] = [];
-  let idx = 0;
-  for (let i = 0; i < n; i++) {
-    const count = perGroup + (i >= n - remainder ? 1 : 0);
-    const existing = existingGroups[i];
-    result.push({
-      group_number: i + 1,
-      label: existing?.label ?? defaultLabel,
-      count_this_group: existing?.count_this_group ?? 0,
-      on_copy: existing?.on_copy ?? 'preserve',
-      children: items.slice(idx, idx + count),
-    });
-    idx += count;
+export function normalizeSlotCycle(
+  slots: TodoTaskNode[],
+  cascadeRatio: number = 2,
+): TodoTaskNode[] {
+  const n = slots.length;
+  if (n === 0) return slots;
+  const quotas = slots.map((_, i) => Math.pow(cascadeRatio, n - 1 - i));
+  let counts = slots.map((s) => s.count_this_group ?? 0);
+  while (counts.every((c, i) => c >= quotas[i])) {
+    counts = counts.map((c, i) => c - quotas[i]);
   }
-  return result;
+  return slots.map((s, i) => ({ ...s, count_this_group: counts[i] }));
 }
 
 /**
- * Get current group number using 2:1 rotation logic.
- * Group i+1 earns 1 turn for every 2 turns group i completes.
- * Pick the lowest-priority group that has earned but unused turns.
- * If none, group 1 (highest priority) gets focus.
+ * The slot currently due for focus. Slot 0 is the pacemaker: with ratio R, slot[i] earns a turn
+ * for every R^i completions of SLOT 0 — never of its immediate neighbor, so an out-of-order
+ * completion in a middle slot can't fund a turn for the slot below it. Scan top-down so the
+ * highest-priority due slot wins, producing the interleaved cascade (#1 #1 #2 #1 #1 #2 #3 for
+ * ratio 2 with 3 slots). Returns the slot's client id.
  */
-export function getCurrentGroupNum(
-  groups: RotatingGroup[],
+export function getCurrentSlotId(
+  slots: TodoTaskNode[],
   cascadeRatio: number = 2,
-): number | undefined {
-  if (groups.length === 0) return undefined;
-  if (groups.length === 1) return groups[0].group_number;
+): string | undefined {
+  if (slots.length === 0) return undefined;
+  if (slots.length === 1) return slots[0].id;
 
-  // Check from lowest priority to highest — first group with earned unused turns wins
-  // With ratio R: group[i] earns a turn for every R completions of group[i-1]
-  for (let i = groups.length - 1; i >= 1; i--) {
-    const parentCount = groups[i - 1].count_this_group;
-    const earnedTurns = Math.floor(parentCount / cascadeRatio);
-    if (groups[i].count_this_group < earnedTurns) {
-      return groups[i].group_number;
+  const pacemakerCount = slots[0].count_this_group ?? 0;
+  for (let i = 1; i < slots.length; i++) {
+    const earnedTurns = Math.floor(pacemakerCount / Math.pow(cascadeRatio, i));
+    if ((slots[i].count_this_group ?? 0) < earnedTurns) {
+      return slots[i].id;
     }
   }
 
-  // No lower group needs a turn — group 1 gets focus
-  return groups[0].group_number;
+  return slots[0].id;
 }
 
-/**
- * Get next item in a group using least-recently-done rotation.
- * Picks the item with the oldest last_date, preferring items not done today.
- */
-export function getNextItemId(
-  groups: RotatingGroup[],
-  currentGroupNum: number | undefined,
-): string | undefined {
-  if (!currentGroupNum) return undefined;
-  const group = groups.find((g) => g.group_number === currentGroupNum);
-  if (!group || group.children.length === 0) return undefined;
-
-  // Find the item with the oldest last_date (least recently done)
-  const oldest = group.children.reduce((best, item) => {
+/** Least-recently-done child of a priority_group slot (ties broken by lower tally). */
+export function getNextItemIdInSlot(slot: TodoTaskNode): string | undefined {
+  const items = slot.children ?? [];
+  if (items.length === 0) return undefined;
+  const oldest = items.reduce((best, item) => {
     const bestDate = parseLastDate(best.last_date);
     const itemDate = parseLastDate(item.last_date);
     if (itemDate !== bestDate) return itemDate < bestDate ? item : best;
-    // Same timestamp: prefer lower tally (less done = more overdue)
     return (item.tally ?? 0) < (best.tally ?? 0) ? item : best;
   });
   return oldest.id;
 }
 
 /**
- * Resolve the deep next item when groups can have nested sub_groups.
- * Returns the chain: { groupNum, itemId?, subGroupNum?, subItemId? }
- * If the selected group has sub_groups, drill into them to find the active sub-group and item.
+ * Resolve the focused slot chain and the actionable leaf item of a rotating node.
+ *  - priority_group slot → its least-recently-done item is the leaf
+ *  - bare task slot → the slot itself is the leaf
+ *  - nested rotating slot → recurse
  */
 export interface DeepNextResult {
-  groupNum: number;
-  itemId?: string;
-  subGroupNum?: number;
-  subItemId?: string;
-  // Full path for arbitrary depth: array of group_numbers from root to leaf
-  groupPath: number[];
+  /** client_ids of the focused slot at each level, root-first */
+  slotPath: string[];
+  /** the actionable item to mark done */
   leafItemId?: string;
 }
 
-export function getDeepNextItem(
-  groups: RotatingGroup[],
-  cascadeRatio: number = 2,
-): DeepNextResult | undefined {
-  const groupNum = getCurrentGroupNum(groups, cascadeRatio);
-  if (!groupNum) return undefined;
+export function getDeepNextItem(rotating: TodoTaskNode): DeepNextResult | undefined {
+  const slots = rotating.children ?? [];
+  const slotId = getCurrentSlotId(slots, rotating.cascade_ratio ?? 2);
+  if (!slotId) return undefined;
+  const slot = slots.find((s) => s.id === slotId);
+  if (!slot) return undefined;
 
-  const group = groups.find((g) => g.group_number === groupNum);
-  if (!group) return undefined;
-
-  // Check if any child in group.children is a nested rotating node; if so, drill into it
-  const nestedRotating = group.children.find((c) => c.task_type === 'rotating');
-  if (nestedRotating && nestedRotating.groups && nestedRotating.groups.length > 0) {
-    const subRatio = nestedRotating.cascade_ratio ?? 2;
-    const sub = getDeepNextItem(nestedRotating.groups, subRatio);
-    if (sub) {
-      return {
-        groupNum,
-        subGroupNum: sub.groupNum,
-        subItemId: sub.itemId ?? sub.leafItemId,
-        itemId: undefined,
-        groupPath: [groupNum, ...sub.groupPath],
-        leafItemId: sub.leafItemId,
-      };
-    }
-    return { groupNum, groupPath: [groupNum] };
+  if (slot.task_type === 'rotating' && (slot.children?.length ?? 0) > 0) {
+    const sub = getDeepNextItem(slot);
+    return {
+      slotPath: [slotId, ...(sub?.slotPath ?? [])],
+      leafItemId: sub?.leafItemId ?? slot.id,
+    };
   }
 
-  // Leaf group: pick next item
-  const itemId = getNextItemId(groups, groupNum);
-  return {
-    groupNum,
-    itemId: itemId ?? undefined,
-    groupPath: [groupNum],
-    leafItemId: itemId ?? undefined,
-  };
+  if (slot.task_type === 'priority_group' && (slot.children?.length ?? 0) > 0) {
+    const itemId = getNextItemIdInSlot(slot);
+    const item = slot.children!.find((c) => c.id === itemId);
+    // A priority group's item may itself be a rotating node — drill into it, routing the
+    // path THROUGH the item so mark-done can increment every level it passes.
+    if (item && item.task_type === 'rotating' && (item.children?.length ?? 0) > 0) {
+      const sub = getDeepNextItem(item);
+      return {
+        slotPath: [slotId, item.id, ...(sub?.slotPath ?? [])],
+        leafItemId: sub?.leafItemId ?? item.id,
+      };
+    }
+    return { slotPath: [slotId], leafItemId: itemId };
+  }
+
+  // Bare task slot (or empty group) — the slot itself is the completion target
+  return { slotPath: [slotId], leafItemId: slot.id };
+}
+
+/**
+ * Pure mark-done for a rotating node. Increments the focused slot's cycle count at every level
+ * of slotPath, stamps the leaf (item last_date + tally for priority_group items; the slot's own
+ * last_date for bare/group-level targets), and applies the cascade reset at each level whose
+ * LAST slot completed (subtract ratio^(n-1-i) from every slot — counts may go negative, which
+ * is legitimate). Returns the updated rotating node; callers patch `children` from it.
+ */
+export function applyMarkDone(
+  container: TodoTaskNode,
+  slotPath: string[],
+  leafItemId?: string,
+  nowIso?: string,
+): TodoTaskNode {
+  const now = nowIso ?? new Date().toISOString();
+  const children = [...(container.children ?? [])];
+  const [childId, ...restPath] = slotPath;
+  const idx = children.findIndex((s) => s.id === childId);
+  if (idx === -1) return container;
+
+  // A rotating node marked through: its own completion bookkeeping — backlog tally decrements
+  // (unless decrement_on_done is off) and its session-logged time banks to zero, matching what
+  // a direct mark on that node would have patched.
+  const stampRotating = (n: TodoTaskNode): TodoTaskNode => ({
+    ...n,
+    ...(n.decrement_on_done !== false && typeof n.tally === 'number' ? { tally: n.tally - 1 } : {}),
+    logged_time: 0,
+    logged_hours: 0,
+  });
+
+  // Routing through a priority group: slotPath[0] addresses one of its ITEMS (a nested
+  // rotating). The group's own count/last_date are stamped by the PARENT rotating level;
+  // here we recurse into the item and stamp ITS last_date so the group's
+  // least-recently-done rotation moves past it (items rotate by date, not counts).
+  if (container.task_type === 'priority_group') {
+    children[idx] = {
+      ...stampRotating(applyMarkDone(children[idx], restPath, leafItemId, now)),
+      last_date: now,
+    };
+    return { ...container, children };
+  }
+
+  const ratio = container.cascade_ratio ?? 2;
+  let slot = children[idx];
+
+  if (
+    restPath.length > 0 &&
+    (slot.task_type === 'rotating' || slot.task_type === 'priority_group')
+  ) {
+    // Deeper levels first, then this slot's own count
+    slot = applyMarkDone(slot, restPath, leafItemId, now);
+    if (slot.task_type === 'rotating') {
+      slot = stampRotating(slot);
+    }
+    slot = { ...slot, count_this_group: (slot.count_this_group ?? 0) + 1 };
+    if (slot.task_type === 'priority_group') {
+      // Marking through a group also stamps the group's last-done date
+      slot = { ...slot, last_date: now };
+    }
+  } else if (
+    slot.task_type === 'priority_group' &&
+    leafItemId &&
+    leafItemId !== slot.id &&
+    slot.children
+  ) {
+    slot = {
+      ...slot,
+      count_this_group: (slot.count_this_group ?? 0) + 1,
+      children: slot.children.map((it) =>
+        it.id === leafItemId ? { ...it, last_date: now, tally: (it.tally ?? 0) + 1 } : it,
+      ),
+    };
+  } else {
+    // Bare task slot / group-level target — the slot itself is stamped
+    slot = { ...slot, count_this_group: (slot.count_this_group ?? 0) + 1, last_date: now };
+  }
+  children[idx] = slot;
+
+  let result = children;
+  if (idx === children.length - 1 && children.length > 1) {
+    const n = result.length;
+    result = result.map((s, i) => ({
+      ...s,
+      count_this_group: (s.count_this_group ?? 0) - Math.pow(ratio, n - 1 - i),
+    }));
+  }
+
+  return { ...container, children: result };
 }

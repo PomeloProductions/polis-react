@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import User, { placeholderUser } from '../models/user/user';
 import AuthRequests from '../services/requests/AuthRequests';
+import { clearCurrentTokenData } from '../services/AuthManager';
 import { logOut } from '../data/persistent/persistent.actions';
 import { connect } from '../data/connect';
 import LoadingScreen from '../components/LoadingScreen';
@@ -36,6 +37,10 @@ let persistedState = {
 
 let meRequest: Promise<User> | null = null;
 let authFailed = false;
+// The token value that triggered the auth failure. A failure only blocks the SAME token —
+// a different (or new) token means a fresh sign-in, so getMe must be retried. Without this,
+// a sticky authFailed left users stuck on the sign-in page after re-logging in.
+let authFailedToken: string | null = null;
 let retryBackoffUntil = 0;
 
 const meSubscriptions: { [key: string]: Dispatch<SetStateAction<MeContextState>> } = {};
@@ -56,7 +61,7 @@ export const MeContext = React.createContext<MeContextStateConsumer>(createDefau
  * invalidated (401 with no recoverable refresh) so no new instances
  * initialize with stale auth state.
  */
-export function clearMeState() {
+export function clearMeState(failedToken?: string) {
   persistedState = {
     me: placeholderUser(),
     networkError: false,
@@ -64,6 +69,8 @@ export function clearMeState() {
     isLoading: false,
   };
   authFailed = true;
+  // Record WHICH token failed so a fresh sign-in (new token) isn't blocked by this failure.
+  authFailedToken = failedToken ?? null;
   meRequest = null;
   Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
 }
@@ -79,6 +86,7 @@ const setPersistedState = (me: User) => {
   // Only clear authFailed if we actually got a valid user
   if (me.id) {
     authFailed = false;
+    authFailedToken = null;
   }
   Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
 };
@@ -114,6 +122,7 @@ const resetNetworkError = () => {
     isLoading: true,
   };
   authFailed = false;
+  authFailedToken = null;
   retryBackoffUntil = 0;
   meRequest = null;
   Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
@@ -156,14 +165,21 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
   const goToSignIn = useCallback(() => {
     if (!optional) {
       authFailed = true;
+      // Remember which token failed so a later, different token (a fresh sign-in) isn't blocked.
+      authFailedToken = tokenData?.token ?? null;
       meRequest = null;
+      // Forget the previous user. Otherwise a stale me.id lingers in module state and, on the
+      // next sign-in within the same session, blocks loadInfo (`if (meContext.me.id) return`)
+      // so getMe never runs — leaving the app rendered but logged-out.
       persistedState = {
         ...persistedState,
+        me: placeholderUser(),
         isLoading: false,
         isLoggedIn: false,
       };
       Object.values(meSubscriptions).forEach((callback) => callback(persistedState));
       try {
+        clearCurrentTokenData();
         logOut();
       } catch (e) {
         // logOut may fail if store is in an unexpected state
@@ -174,12 +190,22 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       }
       navigate('/sign-in', { replace: true });
     }
-  }, [optional, logOut, navigate]);
+  }, [optional, logOut, navigate, tokenData]);
 
   const loadInfo = useCallback(async () => {
-    // Don't fire if auth already failed or a request is in flight
-    if (authFailed || meRequest || meContext.me.id) return;
+    // Skip only if a fetch is in flight or we're actually authenticated. Guarding on me.id
+    // alone was wrong: a stale me.id left over from a prior session (isLoggedIn already false)
+    // would block getMe forever, so re-login rendered the app in a logged-out state.
+    if (meRequest || (meContext.me.id && meContext.isLoggedIn)) return;
     if (!tokenData?.token) return;
+
+    // A previous auth failure only blocks the SAME token. A new token (fresh sign-in or
+    // refresh) clears the failure so getMe is retried — otherwise login would be stuck.
+    if (authFailed) {
+      if (authFailedToken === tokenData.token) return;
+      authFailed = false;
+      authFailedToken = null;
+    }
 
     // Respect backoff from previous 429/5xx errors
     if (Date.now() < retryBackoffUntil) return;
@@ -223,7 +249,7 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       }
     }
     meRequest = null;
-  }, [tokenData, meContext.me.id, goToSignIn]);
+  }, [tokenData, meContext.me.id, meContext.isLoggedIn, goToSignIn]);
 
   const handleRetry = useCallback(() => {
     resetNetworkError();
@@ -233,14 +259,13 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
   useEffect(() => {
     meSubscriptions[instanceKey] = setMeContext;
 
-    // A fresh token arriving after an auth failure (e.g. user just re-signed in
-    // after a 401/logout) must be allowed to load. Reset the stale flag so
-    // loadInfo() isn't blocked by a previous session's failure.
-    if (tokenData?.token && authFailed && !meContext.me.id) {
-      authFailed = false;
-    }
-
-    if (!meContext.me.id && tokenData?.token && !authFailed) {
+    // Allow loadInfo whenever we're not actually logged in and have a token that hasn't
+    // already failed. Checking isLoggedIn (not just me.id) avoids a stale me.id from a prior
+    // session blocking re-authentication. A fresh token (different from the one that failed)
+    // is treated as not-yet-failed — loadInfo clears the flag itself.
+    const tokenNotFailed = !authFailed || authFailedToken !== tokenData?.token;
+    const isAuthenticated = meContext.me.id && meContext.isLoggedIn;
+    if (!isAuthenticated && tokenData?.token && tokenNotFailed) {
       loadInfo();
     } else if (!tokenData?.token && !optional) {
       // No token at all — redirect to sign-in
@@ -255,7 +280,15 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
     return () => {
       delete meSubscriptions[instanceKey];
     };
-  }, [tokenData, instanceKey, loadInfo, meContext.me.id, optional, goToSignIn]);
+  }, [
+    tokenData,
+    instanceKey,
+    loadInfo,
+    meContext.me.id,
+    meContext.isLoggedIn,
+    optional,
+    goToSignIn,
+  ]);
 
   useEffect(() => {
     if (reset) {

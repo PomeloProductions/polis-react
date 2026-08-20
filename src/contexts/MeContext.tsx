@@ -4,6 +4,7 @@ import React, {
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import User, { placeholderUser } from '../models/user/user';
@@ -161,6 +162,13 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
 
   const [instanceKey, _] = useState(Math.random() + '-' + Date.now());
   const navigate = useNavigate();
+  // useNavigate() returns a NEW identity on every location change (react-router v6 resolves
+  // relative paths against the current location). Depending on it from goToSignIn made the
+  // redirect self-perpetuating: navigate('/sign-in') -> new navigate -> new goToSignIn ->
+  // effect re-runs -> navigate again... an infinite update loop whenever the provider mounts
+  // non-optional with no token. Route through a ref so callback identities stay stable.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   const goToSignIn = useCallback(() => {
     if (!optional) {
@@ -188,9 +196,9 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
       if (currentPath && currentPath !== '/sign-in') {
         localStorage.setItem('login_redirect', currentPath);
       }
-      navigate('/sign-in', { replace: true });
+      navigateRef.current('/sign-in', { replace: true });
     }
-  }, [optional, logOut, navigate, tokenData]);
+  }, [optional, logOut, tokenData]);
 
   const loadInfo = useCallback(async () => {
     // Skip only if a fetch is in flight or we're actually authenticated. Guarding on me.id

@@ -4,7 +4,7 @@ export interface ComponentProps {
   componentId: number;
   config: Record<string, unknown>;
   onConfigChange: (config: Record<string, unknown>) => Promise<void>;
-  /** Update displayed config without persisting to config_json — used by todo_task PATCH flow */
+  /** Update displayed config without persisting to config_json — for widgets that manage their own optimistic PATCH flow */
   onDisplayUpdate: (config: Record<string, unknown>) => void;
   userId: number;
   pageParams?: Record<string, string>;
@@ -14,13 +14,9 @@ type LazyComponent = React.LazyExoticComponent<React.FC<ComponentProps>>;
 export type RegistrableComponent = LazyComponent | React.ComponentType<ComponentProps>;
 
 const registry: Record<string, RegistrableComponent> = {
-  day_summary: lazy(() => import('./widgets/DaySummaryWidget')),
   stats_cards: lazy(() => import('./widgets/StatsCardsWidget')),
   settings_panel: lazy(() => import('./widgets/SettingsPanelWidget')),
   page_manager: lazy(() => import('./widgets/PageManagerWidget')),
-  todo: lazy(() => import('./widgets/TodoTaskWidget')),
-  todo_task: lazy(() => import('./widgets/TodoTaskWidget')),
-  todo_bullet_list: lazy(() => import('./widgets/TodoBulletListWidget')),
 };
 
 /**

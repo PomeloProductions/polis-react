@@ -15,25 +15,26 @@ import {
 import { IconPlus, IconTrash, IconGripVertical } from '@tabler/icons-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { UserPagesContext } from '../../contexts/UserPagesContext';
-import { TodoContext } from '../../contexts/TodoContext';
 import { UserPage } from '../../models/user/user-page';
 import { getRegisteredTypes } from './ComponentRegistry';
 
 const COMPONENT_LABELS: Record<string, string> = {
-  day_summary: 'Day Summary',
   stats_cards: 'Stats Cards',
   settings_panel: 'Settings Panel',
-  todo_task: 'Todo Task',
 };
 
 interface PageSettingsPanelProps {
   page: UserPage;
+  /**
+   * Called after a component is added or removed so the consumer can refresh
+   * its page data. No-op when not provided.
+   */
+  onRefresh?: () => void | Promise<void>;
 }
 
-const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
+const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }) => {
   const { pages, editPage, addPage, removePage, addComponent, removeComponent } =
     useContext(UserPagesContext);
-  const { silentRefresh } = useContext(TodoContext);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [newPageName, setNewPageName] = useState('');
@@ -101,30 +102,15 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
   };
 
   const handleAddComponent = async (pageId: number, componentType: string) => {
-    if (componentType === 'todo_group') {
-      await addComponent(pageId, {
-        component_type: 'todo_task',
-        config_json: {
-          root: {
-            id: `cat_${Date.now()}`,
-            task_type: 'category',
-            label: 'New Group',
-            schedule: [0, 1, 2, 3, 4, 5, 6],
-            children: [],
-          },
-        },
-      });
-    } else {
-      await addComponent(pageId, { component_type: componentType });
-    }
-    // Refresh the todo page so the new component appears
-    await silentRefresh();
+    await addComponent(pageId, { component_type: componentType });
+    // Refresh the page so the new component appears
+    await onRefresh?.();
   };
 
   const handleRemoveComponent = async (pageId: number, componentId: number) => {
     await removeComponent(pageId, componentId);
-    // Refresh the todo page so the removed component disappears
-    await silentRefresh();
+    // Refresh the page so the removed component disappears
+    await onRefresh?.();
   };
 
   const pageComponents = (page.components ?? []).filter((c) => c.component_type !== 'page_manager');
@@ -239,9 +225,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
           pageComponents.map((comp) => (
             <Group key={comp.id} justify="space-between">
               <Badge variant="light" size="sm" tt="uppercase">
-                {comp.component_type === 'todo_task' && (comp.config_json as any)?.root?.label
-                  ? (comp.config_json as any).root.label
-                  : comp.component_type.replace(/_/g, ' ')}
+                {comp.component_type.replace(/_/g, ' ')}
               </Badge>
               <ActionIcon
                 size="sm"
@@ -259,15 +243,12 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page }) => {
           size="xs"
           searchable
           value={null}
-          data={[
-            { value: 'todo_group', label: 'Todo Group' },
-            ...getRegisteredTypes()
-              .filter((t) => !['page_manager', 'todo', 'todo_bullet_list'].includes(t))
-              .map((t) => ({
-                value: t,
-                label: COMPONENT_LABELS[t] ?? t.replace(/_/g, ' '),
-              })),
-          ]}
+          data={getRegisteredTypes()
+            .filter((t) => t !== 'page_manager')
+            .map((t) => ({
+              value: t,
+              label: COMPONENT_LABELS[t] ?? t.replace(/_/g, ' '),
+            }))}
           onChange={(v) => {
             if (v) void handleAddComponent(page.id!, v);
           }}

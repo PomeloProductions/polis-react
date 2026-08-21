@@ -98,5 +98,4 @@ export const CATEGORIES: Record<string, { label: string; color: string }> = {
   dashboard: { label: 'Dashboard', color: 'blue' },
   content: { label: 'Content', color: 'orange' },
   settings: { label: 'Settings', color: 'gray' },
-  todo: { label: 'Todo', color: 'teal' },
 };

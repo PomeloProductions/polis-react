@@ -5,38 +5,28 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { UserPage } from '../../models/user/user-page';
 import { getComponent, ComponentProps } from './ComponentRegistry';
 import { UserPagesContext } from '../../contexts/UserPagesContext';
-import { TodoContext } from '../../contexts/TodoContext';
 import { getComponentGuide } from '../../pages/ComponentGuide/componentMetadata';
 import ConfigEditor from '../../pages/ComponentGuide/ConfigEditor';
-import { TodoTaskNode, moveNode, updateNodeAtPath, getNodeAtPath } from '../Todo/todoTaskUtils';
-import { MeContext } from '../../contexts/MeContext';
-import { patchTodoNode } from '../../services/requests/TodoRequests';
-
-/** Parse a widget-level droppable ID like "comp:123:drop:0.1" */
-function parseWidgetDropId(id: string): { compId: number; path: number[] } | null {
-  const match = id.match(/^comp:(\d+):drop:(.*)$/);
-  if (!match) return null;
-  const compId = parseInt(match[1], 10);
-  const pathStr = match[2];
-  const path = pathStr === '' ? [] : pathStr.split('.').map(Number);
-  return { compId, path };
-}
+import { defaultPageTypeRegistry } from '../../util/page-type-registry';
 
 interface PageRendererProps {
   page: UserPage;
   userId: number;
   pageParams?: Record<string, string>;
+  /**
+   * Called after a drag reorder is persisted so the consumer can refresh its
+   * page data. No-op when not provided.
+   */
+  onRefresh?: () => void | Promise<void>;
 }
 
-const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams }) => {
+const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams, onRefresh }) => {
   const { editComponent } = useContext(UserPagesContext);
-  const { me } = useContext(MeContext);
-  const { silentRefresh } = useContext(TodoContext);
   const [configOpenId, setConfigOpenId] = useState<number | null>(null);
   // Optimistic local config overrides so widgets see changes immediately
   const [localConfigs, setLocalConfigs] = useState<Record<number, Record<string, unknown>>>({});
 
-  // Reset local overrides when the page changes (e.g. navigating to a different day)
+  // Reset local overrides when the page changes (e.g. navigating to a different page)
   const pageId = page.id;
   const [lastPageId, setLastPageId] = useState(pageId);
   if (pageId !== lastPageId) {
@@ -57,210 +47,29 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
   // Filter out page_manager — it's rendered in the settings drawer, not inline
   const components = (page.components ?? []).filter((c) => c.component_type !== 'page_manager');
 
-  const isTodoPage = components.some((c) => c.component_type === 'todo_task');
-
-  const getCompConfig = useCallback(
-    (compId: number): Record<string, unknown> => {
-      const comp = components.find((c) => c.id === compId);
-      return localConfigs[compId] ?? (comp?.config_json as Record<string, unknown>) ?? {};
-    },
-    [components, localConfigs],
-  );
+  // Draggability is driven by the page-type registry so the renderer stays generic.
+  const draggable = defaultPageTypeRegistry.isDraggable(page.page_type);
 
   const handleDragEnd = useCallback(
     (result: DropResult) => {
       if (!result.destination) return;
       const { source, destination } = result;
-      if (source.droppableId === destination.droppableId && source.index === destination.index)
-        return;
+      if (source.index === destination.index) return;
 
-      const srcIsPage = source.droppableId === 'page-components';
-      const dstIsPage = destination.droppableId === 'page-components';
-      const srcWidget = !srcIsPage ? parseWidgetDropId(source.droppableId) : null;
-      const dstWidget = !dstIsPage ? parseWidgetDropId(destination.droppableId) : null;
-
-      // Case A: Page → Page (reorder components)
-      if (srcIsPage && dstIsPage) {
-        const sorted = [...components].sort(
-          (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
-        );
-        const [moved] = sorted.splice(source.index, 1);
-        sorted.splice(destination.index, 0, moved);
-        const updates = sorted.map(async (comp, idx) => {
-          if (comp.display_order !== idx) {
-            return editComponent(page.id!, comp.id!, { display_order: idx });
-          }
-        });
-        Promise.all(updates).then(() => void silentRefresh());
-        return;
-      }
-
-      // Prevent non-todo_task components from being dropped into widget droppables
-      if (srcIsPage && dstWidget) {
-        const dragIdMatch = result.draggableId.match(/^page-comp:(\d+)$/);
-        if (dragIdMatch) {
-          const movedCompId = parseInt(dragIdMatch[1], 10);
-          const movedComp = components.find((c) => c.id === movedCompId);
-          if (movedComp && movedComp.component_type !== 'todo_task') {
-            return; // Only todo_task components can be dropped into categories
-          }
+      // Reorder top-level page components by display_order.
+      const sorted = [...components].sort(
+        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+      );
+      const [moved] = sorted.splice(source.index, 1);
+      sorted.splice(destination.index, 0, moved);
+      const updates = sorted.map(async (comp, idx) => {
+        if (comp.display_order !== idx) {
+          return editComponent(page.id!, comp.id!, { display_order: idx });
         }
-      }
-
-      // Case B & C: Widget → Widget (same or cross-component)
-      if (srcWidget && dstWidget) {
-        if (srcWidget.compId === dstWidget.compId) {
-          // Same component: local tree move
-          const config = getCompConfig(srcWidget.compId);
-          const root = config.root as TodoTaskNode | undefined;
-          if (!root) return;
-
-          const updated = moveNode(
-            root,
-            srcWidget.path,
-            source.index,
-            dstWidget.path,
-            destination.index,
-          );
-          const newConfig = { ...config, root: updated };
-          setLocalConfigs((prev) => ({ ...prev, [srcWidget.compId]: newConfig }));
-
-          // PATCH the reordered children on the source parent
-          if (me?.id) {
-            const srcParent =
-              srcWidget.path.length === 0 ? root : getNodeAtPath(root, srcWidget.path);
-            if (srcParent?.id) {
-              const updatedParent =
-                srcWidget.path.length === 0 ? updated : getNodeAtPath(updated, srcWidget.path);
-              patchTodoNode(me.id, srcParent.id, srcWidget.compId, {
-                children: (updatedParent.children ?? []).map((c: TodoTaskNode) => ({ id: c.id })),
-              }).catch(console.error);
-            }
-            // If cross-parent within same component, also patch destination parent
-            if (srcWidget.path.join('.') !== dstWidget.path.join('.')) {
-              const dstParent =
-                dstWidget.path.length === 0 ? root : getNodeAtPath(root, dstWidget.path);
-              if (dstParent?.id) {
-                const updatedDstParent =
-                  dstWidget.path.length === 0 ? updated : getNodeAtPath(updated, dstWidget.path);
-                patchTodoNode(me.id, dstParent.id, dstWidget.compId, {
-                  children: (updatedDstParent.children ?? []).map((c: TodoTaskNode) => ({
-                    id: c.id,
-                  })),
-                }).catch(console.error);
-              }
-            }
-          }
-        } else {
-          // Cross-component: remove from source, add to destination
-          const srcConfig = getCompConfig(srcWidget.compId);
-          const dstConfig = getCompConfig(dstWidget.compId);
-          const srcRoot = srcConfig.root as TodoTaskNode | undefined;
-          const dstRoot = dstConfig.root as TodoTaskNode | undefined;
-          if (!srcRoot || !dstRoot) return;
-
-          // Get the node being moved
-          const srcParent =
-            srcWidget.path.length === 0 ? srcRoot : getNodeAtPath(srcRoot, srcWidget.path);
-          const movedNode = (srcParent.children ?? [])[source.index];
-          if (!movedNode) return;
-
-          // Remove from source
-          const srcChildren = [...(srcParent.children ?? [])];
-          srcChildren.splice(source.index, 1);
-          const updatedSrc =
-            srcWidget.path.length === 0
-              ? { ...srcRoot, children: srcChildren }
-              : updateNodeAtPath(srcRoot, srcWidget.path, { children: srcChildren });
-
-          // Add to destination
-          const dstParent =
-            dstWidget.path.length === 0 ? dstRoot : getNodeAtPath(dstRoot, dstWidget.path);
-          const dstChildren = [...(dstParent.children ?? [])];
-          dstChildren.splice(destination.index, 0, movedNode);
-          const updatedDst =
-            dstWidget.path.length === 0
-              ? { ...dstRoot, children: dstChildren }
-              : updateNodeAtPath(dstRoot, dstWidget.path, { children: dstChildren });
-
-          // Optimistic update both components
-          setLocalConfigs((prev) => ({
-            ...prev,
-            [srcWidget.compId]: { ...srcConfig, root: updatedSrc },
-            [dstWidget.compId]: { ...dstConfig, root: updatedDst },
-          }));
-
-          // API: move the node between components
-          if (me?.id && movedNode.id) {
-            const dstParentNode =
-              dstWidget.path.length === 0 ? dstRoot : getNodeAtPath(dstRoot, dstWidget.path);
-            patchTodoNode(me.id, movedNode.id, srcWidget.compId, {
-              _move: {
-                target_component_id: dstWidget.compId,
-                target_parent_client_id: dstParentNode?.id ?? null,
-                target_sort_order: destination.index,
-              },
-            })
-              .then(() => {
-                void silentRefresh();
-              })
-              .catch(console.error);
-          }
-        }
-        return;
-      }
-
-      // Case D: Page-comp → Widget (component into category)
-      if (srcIsPage && dstWidget) {
-        // Find the dragged component by its draggableId (page-comp:{id})
-        const dragIdMatch = result.draggableId.match(/^page-comp:(\d+)$/);
-        if (!dragIdMatch) return;
-        const movedCompId = parseInt(dragIdMatch[1], 10);
-        const movedComp = components.find((c) => c.id === movedCompId);
-        if (!movedComp) return;
-        const movedConfig = getCompConfig(movedComp.id!);
-        const movedRoot = movedConfig.root as TodoTaskNode | undefined;
-        if (!movedRoot) return;
-
-        const dstConfig = getCompConfig(dstWidget.compId);
-        const dstRoot = dstConfig.root as TodoTaskNode | undefined;
-        if (!dstRoot) return;
-
-        // Add the component's root node as a child of the destination
-        const dstParent =
-          dstWidget.path.length === 0 ? dstRoot : getNodeAtPath(dstRoot, dstWidget.path);
-        const dstChildren = [...(dstParent.children ?? [])];
-        dstChildren.splice(destination.index, 0, movedRoot);
-        const updatedDst =
-          dstWidget.path.length === 0
-            ? { ...dstRoot, children: dstChildren }
-            : updateNodeAtPath(dstRoot, dstWidget.path, { children: dstChildren });
-
-        setLocalConfigs((prev) => ({
-          ...prev,
-          [dstWidget.compId]: { ...dstConfig, root: updatedDst },
-        }));
-
-        if (me?.id && movedRoot.id) {
-          const dstParentNode =
-            dstWidget.path.length === 0 ? dstRoot : getNodeAtPath(dstRoot, dstWidget.path);
-          patchTodoNode(me.id, movedRoot.id, movedComp.id!, {
-            _move: {
-              target_component_id: dstWidget.compId,
-              target_parent_client_id: dstParentNode?.id ?? null,
-              target_sort_order: destination.index,
-            },
-          })
-            .then(() => {
-              // Refresh the page to reflect the moved component
-              void silentRefresh();
-            })
-            .catch(console.error);
-        }
-        return;
-      }
+      });
+      Promise.all(updates).then(() => void onRefresh?.());
     },
-    [components, page.id, editComponent, getCompConfig, me?.id, silentRefresh],
+    [components, page.id, editComponent, onRefresh],
   );
 
   if (components.length === 0) {
@@ -308,7 +117,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
         pageParams,
       };
 
-      if (isTodoPage) {
+      if (draggable) {
         return (
           <Draggable key={comp.id} draggableId={`page-comp:${comp.id}`} index={idx}>
             {(provided, snapshot) => (
@@ -375,9 +184,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({ page, userId, pageParams })
 
   return (
     <>
-      {isTodoPage ? (
+      {draggable ? (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="page-components" type="TODO_NODE">
+          <Droppable droppableId="page-components">
             {(provided) => (
               <Stack gap="md" ref={provided.innerRef} {...provided.droppableProps}>
                 {renderComponents()}

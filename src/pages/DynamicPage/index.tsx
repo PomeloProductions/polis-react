@@ -6,11 +6,12 @@ import { UserPagesContext } from '../../contexts/UserPagesContext';
 import { MeContext } from '../../contexts/MeContext';
 import PageRenderer from '../../components/PageRenderer/index';
 import PageSettingsPanel from '../../components/PageRenderer/PageSettingsPanel';
+import { defaultPageTypeRegistry } from '../../util/page-type-registry';
 
 const DefaultDynamicPage: React.FC = () => {
   const { pageSlug, param1 } = useParams<{ pageSlug?: string; param1?: string }>();
   const slug = pageSlug || 'home';
-  const { pages, loading } = useContext(UserPagesContext);
+  const { pages, loading, refreshPages } = useContext(UserPagesContext);
   const { me } = useContext(MeContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -39,7 +40,7 @@ const DefaultDynamicPage: React.FC = () => {
   }
 
   return (
-    <Container size={page.page_type === 'dashboard' ? 'lg' : 'xl'} py="xl">
+    <Container size={defaultPageTypeRegistry.resolveContainerSize(page.page_type)} py="xl">
       <Group justify="space-between" mb="md">
         <Text size="xl" fw={700}>
           {displayTitle}
@@ -53,7 +54,7 @@ const DefaultDynamicPage: React.FC = () => {
           <IconSettings size={20} />
         </ActionIcon>
       </Group>
-      <PageRenderer page={page} userId={me.id} pageParams={pageParams} />
+      <PageRenderer page={page} userId={me.id} pageParams={pageParams} onRefresh={refreshPages} />
 
       <Drawer
         opened={settingsOpen}
@@ -63,7 +64,7 @@ const DefaultDynamicPage: React.FC = () => {
         size="lg"
         styles={{ title: { fontSize: '1.25rem', fontWeight: 600 } }}
       >
-        <PageSettingsPanel page={page} />
+        <PageSettingsPanel page={page} onRefresh={refreshPages} />
       </Drawer>
     </Container>
   );

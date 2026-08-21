@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### ⚠ BREAKING CHANGES
+
+* **renderer:** The page/component renderer is now framework-generic — all Todo (time-management) specifics have been removed. This changes the renderer's public surface and warrants a **minor** bump (0.2.0 → 0.3.0).
+  * Removed built-in registry entries `day_summary`, `todo`, `todo_task`, and `todo_bullet_list` along with their widgets, plus `src/components/Todo/*`, `TodoContext`, `TimerContext`, `TodoRequests`, and the `todo` user model. Consumers that need these must supply their own widgets via `registerComponents(map)`.
+  * `PageRenderer` no longer performs todo-tree PATCH drag logic. Drag-and-drop now only reorders top-level page components and is gated by `defaultPageTypeRegistry.isDraggable(page.page_type)`; register `{ draggable: true }` for a page type to opt in.
+  * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
+  * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
+
 ## [0.2.0](https://github.com/PomeloProductions/polis-react/compare/v0.1.0...v0.2.0) (2026-08-12)
 
 

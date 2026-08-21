@@ -10,6 +10,18 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.3.0](https://github.com/PomeloProductions/polis-react/compare/v0.2.0...v0.3.0) (2026-08-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **renderer:** renderer public surface changed (Todo removed from the built-in registry — consumers must registerComponents(); onRefresh props added; draggability + container size now resolved from page-type-registry). Warrants a minor bump (0.2.0 -> 0.3.0).
+
+### Features
+
+* **renderer:** Make page renderer generic; remove Todo specifics ([31600cf](https://github.com/PomeloProductions/polis-react/commit/31600cf420717dec0101ff1703e42c5d457e0c98))
+* **renderer:** Make page renderer generic; remove Todo specifics ([d75c97b](https://github.com/PomeloProductions/polis-react/commit/d75c97b6fc90e815f79a081c9989650a55aa3e6b))
+
 ## [0.2.0](https://github.com/PomeloProductions/polis-react/compare/v0.1.0...v0.2.0) (2026-08-12)
 
 

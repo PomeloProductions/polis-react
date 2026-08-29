@@ -41,6 +41,8 @@
     "./theme": "./src/theme/index.ts",
     "./theme/PolisTheme": "./src/theme/PolisTheme.ts",
     "./theme/PolisThemeContext": "./src/theme/PolisThemeContext.tsx",
+    "./theme/colorScheme": "./src/theme/colorScheme.ts",
+    "./components/ColorSchemeToggle": "./src/components/ColorSchemeToggle/index.tsx",
     "./theme/*": "./src/theme/*.scss",
     "./assets/*": "./src/assets/*",
     "./pages/*": "./src/pages/*/index.tsx",

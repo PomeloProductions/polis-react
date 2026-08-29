@@ -20,7 +20,29 @@
 // ───── Theming ─────
 export { PolisProvider, usePolisTheme } from './components/PolisProvider';
 export { PolisThemeContext, FALLBACK_POLIS_THEME } from './theme/PolisThemeContext';
-export type { PolisTheme } from './theme/PolisTheme';
+export type { PolisTheme, PolisColorTokens } from './theme/PolisTheme';
+export { default as ColorSchemeToggle } from './components/ColorSchemeToggle';
+export type { ColorSchemeToggleProps } from './components/ColorSchemeToggle';
+export {
+  ColorSchemeContext,
+  useColorScheme,
+  useColorMode,
+  getSystemColorScheme,
+  resolveColorScheme,
+  readStoredColorScheme,
+  writeStoredColorScheme,
+  applyColorSchemeToDocument,
+  getColorSchemeInitScript,
+  COLOR_SCHEME_STORAGE_KEY,
+  POLIS_COLOR_SCHEME_ATTR,
+  MANTINE_COLOR_SCHEME_ATTR,
+  BOOTSTRAP_COLOR_SCHEME_ATTR,
+} from './theme/colorScheme';
+export type {
+  PolisColorScheme,
+  ResolvedColorScheme,
+  ColorSchemeContextValue,
+} from './theme/colorScheme';
 
 // ───── Pure components ─────
 export { default as ApplicationLogo } from './components/ApplicationLogo';

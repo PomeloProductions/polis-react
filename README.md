@@ -114,16 +114,61 @@ import { theme } from '@polis/theme-mantine'; // or '@polis/theme-bootstrap'
    // theme.colors.primary, theme.fonts.body, ...
    ```
 
+### Dark mode
+
+`PolisProvider` also owns the app's colour scheme. A theme expresses dark
+mode by adding an optional `dark: PolisColorTokens` set alongside its light
+`colors`. The provider tracks the user's preference
+(`'light' | 'dark' | 'system'`), resolves `'system'` against
+`prefers-color-scheme` (reacting to OS changes live), persists the choice to
+`localStorage`, injects the matching colour token set, and flips the
+framework-native attributes on `<html>`:
+
+- `data-mantine-color-scheme` (Mantine 7/8 native dark)
+- `data-bs-theme` (Bootstrap 5.3 native dark)
+- `data-polis-color-scheme` (generic hook for your own CSS)
+
+```tsx
+import { PolisProvider, useColorScheme, ColorSchemeToggle } from '@polis/react';
+import { theme } from '@polis/theme-mantine';
+
+<PolisProvider theme={theme} defaultAppliedColorScheme="system">
+  <ColorSchemeToggle />
+  <App />
+</PolisProvider>;
+
+// Anywhere inside:
+const { resolvedColorScheme, setColorScheme, toggleColorScheme } = useColorScheme();
+```
+
+`useColorMode` is an alias for `useColorScheme`. Themes with only a light
+`colors` set keep working — dark mode reuses the light palette for them.
+
+**Avoiding a flash of the wrong theme (FOUC):** inline the snippet returned
+by `getColorSchemeInitScript()` in your HTML `<head>` so the attributes are
+set before React hydrates:
+
+```html
+<script>
+  /* output of getColorSchemeInitScript() */
+</script>
+```
+
+For single-scheme apps, pass `forceColorScheme="light" | "dark"` to pin the
+scheme (this also pins the token set and disables the toggle). Controlled
+usage is available via the `colorScheme` + `onColorSchemeChange` props.
+
 ### Writing a new theme
 
 Create a package whose `src/theme.ts` exports a `theme: PolisTheme`
 object. The interface is:
 
 ```ts
-import type { PolisTheme } from '@polis/react/theme/PolisTheme';
+import type { PolisTheme, PolisColorTokens } from '@polis/react/theme/PolisTheme';
 ```
 
-…and includes `name`, `colors`, `fonts`, `radius`, `spacing`, and an
+…and includes `name`, `colors` (light), an optional `dark`
+(`PolisColorTokens`) for dark mode, plus `fonts`, `radius`, `spacing`, and an
 optional `mantineTheme`. See `@polis/theme-bootstrap` and
 `@polis/theme-mantine` for reference implementations.
 

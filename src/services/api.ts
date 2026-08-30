@@ -84,16 +84,37 @@ function attemptRefresh(currentToken: string): Promise<TokenState | null> {
   return refreshPromise;
 }
 
+/** Refresh the current token if it is within the refresh margin of expiry. */
+function refreshIfNeeded() {
+  if (!appState) return;
+  const tokenData = appState.state.persistent.tokenData;
+  if (tokenData?.token && tokenNeedsRefresh(tokenData)) {
+    attemptRefresh(tokenData.token);
+  }
+}
+
 // Proactively refresh token when tab becomes visible after being hidden (PolisOS).
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && appState) {
-      const tokenData = appState.state.persistent.tokenData;
-      if (tokenData && tokenNeedsRefresh(tokenData)) {
-        attemptRefresh(tokenData.token);
-      }
+    if (document.visibilityState === 'visible') {
+      refreshIfNeeded();
     }
   });
+}
+
+// Proactive background refresh: even a fully idle user (no requests, tab left
+// open) gets their access token rotated before the 60-min TTL expires, so the
+// session stays alive up to the server's refresh_ttl window. The single-flight
+// guard in attemptRefresh() means this never competes with request-driven or
+// visibility-driven refreshes.
+const PROACTIVE_REFRESH_CHECK_MS = 60 * 1000; // check every minute
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    // Skip while hidden — visibilitychange handles the resume, and we don't
+    // want to keep a backgrounded tab's token alive forever needlessly.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    refreshIfNeeded();
+  }, PROACTIVE_REFRESH_CHECK_MS);
 }
 
 // ============================================================================
@@ -283,13 +304,38 @@ export const responseErrorInterceptor = (error: AxiosError): Promise<AxiosRespon
     const alreadyRetried = (error.config as unknown as Record<string, unknown>)._authRetried;
     if (!alreadyRetried) {
       const tokenData = appState?.state?.persistent?.tokenData;
+      // The token this specific request carried when it got the 401. This may
+      // differ from the token now in state if a sibling request already
+      // refreshed while this one was in flight.
+      const requestToken = (error.config.headers?.['Authorization'] as string | undefined)?.replace(
+        'Bearer ',
+        '',
+      );
+
+      // Fast path: a sibling refresh already replaced the token that got the
+      // 401. Just retry with the fresh token — do NOT trigger another refresh
+      // (that would refresh the just-issued token and, with a zero blacklist
+      // grace period, blacklist it out from under the sibling → self-logout).
+      if (tokenData?.token && requestToken && requestToken !== tokenData.token) {
+        releaseSlot();
+        if (appState) appState.dispatch(decrementLoadingCount());
+        const config = error.config;
+        (config as unknown as Record<string, unknown>)._authRetried = true;
+        config.headers = config.headers || {};
+        config.headers['Authorization'] = `Bearer ${tokenData.token}`;
+        return api.request(config);
+      }
+
       if (tokenData?.token) {
         releaseSlot();
         if (appState) appState.dispatch(decrementLoadingCount());
-        return attemptRefresh(tokenData.token).then((refreshed) => {
+        // Refresh using the token that actually got the 401. attemptRefresh()
+        // is single-flight, so concurrent 401s share one /auth/refresh call.
+        return attemptRefresh(requestToken || tokenData.token).then((refreshed) => {
           if (refreshed) {
             const config = error.config!;
             (config as unknown as Record<string, unknown>)._authRetried = true;
+            config.headers = config.headers || {};
             config.headers['Authorization'] = `Bearer ${refreshed.token}`;
             return api.request(config);
           }

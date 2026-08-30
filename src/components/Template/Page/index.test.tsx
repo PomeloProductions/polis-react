@@ -23,11 +23,18 @@ describe('Page', () => {
     const homeLink = document.querySelector('a[href="/"]');
     expect(homeLink).toBeInTheDocument();
 
-    // Check for header
-    expect(screen.getByText('Header Title')).toBeInTheDocument();
-
     // Two responsive burgers (mobile + desktop) toggle the navigation.
     expect(screen.getAllByLabelText('Toggle navigation').length).toBeGreaterThan(0);
+  });
+
+  it('renders the provided title in the header and no placeholder by default', () => {
+    const { unmount } = renderWithRouter(<Page />);
+    // With no title prop there must be no hardcoded placeholder text.
+    expect(screen.queryByText('Header Title')).not.toBeInTheDocument();
+    unmount();
+
+    renderWithRouter(<Page headerTitle="My App" />);
+    expect(screen.getByText('My App')).toBeInTheDocument();
   });
 
   it('toggles the sidebar without removing page content when the burger is clicked', () => {

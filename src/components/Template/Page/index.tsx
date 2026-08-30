@@ -7,7 +7,18 @@ import Menu from '../../Menu';
 import { Link } from 'react-router-dom';
 import { usePolisTheme } from '../../PolisProvider';
 
-interface PageProps extends React.HTMLProps<HTMLDivElement> {}
+interface PageProps extends React.HTMLProps<HTMLDivElement> {
+  /**
+   * Content shown in the header bar next to the burger. When omitted, the
+   * header shows only the burger (no placeholder text). Consumers pass their
+   * app / page name here.
+   *
+   * Named `headerTitle` (not `title`) so it can be a `ReactNode` without
+   * colliding with the DOM `title` string attribute inherited from
+   * `HTMLProps<HTMLDivElement>`.
+   */
+  headerTitle?: React.ReactNode;
+}
 
 /**
  * Responsive application shell.
@@ -25,7 +36,7 @@ interface PageProps extends React.HTMLProps<HTMLDivElement> {}
  *
  * The header is fixed to the viewport width, keeping it aligned on mobile.
  */
-const Page: React.FC<PageProps> = ({ children }) => {
+const Page: React.FC<PageProps> = ({ children, headerTitle }) => {
   // Two independent disclosures: desktop-docked vs mobile-drawer. AppShell
   // reads `collapsed.desktop` / `collapsed.mobile` from these so the same
   // burger works at every width without reflowing content.
@@ -48,18 +59,15 @@ const Page: React.FC<PageProps> = ({ children }) => {
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
-      style={{
-        background: theme.colors.surface,
-        color: theme.colors.textPrimary,
-        fontFamily: theme.fonts.body,
-      }}
     >
-      <AppShell.Header
-        style={{
-          background: theme.colors.surfaceAlt,
-          borderBottom: `1px solid ${theme.colors.border}`,
-        }}
-      >
+      {/*
+        Shell surface colours (header / navbar / main / root backgrounds and
+        borders) are set in index.scss from the scheme-aware `--polis-color-*`
+        custom properties, NOT here: Mantine 7's AppShell subcomponents drop an
+        inline `style`/`bg` prop on their rendered DOM node, so styling them via
+        CSS is the only reliable way to make the shell follow dark mode.
+      */}
+      <AppShell.Header data-testid="header">
         {/* Header sits inside the viewport; `Group` keeps items on one row and
             `wrap="nowrap"` + overflow guard stop horizontal overflow on phones. */}
         <Group h="100%" px="md" gap="sm" wrap="nowrap" style={{ overflow: 'hidden' }}>
@@ -87,21 +95,15 @@ const Page: React.FC<PageProps> = ({ children }) => {
               textOverflow: 'ellipsis',
             }}
           >
-            Header Title
+            {headerTitle}
           </Box>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar
-        data-testid="sidebar"
-        style={{
-          background: theme.colors.surfaceAlt,
-          borderRight: `1px solid ${theme.colors.border}`,
-        }}
-      >
+      <AppShell.Navbar data-testid="sidebar">
         <Box
           style={{
-            borderBottom: `1px solid ${theme.colors.border}`,
+            borderBottom: `1px solid var(--polis-color-border, ${theme.colors.border})`,
             padding: '12px 16px',
           }}
         >

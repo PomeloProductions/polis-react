@@ -2,13 +2,49 @@
 //
 // The shell itself is a Mantine `AppShell`, which owns the sidebar
 // dock/drawer behaviour and header positioning via its responsive props.
-// These rules only apply the Polis theme tokens and guard against
-// horizontal overflow on narrow (phone) viewports.
+// These rules apply the Polis theme tokens (so the shell follows the active
+// colour scheme) and guard against horizontal overflow on narrow (phone)
+// viewports.
+//
+// IMPORTANT: Mantine 7's `AppShell.Header` / `AppShell.Navbar` / `AppShell.Main`
+// do NOT forward an inline `style`/`bg` prop to their rendered DOM node (they
+// only emit their own `--app-shell-*` vars), so the shell surfaces MUST be
+// coloured from CSS here rather than via inline styles on the components.
+// The `--polis-color-*` custom properties are swapped per colour scheme by
+// <PolisProvider>, so these rules give a dark shell in dark mode and a light
+// shell in light mode with no per-component JS.
 
+// AppShell root (id="wrapper"). Fill the viewport so the scheme-aware surface
+// reaches below short content instead of exposing the (possibly white) page
+// body underneath it.
+#wrapper.mantine-AppShell-root,
 #wrapper {
   background: var(--polis-color-surface, transparent);
   color: var(--polis-color-text-primary, inherit);
   font-family: var(--polis-font-body, system-ui, sans-serif);
+  min-height: 100vh;
+}
+
+// Header bar: burger + title. Was rendering light/white in dark mode.
+#wrapper .mantine-AppShell-header {
+  background: var(--polis-color-surface-alt, transparent);
+  color: var(--polis-color-text-primary, inherit);
+  border-bottom: 1px solid var(--polis-color-border, transparent);
+}
+
+// Sidebar / navbar surface.
+#wrapper .mantine-AppShell-navbar {
+  background: var(--polis-color-surface-alt, transparent);
+  color: var(--polis-color-text-primary, inherit);
+  border-right: 1px solid var(--polis-color-border, transparent);
+}
+
+// Outer content region (the area around the content cards). Was white in dark
+// mode because only the inner cards honoured the scheme.
+#wrapper .mantine-AppShell-main,
+#wrapper #page-content-wrapper {
+  background: var(--polis-color-surface, transparent);
+  color: var(--polis-color-text-primary, inherit);
 }
 
 // Never allow the shell to scroll the page sideways on mobile.

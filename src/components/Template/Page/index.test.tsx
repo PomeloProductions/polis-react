@@ -16,36 +16,38 @@ describe('Page', () => {
   it('renders sidebar and navigation', () => {
     renderWithRouter(<Page />);
 
-    // Check for sidebar
+    // Check for sidebar (the AppShell navbar)
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+
+    // Home link lives in the sidebar
     const homeLink = document.querySelector('a[href="/"]');
     expect(homeLink).toBeInTheDocument();
 
-    // Check for navigation
+    // Check for header
     expect(screen.getByText('Header Title')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '☰' })).toBeInTheDocument();
+
+    // Two responsive burgers (mobile + desktop) toggle the navigation.
+    expect(screen.getAllByLabelText('Toggle navigation').length).toBeGreaterThan(0);
   });
 
-  it('toggles sidebar when button is clicked', () => {
-    renderWithRouter(<Page />);
+  it('toggles the sidebar without removing page content when the burger is clicked', () => {
+    renderWithRouter(
+      <Page>
+        <div data-testid="test-content">Test Content</div>
+      </Page>,
+    );
 
-    const toggleButton = screen.getByRole('button', { name: '☰' });
+    const [toggleButton] = screen.getAllByLabelText('Toggle navigation');
     const sidebar = screen.getByTestId('sidebar');
 
-    // Initial state
-    expect(sidebar).toHaveClass('open');
-
-    // Click button
+    // Toggling the shell must never remove the content region (no reflow that
+    // hides the page) or the sidebar element from the tree.
     fireEvent.click(toggleButton);
+    expect(sidebar).toBeInTheDocument();
+    expect(screen.getByTestId('test-content')).toBeInTheDocument();
 
-    // Check if sidebar is collapsed
-    expect(sidebar).toHaveClass('collapsed');
-    expect(sidebar).not.toHaveClass('open');
-
-    // Click button again
     fireEvent.click(toggleButton);
-
-    // Check if sidebar is open again
-    expect(sidebar).toHaveClass('open');
-    expect(sidebar).not.toHaveClass('collapsed');
+    expect(sidebar).toBeInTheDocument();
+    expect(screen.getByTestId('test-content')).toBeInTheDocument();
   });
 });

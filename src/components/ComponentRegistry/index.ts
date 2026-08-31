@@ -31,7 +31,8 @@ export interface ComponentProps {
 
 /** A component acceptable for registration — eager or `React.lazy`. */
 export type RegisterableComponent<P extends ComponentProps = ComponentProps> =
-  React.ComponentType<P> | React.LazyExoticComponent<React.ComponentType<P>>;
+  | React.ComponentType<P>
+  | React.LazyExoticComponent<React.ComponentType<P>>;
 
 export interface ComponentRegistry<P extends ComponentProps = ComponentProps> {
   /** Register (or overwrite) the component for `componentType`. */

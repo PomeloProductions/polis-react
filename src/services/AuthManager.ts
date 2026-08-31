@@ -46,7 +46,13 @@ export function getTokenExpiryMs(token: string): number | null {
  * back to an age-based check when `exp` is unavailable.
  */
 export function tokenNeedsRefresh(tokenData: TokenState): boolean {
-  const expiryMs = getTokenExpiryMs(tokenData.token);
+  // Prefer the expiry captured at store time (first-class "when it expires"),
+  // falling back to decoding the token on the fly for backward compatibility
+  // with tokens persisted before `expiresAt` existed.
+  const expiryMs =
+    typeof tokenData.expiresAt === 'number'
+      ? tokenData.expiresAt
+      : getTokenExpiryMs(tokenData.token);
   if (expiryMs !== null) {
     return Date.now() >= expiryMs - TOKEN_REFRESH_MARGIN_MS;
   }
@@ -54,13 +60,20 @@ export function tokenNeedsRefresh(tokenData: TokenState): boolean {
 }
 
 /**
- * Puts our token into our persistent storage properly
+ * Puts our token into our persistent storage properly.
+ *
+ * Records both `receivedAt` (when we got it) and `expiresAt` (when it expires,
+ * decoded from the JWT `exp` claim when available) so the proactive
+ * pre-request refresh check is explicit and cheap, matching the intended
+ * design: "keep track of when the token was received and when it expires."
  * @param token
  */
 export function storeReceivedToken(token: string): TokenState {
-  const tokenData = {
+  const expiryMs = getTokenExpiryMs(token);
+  const tokenData: TokenState = {
     token: token,
     receivedAt: Date.now(),
+    ...(expiryMs !== null ? { expiresAt: expiryMs } : {}),
   };
   appState.dispatch(setTokenData(tokenData));
 

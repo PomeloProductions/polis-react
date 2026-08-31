@@ -1,6 +1,14 @@
+import { jest } from '@jest/globals';
+
+const dispatch = jest.fn();
+jest.mock('../data/AppContext', () => ({
+  appState: { dispatch, state: { persistent: {} } },
+}));
+
 import {
   tokenNeedsRefresh,
   getTokenExpiryMs,
+  storeReceivedToken,
   TOKEN_REFRESH_MARGIN_MS,
   TOKEN_REFRESH_FALLBACK_MS,
 } from './AuthManager';
@@ -72,5 +80,67 @@ describe('tokenNeedsRefresh (fallback for opaque tokens)', () => {
         receivedAt: Date.now() - (TOKEN_REFRESH_FALLBACK_MS + MIN),
       }),
     ).toBe(true);
+  });
+});
+
+describe('tokenNeedsRefresh (prefers stored expiresAt)', () => {
+  it('uses expiresAt when present (false when comfortably before expiry)', () => {
+    expect(
+      tokenNeedsRefresh({
+        token: 'opaque', // undecodable — must rely on expiresAt, not the token
+        receivedAt: Date.now(),
+        expiresAt: Date.now() + 60 * MIN,
+      }),
+    ).toBe(false);
+  });
+
+  it('uses expiresAt when present (true within the refresh margin)', () => {
+    expect(
+      tokenNeedsRefresh({
+        token: 'opaque',
+        receivedAt: Date.now(),
+        expiresAt: Date.now() + TOKEN_REFRESH_MARGIN_MS - MIN,
+      }),
+    ).toBe(true);
+  });
+
+  it('uses expiresAt when present (true for an already-expired token)', () => {
+    expect(
+      tokenNeedsRefresh({
+        token: 'opaque',
+        receivedAt: Date.now(),
+        expiresAt: Date.now() - MIN,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('storeReceivedToken', () => {
+  beforeEach(() => dispatch.mockClear());
+
+  it('records receivedAt and expiresAt (decoded from the JWT exp)', () => {
+    const expSec = Math.floor(Date.now() / 1000) + 3600;
+    const before = Date.now();
+    const result = storeReceivedToken(makeJwt(expSec));
+    const after = Date.now();
+
+    expect(result.token).toBe(makeJwt(expSec));
+    expect(result.receivedAt).toBeGreaterThanOrEqual(before);
+    expect(result.receivedAt).toBeLessThanOrEqual(after);
+    expect(result.expiresAt).toBe(expSec * 1000);
+
+    // Dispatched into persistent state with the same shape.
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'set-token-data',
+        tokenData: expect.objectContaining({ expiresAt: expSec * 1000 }),
+      }),
+    );
+  });
+
+  it('omits expiresAt for an opaque/undecodable token', () => {
+    const result = storeReceivedToken('opaque-token');
+    expect(result.receivedAt).toEqual(expect.any(Number));
+    expect(result.expiresAt).toBeUndefined();
   });
 });

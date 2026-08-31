@@ -10,6 +10,46 @@ import { notifications } from '@mantine/notifications';
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // ============================================================================
+// Public (unauthenticated) endpoints
+// ----------------------------------------------------------------------------
+// Every request through the shared `api` instance is auth-REQUIRED by default:
+// if there is no session, the request is short-circuited before it hits the
+// network (see requestInterceptor) so authed endpoints like `/users/me` can
+// never fire while logged out. These endpoints are the exceptions — they are
+// legitimately reachable with no token, so they must be allowed through even
+// when `tokenData` is null. Paths are matched against the request URL's
+// pathname; a request is public when its path ends with one of these (so an
+// optional `/v1` API prefix or a full baseURL still matches).
+// ============================================================================
+const PUBLIC_PATHS: readonly string[] = [
+  '/auth/login',
+  '/auth/sign-up',
+  '/auth/refresh',
+  '/forgot-password',
+  '/reset-password',
+  '/validate-invitation',
+  '/verification-codes',
+  '/verification-codes-validate',
+  '/general-contact',
+];
+
+/** Whether a request URL targets a public (no-auth-required) endpoint. */
+export function isPublicPath(url: string | undefined): boolean {
+  if (!url) return false;
+  // Strip query string and any origin/baseURL, then normalize a trailing slash
+  // (one request path has a stray trailing space in a consumer — be lenient).
+  let path = url.split('?')[0].trim();
+  const schemeIdx = path.indexOf('://');
+  if (schemeIdx !== -1) {
+    const afterScheme = path.slice(schemeIdx + 3);
+    const slash = afterScheme.indexOf('/');
+    path = slash === -1 ? '/' : afterScheme.slice(slash);
+  }
+  if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+  return PUBLIC_PATHS.some((p) => path === p || path.endsWith(p));
+}
+
+// ============================================================================
 // Rate-limit (429) configuration
 // ============================================================================
 const RATE_LIMIT_MAX_RETRIES = 3;
@@ -255,10 +295,28 @@ export const requestInterceptor = async (
 
         config.headers = config.headers || {};
         config.headers['Authorization'] = `Bearer ${tokenData.token}`;
+      } else if (!isPublicPath(config.url)) {
+        // No session and this is an auth-REQUIRED endpoint (e.g. /users/me):
+        // short-circuit BEFORE the network call so it can't fire — and 401 —
+        // while logged out. Public endpoints (login, refresh, sign-up,
+        // password reset, invitation validation, verification codes, contact)
+        // are allowed through with no token. Reject with the same
+        // isAuthError-flagged shape the invalidated-session guard throws so
+        // callers/routing treat it as an auth failure, not a network error.
+        releaseSlot();
+        appState.dispatch(decrementLoadingCount());
+        const noSessionErr = new Error('No active session');
+        (noSessionErr as Error & { isAuthError: boolean }).isAuthError = true;
+        throw noSessionErr;
       }
     }
     return config;
   } catch (error) {
+    // Preserve an already-flagged auth error (e.g. the no-session
+    // short-circuit) instead of masking it as a generic failure.
+    if ((error as { isAuthError?: boolean })?.isAuthError) {
+      throw error;
+    }
     releaseSlot();
     if (appState) {
       appState.dispatch(decrementLoadingCount());

@@ -1,6 +1,6 @@
 {
   "name": "@polis/react",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Shared React core for Polis-family apps (auth, API client, base contexts, layout primitives, reusable components).",
   "license": "MIT",
   "repository": {

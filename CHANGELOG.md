@@ -10,6 +10,16 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.4.2](https://github.com/PomeloProductions/polis-react/compare/v0.4.1...v0.4.2) (2026-08-31)
+
+
+### Bug Fixes
+
+* Block auth-required requests while logged out; track token expiry explicitly ([a92ee70](https://github.com/PomeloProductions/polis-react/commit/a92ee70ab57a41ab8e61dd21203025bf8d20fedf))
+* **ci:** Restore prettier formatting on ComponentRegistry union type ([f63a826](https://github.com/PomeloProductions/polis-react/commit/f63a826b33bea58ec2b7d9f6b1f99d9b8f9c89e1))
+* Harden token refresh to prevent ~60-min logout ([8d84d01](https://github.com/PomeloProductions/polis-react/commit/8d84d01a3b1c5f571c0f0349fc72366732a87ef7))
+* Refresh access token before its real expiry to prevent ~60-min logout ([6482494](https://github.com/PomeloProductions/polis-react/commit/6482494fa17db3a0434525597dd4e248533dc29d))
+
 ## [0.4.1](https://github.com/PomeloProductions/polis-react/compare/v0.4.0...v0.4.1) (2026-08-30)
 
 

@@ -100,4 +100,21 @@ describe('Page shell colour scheme', () => {
     expect(rootVar('--polis-color-surface-alt')).toBe('#f5f5f5');
     expect(rootVar('--polis-color-text-primary')).toBe('#000000');
   });
+
+  // Native Mantine components (TextInput, Paper, selected-row states) do NOT
+  // read the `--polis-color-*` tokens — they follow Mantine's own colour
+  // scheme, driven by `data-mantine-color-scheme` on <html>. If that attribute
+  // is not synced to 'dark', those surfaces stay light/white in dark mode
+  // (unreadable). <PolisProvider> both passes `forceColorScheme` to
+  // <MantineProvider> AND sets this attribute; assert the attribute so the
+  // Mantine-native surfaces track dark mode with the Polis shell.
+  it('syncs the Mantine colour scheme to dark in dark mode', () => {
+    renderShell('dark');
+    expect(document.documentElement.getAttribute('data-mantine-color-scheme')).toBe('dark');
+  });
+
+  it('syncs the Mantine colour scheme to light in light mode', () => {
+    renderShell('light');
+    expect(document.documentElement.getAttribute('data-mantine-color-scheme')).toBe('light');
+  });
 });

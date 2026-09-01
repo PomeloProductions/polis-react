@@ -17,6 +17,7 @@ export {
   writeStoredColorScheme,
   applyColorSchemeToDocument,
   getColorSchemeInitScript,
+  ColorSchemeContextProvider,
   COLOR_SCHEME_STORAGE_KEY,
   POLIS_COLOR_SCHEME_ATTR,
   MANTINE_COLOR_SCHEME_ATTR,

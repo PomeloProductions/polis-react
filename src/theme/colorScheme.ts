@@ -1,4 +1,5 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, createElement } from 'react';
+import type { ReactNode } from 'react';
 
 /**
  * The colour-scheme *preference* a user can pick. `'system'` defers to the
@@ -132,3 +133,69 @@ export const getColorSchemeInitScript = (storageKey: string = COLOR_SCHEME_STORA
   } catch (e) {}
 })();
 `;
+
+/**
+ * Standalone provider for `ColorSchemeContext`. Use this when the app has its
+ * own `MantineProvider` setup (e.g. custom theme) and doesn't use `PolisProvider`.
+ *
+ * Reads the stored preference from localStorage on mount, listens for OS
+ * `prefers-color-scheme` changes when `'system'` is active, and applies the
+ * resolved scheme to the document attributes so Mantine and Bootstrap pick it up.
+ */
+export const ColorSchemeContextProvider = ({
+  children,
+  defaultColorScheme = 'system',
+}: {
+  children: ReactNode;
+  defaultColorScheme?: PolisColorScheme;
+}) => {
+  const [colorScheme, setColorSchemeState] = useState<PolisColorScheme>(
+    () => readStoredColorScheme() ?? defaultColorScheme,
+  );
+  const [resolvedColorScheme, setResolvedColorScheme] = useState<ResolvedColorScheme>(() =>
+    resolveColorScheme(readStoredColorScheme() ?? defaultColorScheme),
+  );
+
+  const applyAndStore = useCallback((scheme: PolisColorScheme) => {
+    const resolved = resolveColorScheme(scheme);
+    writeStoredColorScheme(scheme);
+    applyColorSchemeToDocument(resolved);
+    setColorSchemeState(scheme);
+    setResolvedColorScheme(resolved);
+  }, []);
+
+  // Apply on mount (handles the case where index.html FOUC script wasn't used).
+  useEffect(() => {
+    applyColorSchemeToDocument(resolvedColorScheme);
+  }, []);
+
+  // Track OS changes when scheme is 'system'.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (colorScheme === 'system') {
+        const resolved = getSystemColorScheme();
+        applyColorSchemeToDocument(resolved);
+        setResolvedColorScheme(resolved);
+      }
+    };
+    mq.addEventListener('change', handleChange);
+    return () => mq.removeEventListener('change', handleChange);
+  }, [colorScheme]);
+
+  const setColorScheme = useCallback(
+    (scheme: PolisColorScheme) => applyAndStore(scheme),
+    [applyAndStore],
+  );
+
+  const toggleColorScheme = useCallback(() => {
+    applyAndStore(resolvedColorScheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedColorScheme, applyAndStore]);
+
+  return createElement(
+    ColorSchemeContext.Provider,
+    { value: { colorScheme, resolvedColorScheme, setColorScheme, toggleColorScheme } },
+    children,
+  );
+};

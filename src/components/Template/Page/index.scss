@@ -45,6 +45,11 @@
 #wrapper #page-content-wrapper {
   background: var(--polis-color-surface, transparent);
   color: var(--polis-color-text-primary, inherit);
+  // Bottom clearance so page content can scroll clear of a floating bottom
+  // element (e.g. PolisOS's running-timer card, position:fixed bottom-right).
+  // The mobile responsive refactor (43abc9e) dropped the original 200px; this
+  // restores it, plus the phone safe-area inset.
+  padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
 }
 
 // Never allow the shell to scroll the page sideways on mobile.

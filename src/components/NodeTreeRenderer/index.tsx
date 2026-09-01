@@ -129,9 +129,13 @@ function NodeTreeRenderer<T extends TreeNode>(props: NodeTreeRendererProps<T>): 
               transition: 'background-color 0.15s',
               ...(snapshot.isDraggingOver
                 ? {
-                    backgroundColor: 'var(--mantine-color-blue-0)',
+                    // Scheme-aware drop-target hint: the Polis primary-subtle
+                    // tint is dark in dark mode, so the highlight stays legible
+                    // instead of a fixed light-blue (`--mantine-color-blue-0`).
+                    backgroundColor:
+                      'var(--polis-color-primary-subtle, var(--mantine-color-blue-0))',
                     borderRadius: 4,
-                    outline: '2px dashed var(--mantine-color-blue-4)',
+                    outline: '2px dashed var(--polis-color-primary, var(--mantine-color-blue-4))',
                     outlineOffset: 2,
                   }
                 : {}),
@@ -149,7 +153,11 @@ function NodeTreeRenderer<T extends TreeNode>(props: NodeTreeRendererProps<T>): 
                         ? {
                             opacity: 0.9,
                             boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                            backgroundColor: '#fff',
+                            // Scheme-aware surface so the lifted drag card is
+                            // dark in dark mode instead of a hardcoded white
+                            // card (unreadable text on white in dark mode).
+                            backgroundColor:
+                              'var(--polis-color-surface, var(--mantine-color-body, #fff))',
                             borderRadius: 4,
                           }
                         : {}),

@@ -10,7 +10,6 @@ import User, { placeholderUser } from '../models/user/user';
 import AuthRequests from '../services/requests/AuthRequests';
 import { logOut } from '../data/persistent/persistent.actions';
 import { connect } from '../data/connect';
-import { getSyncToken, clearSyncToken } from '../services/AuthManager';
 import LoadingScreen from '../components/LoadingScreen';
 import NetworkError from '../components/Errors/NetworkError';
 import { useNavigate } from 'react-router-dom';
@@ -58,7 +57,6 @@ export const MeContext = React.createContext<MeContextStateConsumer>(createDefau
  * initialize with stale auth state.
  */
 export function clearMeState() {
-  clearSyncToken();
   persistedState = {
     me: placeholderUser(),
     networkError: false,
@@ -157,7 +155,6 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
 
   const goToSignIn = useCallback(() => {
     if (!optional) {
-      clearSyncToken();
       authFailed = true;
       meRequest = null;
       persistedState = {
@@ -246,21 +243,13 @@ const MeContextProvider: React.FC<PropsWithChildren<MeContextProviderProps>> = (
     if (!meContext.me.id && tokenData?.token && !authFailed) {
       loadInfo();
     } else if (!tokenData?.token && !optional) {
-      // getSyncToken() is set synchronously in storeReceivedToken() before the
-      // React useReducer flush. If it's non-null, a fresh login just happened and
-      // the tokenData prop hasn't propagated yet — skip goToSignIn() and wait for
-      // the next render so we don't wipe the new token mid-navigation.
-      if (!getSyncToken()) {
-        goToSignIn();
-      }
+      // No token at all — redirect to sign-in
+      goToSignIn();
     } else if (!tokenData?.token) {
-      // Optional route with no token. If getSyncToken() is set, a fresh login
-      // just happened and tokenData hasn't propagated yet — stay in loading state
-      // so we don't flash unauthenticated content or the nav before getMe() runs.
-      // Only call markLoadIdle() when there is genuinely no pending token.
-      if (!getSyncToken()) {
-        markLoadIdle();
-      }
+      // Optional route with no token (e.g. the sign-in page itself):
+      // there is nothing to load, so the initial isLoading must clear or
+      // the provider renders the "Getting Ready" screen forever.
+      markLoadIdle();
     }
 
     return () => {

@@ -15,20 +15,6 @@ export const TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000; // 5 minutes
 // user fell through to the reactive 401 path, causing the ~60-min logout.
 export const TOKEN_REFRESH_FALLBACK_MS = 50 * 60 * 1000; // 50 minutes
 
-// Module-level token mirror — updated synchronously before the React dispatch so
-// callers can check for a valid token before the useReducer flush propagates.
-let _syncToken: string | null = null;
-
-/** Returns the most-recently stored token, even before React re-renders. */
-export function getSyncToken(): string | null {
-  return _syncToken;
-}
-
-/** Call on logout to clear the synchronous mirror. */
-export function clearSyncToken(): void {
-  _syncToken = null;
-}
-
 /**
  * Decode the `exp` (expiry) claim from a JWT, in milliseconds since epoch.
  * Returns null if the token is not a decodable JWT or has no numeric `exp`.
@@ -83,7 +69,6 @@ export function tokenNeedsRefresh(tokenData: TokenState): boolean {
  * @param token
  */
 export function storeReceivedToken(token: string): TokenState {
-  _syncToken = token; // update synchronously before the React dispatch
   const expiryMs = getTokenExpiryMs(token);
   const tokenData: TokenState = {
     token: token,

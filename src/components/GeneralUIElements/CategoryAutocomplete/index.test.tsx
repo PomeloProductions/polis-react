@@ -41,9 +41,9 @@ jest.mock('../../../services/api', () => ({
 }));
 
 describe('CategoryAutocomplete', () => {
-  // Mantine's Combobox is slow to drive under jsdom + userEvent (individual
-  // interactions can take ~14s on a busy machine, more under CI coverage
-  // instrumentation), so a low cap flakes here.
+  // Mantine v9's Combobox is substantially slower to open/select under jsdom +
+  // userEvent than v8 (~12-15s per dropdown interaction here vs ~2s before, and
+  // more under CI coverage instrumentation), so a low cap flakes here.
   jest.setTimeout(60000);
 
   const mockOnSelect = jest.fn();
@@ -74,7 +74,8 @@ describe('CategoryAutocomplete', () => {
 
   it('renders with label', () => {
     renderWithMantine(<CategoryAutocomplete onSelect={mockOnSelect} label="Category" />);
-    const input = screen.getByRole('textbox', { name: 'Category' });
+    // Mantine v9 gives the Autocomplete input role="combobox" (was "textbox").
+    const input = screen.getByRole('combobox', { name: 'Category' });
     expect(input).toBeInTheDocument();
   });
 

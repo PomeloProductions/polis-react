@@ -28,10 +28,18 @@ export function getTokenExpiryMs(token: string): number | null {
     let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     // Restore base64 padding stripped by base64url.
     while (payload.length % 4 !== 0) payload += '=';
+    // Prefer the browser-native `atob`; fall back to Node's `Buffer` when it
+    // is not available (e.g. SSR). Reached via `globalThis` so this browser
+    // package does not depend on ambient Node globals being in type scope.
+    const nodeBuffer = (
+      globalThis as {
+        Buffer?: { from(s: string, enc: string): { toString(enc: string): string } };
+      }
+    ).Buffer;
     const decode =
       typeof atob === 'function'
         ? atob
-        : (s: string) => Buffer.from(s, 'base64').toString('binary');
+        : (s: string) => nodeBuffer!.from(s, 'base64').toString('binary');
     const json = JSON.parse(decode(payload)) as { exp?: number };
     if (typeof json.exp !== 'number') return null;
     return json.exp * 1000; // exp is in seconds

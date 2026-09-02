@@ -72,9 +72,16 @@ describe('MyCollections', () => {
     };
     const { container } = renderWithProviders(<MyCollections user={userWithoutId} />);
 
-    // The component should not render any content, only the Mantine style element
-    expect(container.children.length).toBe(1);
-    expect(container.firstChild).toHaveAttribute('data-mantine-styles', 'classes');
+    // The component should not render any content — the only DOM nodes are
+    // Mantine's injected <style> elements. Mantine v9 injects more than one
+    // style tag (base reset + component classes), so assert on the invariant
+    // (every child is a Mantine style element) rather than an exact count.
+    const children = Array.from(container.children);
+    expect(children.length).toBeGreaterThan(0);
+    children.forEach((child) => {
+      expect(child.tagName).toBe('STYLE');
+      expect(child).toHaveAttribute('data-mantine-styles');
+    });
   });
 
   test('renders My Collections header and create button', () => {

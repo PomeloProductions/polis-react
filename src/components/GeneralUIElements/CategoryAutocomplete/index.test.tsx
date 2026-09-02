@@ -54,7 +54,10 @@ describe('CategoryAutocomplete', () => {
   });
 
   const renderWithMantine = (component: React.ReactElement) => {
-    return render(<MantineProvider>{component}</MantineProvider>);
+    // env="test" makes Mantine v9 combobox dropdowns render synchronously
+    // under jsdom (no transition/portal timing); without it the Autocomplete
+    // dropdown never opens and option assertions time out.
+    return render(<MantineProvider env="test">{component}</MantineProvider>);
   };
 
   it('renders with default props', () => {

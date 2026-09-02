@@ -7,11 +7,10 @@ interface ServerAlertProps {
 
 const ServerAlert: React.FC<ServerAlertProps> = ({ requestError }) => {
   let message = undefined;
-  let field: string | undefined = undefined;
   const errors = requestError.data.errors;
   if (errors) {
     const keys = Object.keys(errors);
-    field = keys.length ? keys[0] : undefined;
+    const field = keys.length ? keys[0] : undefined;
     message = field ? errors[field].pop() : undefined;
   }
 

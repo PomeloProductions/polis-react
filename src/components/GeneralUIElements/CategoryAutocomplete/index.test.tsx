@@ -41,7 +41,10 @@ jest.mock('../../../services/api', () => ({
 }));
 
 describe('CategoryAutocomplete', () => {
-  jest.setTimeout(10000); // Add a 10-second timeout for all tests in this suite
+  // Mantine's Combobox is slow to drive under jsdom + userEvent (individual
+  // interactions can take ~14s on a busy machine, more under CI coverage
+  // instrumentation), so a low cap flakes here.
+  jest.setTimeout(60000);
 
   const mockOnSelect = jest.fn();
 

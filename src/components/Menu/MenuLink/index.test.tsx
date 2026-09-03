@@ -6,6 +6,26 @@ import { PolisProvider } from '../../PolisProvider';
 import type { PolisTheme } from '../../../theme/PolisTheme';
 import { renderWithRouter } from '../../../test-utils';
 
+// Capture the `style` prop MenuLink hands to Mantine's <Text>. We wrap the real
+// Text so rendering (and the `data-testid` href assertion) still works, while
+// recording every props object it receives. This replaces an earlier
+// `jest.spyOn(React, 'createElement')` approach, which no longer sees anything
+// under the automatic JSX runtime that react-router v7's `Link` (and Mantine's
+// polymorphic `component={Link}` path) compile to — those emit `jsx()` calls,
+// not `React.createElement`.
+const textPropsCapture: Array<Record<string, unknown>> = [];
+jest.mock('@mantine/core', () => {
+  const actual = jest.requireActual('@mantine/core');
+  const RealText = actual.Text;
+  return {
+    ...actual,
+    Text: (props: Record<string, unknown>) => {
+      textPropsCapture.push(props);
+      return React.createElement(RealText, props);
+    },
+  };
+});
+
 describe('MenuLink', () => {
   it('handles additional props correctly', () => {
     renderWithRouter(
@@ -89,11 +109,11 @@ describe('MenuLink', () => {
   //
   // jsdom's CSSOM silently DROPS `color`/`border` declarations whose value is
   // `var(...)` (a jsdom limitation; real browsers keep them), so we cannot read
-  // them back off `element.style`. Instead we spy on `React.createElement` to
-  // capture the exact `style` object MenuLink hands to <Text> and assert on the
+  // them back off `element.style`. Instead we capture the exact `style` object
+  // MenuLink hands to <Text> (via the module mock above) and assert on the
   // string values there — which is what ships to the DOM in a real browser.
   const styleFor = (scheme: 'light' | 'dark', to = '/other'): React.CSSProperties => {
-    const spy = jest.spyOn(React, 'createElement');
+    textPropsCapture.length = 0;
     render(
       <MemoryRouter initialEntries={['/current']}>
         <PolisProvider theme={theme} forceColorScheme={scheme}>
@@ -103,18 +123,17 @@ describe('MenuLink', () => {
         </PolisProvider>
       </MemoryRouter>,
     );
-    // Find the <Text ...> call whose props carry our link's style (it has the
-    // scheme-aware color) — it is the element with a `style.color` string.
-    const call = spy.mock.calls.find(
-      ([, props]) =>
-        props &&
-        typeof props === 'object' &&
-        'style' in props &&
-        (props as { style?: React.CSSProperties }).style?.color !== undefined,
+    // Find the <Text ...> render whose props carry our link's style (it has the
+    // scheme-aware color) — it is the one with a `style.color` string.
+    const props = textPropsCapture.find(
+      (p) =>
+        p &&
+        typeof p === 'object' &&
+        'style' in p &&
+        (p as { style?: React.CSSProperties }).style?.color !== undefined,
     );
-    spy.mockRestore();
-    if (!call) throw new Error('MenuLink did not pass a style with a color');
-    return (call[1] as { style: React.CSSProperties }).style;
+    if (!props) throw new Error('MenuLink did not pass a style with a color');
+    return (props as { style: React.CSSProperties }).style;
   };
 
   it('colours inactive nav text from the scheme-aware --polis-color-text-muted var', () => {

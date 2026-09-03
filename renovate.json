@@ -1,4 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7",
+      "description": "Restrict TypeScript to <7. typescript-eslint has no TypeScript 7 support yet (see typescript-eslint#10940), so TS 7 breaks lint. Renovate still offers 6.x, and this restriction auto-lifts once widened."
+    }
+  ]
 }

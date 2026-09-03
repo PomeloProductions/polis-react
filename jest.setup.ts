@@ -1,4 +1,15 @@
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// react-router v7 references TextEncoder/TextDecoder at import time, but jsdom
+// does not provide them. Polyfill from Node's `util` before any test module
+// pulls in react-router-dom.
+if (typeof globalThis.TextEncoder === 'undefined') {
+  (globalThis as any).TextEncoder = TextEncoder;
+}
+if (typeof globalThis.TextDecoder === 'undefined') {
+  (globalThis as any).TextDecoder = TextDecoder;
+}
 
 // jsdom doesn't implement IntersectionObserver, but several components
 // (e.g. DataList) instantiate one at mount time. Provide a no-op stub.

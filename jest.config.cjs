@@ -1,6 +1,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: 'jsdom',
+  // Mantine's Combobox-based widgets (e.g. CategoryAutocomplete) are slow to
+  // drive under jsdom + userEvent — individual interactions can take ~14s on a
+  // busy machine, which trips Jest's 10s default. Raise the per-test timeout so
+  // these don't flake on slower runners.
+  testTimeout: 30000,
   roots: ['<rootDir>/src'],
   testMatch: ['**/?(*.)+(test).[jt]s?(x)'],
   testPathIgnorePatterns: ['/node_modules/', '/src/test-utils/jest-dom.d.ts'],

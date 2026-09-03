@@ -42,8 +42,9 @@ jest.mock('../../../services/api', () => ({
 
 describe('CategoryAutocomplete', () => {
   // Mantine v9's Combobox is substantially slower to open/select under jsdom +
-  // userEvent than v8 (~12-15s per dropdown interaction here vs ~2s before, and
-  // more under CI coverage instrumentation), so a low cap flakes here.
+  // userEvent than v8 (~12-15s per dropdown interaction here vs ~2s before), and
+  // CI runs the suite under coverage instrumentation (slower still), so the
+  // dropdown-driven tests below need a generous per-test timeout.
   jest.setTimeout(60000);
 
   const mockOnSelect = jest.fn();

@@ -1,0 +1,28 @@
+name: Label incompatible dep PRs
+on:
+  check_suite:
+    types: [completed]
+permissions:
+  pull-requests: write
+  checks: read
+  contents: read
+jobs:
+  label:
+    if: github.event.check_suite.head_branch != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label Renovate PRs by check result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(gh pr list --repo ${{ github.repository }} --head "${{ github.event.check_suite.head_branch }}" --json number,author,url --jq '.[0]')
+          [ -z "$pr" ] && exit 0
+          login=$(echo "$pr" | jq -r '.author.login')
+          num=$(echo "$pr" | jq -r '.number')
+          case "$login" in renovate|app/renovate|renovate[bot]) ;; *) exit 0 ;; esac
+          concl="${{ github.event.check_suite.conclusion }}"
+          if [ "$concl" = "failure" ] || [ "$concl" = "timed_out" ]; then
+            gh pr edit "$num" --repo ${{ github.repository }} --add-label incompatible || true
+          elif [ "$concl" = "success" ]; then
+            gh pr edit "$num" --repo ${{ github.repository }} --remove-label incompatible || true
+          fi

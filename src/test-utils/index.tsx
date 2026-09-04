@@ -23,7 +23,10 @@ export const renderWithRouter = (
   return {
     ...render(
       <MemoryRouter initialEntries={[route]}>
-        <MantineProvider>
+        {/* env="test" disables Mantine transitions/portal timing so combobox
+            dropdowns (Autocomplete/Select) render synchronously under jsdom —
+            required as of Mantine v9. */}
+        <MantineProvider env="test">
           <MeContextProvider>{component}</MeContextProvider>
         </MantineProvider>
       </MemoryRouter>,

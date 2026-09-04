@@ -98,7 +98,7 @@ const ComponentRow: React.FC<ComponentRowProps> = ({ entry, isExpanded, onToggle
         </Group>
       </Group>
 
-      <Collapse in={isExpanded}>
+      <Collapse expanded={isExpanded}>
         <Divider />
         <Box p="lg" bg="gray.0">
           <Text size="sm" c="dimmed" mb="lg">

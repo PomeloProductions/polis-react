@@ -6,6 +6,7 @@ permissions:
   pull-requests: write
   checks: read
   contents: read
+  actions: read
 jobs:
   label:
     if: github.event.check_suite.head_branch != null
@@ -14,15 +15,73 @@ jobs:
       - name: Label Renovate PRs by check result
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.event.check_suite.head_branch }}
+          CONCL: ${{ github.event.check_suite.conclusion }}
+          CHECK_RUNS_URL: ${{ github.event.check_suite.check_runs_url }}
+          MARKER: "<!-- incompatible-bot -->"
         run: |
-          pr=$(gh pr list --repo ${{ github.repository }} --head "${{ github.event.check_suite.head_branch }}" --json number,author,url --jq '.[0]')
+          set -uo pipefail
+
+          pr=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --json number,author,url --jq '.[0]')
           [ -z "$pr" ] && exit 0
           login=$(echo "$pr" | jq -r '.author.login')
           num=$(echo "$pr" | jq -r '.number')
           case "$login" in renovate|app/renovate|renovate[bot]) ;; *) exit 0 ;; esac
-          concl="${{ github.event.check_suite.conclusion }}"
-          if [ "$concl" = "failure" ] || [ "$concl" = "timed_out" ]; then
-            gh pr edit "$num" --repo ${{ github.repository }} --add-label incompatible || true
-          elif [ "$concl" = "success" ]; then
-            gh pr edit "$num" --repo ${{ github.repository }} --remove-label incompatible || true
+
+          # ---- helper: find an existing sticky comment id (containing the marker) ----
+          find_sticky_id() {
+            gh api "repos/$REPO/issues/$num/comments" --paginate \
+              --jq "[.[] | select(.body | contains(\"$MARKER\")) | .id] | last // empty" 2>/dev/null
+          }
+
+          if [ "$CONCL" = "failure" ] || [ "$CONCL" = "timed_out" ]; then
+            gh pr edit "$num" --repo "$REPO" --add-label incompatible || true
+
+            # ---- resolve the failing workflow run id from this check_suite ----
+            run_id=""
+            run_url=""
+            if [ -n "${CHECK_RUNS_URL:-}" ]; then
+              run_id=$(gh api "$CHECK_RUNS_URL" --paginate \
+                --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="timed_out") | .details_url]
+                      | map(capture("/runs/(?<id>[0-9]+)").id) | .[0] // empty' 2>/dev/null || true)
+            fi
+            if [ -n "$run_id" ]; then
+              run_url=$(gh run view "$run_id" --repo "$REPO" --json url --jq '.url' 2>/dev/null || true)
+            fi
+            [ -z "$run_url" ] && run_url="https://github.com/$REPO/pull/$num/checks"
+
+            # ---- fetch failed logs and extract the incompatibility reason ----
+            snippet=""
+            if [ -n "$run_id" ]; then
+              logs=$(gh run view "$run_id" --repo "$REPO" --log-failed 2>/dev/null || true)
+              [ -z "$logs" ] && logs=$(gh run view "$run_id" --repo "$REPO" --log 2>/dev/null || true)
+              if [ -n "$logs" ]; then
+                snippet=$(echo "$logs" | grep -iE 'ERESOLVE|could not be resolved|peer dep|peerDependenc|requires .* but|conflicts with|does not satisfy|npm error code|error TS[0-9]|Unsupported engine|Your requirements could not|Problem [0-9]|Class .* not found|Call to undefined' | head -n 10 || true)
+              fi
+            fi
+
+            if [ -n "$snippet" ]; then
+              body=$(printf '%s\n🚫 **Marked `incompatible`** — CI failed with what looks like a dependency/toolchain incompatibility:\n\n```\n%s\n```\n\nThis bump can'"'"'t merge until upstream/the toolchain catches up. Full logs: %s\n' "$MARKER" "$snippet" "$run_url")
+            else
+              body=$(printf '%s\n🚫 **Marked `incompatible`** — CI failed, but no specific incompatibility signature was found in the logs. Please review manually. Full logs: %s\n' "$MARKER" "$run_url")
+            fi
+
+            # ---- sticky: edit existing marker comment, else create ----
+            cid=$(find_sticky_id)
+            if [ -n "$cid" ]; then
+              jq -n --arg b "$body" '{body:$b}' | gh api -X PATCH "repos/$REPO/issues/comments/$cid" --input - >/dev/null || true
+            else
+              printf '%s' "$body" | gh pr comment "$num" --repo "$REPO" --body-file - || true
+            fi
+
+          elif [ "$CONCL" = "success" ]; then
+            gh pr edit "$num" --repo "$REPO" --remove-label incompatible || true
+
+            # ---- edit the sticky comment (only if one exists) to a green note ----
+            cid=$(find_sticky_id)
+            if [ -n "$cid" ]; then
+              body=$(printf '%s\n✅ Now compatible — CI is green; the `incompatible` label was removed.\n' "$MARKER")
+              jq -n --arg b "$body" '{body:$b}' | gh api -X PATCH "repos/$REPO/issues/comments/$cid" --input - >/dev/null || true
+            fi
           fi

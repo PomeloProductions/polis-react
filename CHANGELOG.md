@@ -10,6 +10,19 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.5.0](https://github.com/PomeloProductions/polis-react/compare/v0.4.2...v0.5.0) (2026-09-05)
+
+
+### Features
+
+* **settings:** Add Appearance tab, ColorSchemeContextProvider, extraTabs prop ([dd8f310](https://github.com/PomeloProductions/polis-react/commit/dd8f3100a306b741aaf9741c252fc06c251d6cd8))
+* **settings:** Appearance tab, ColorSchemeContextProvider, and extraTabs ([180804f](https://github.com/PomeloProductions/polis-react/commit/180804f793ee8a8cdee339e6e32de7394cb8311b))
+
+
+### Bug Fixes
+
+* **auth:** Guard goToSignIn against post-login token propagation race ([141cea2](https://github.com/PomeloProductions/polis-react/commit/141cea2eed0df6cd92fa7e2b41d1cf5a90dee572))
+
 ## [0.4.2](https://github.com/PomeloProductions/polis-react/compare/v0.4.1...v0.4.2) (2026-08-31)
 
 

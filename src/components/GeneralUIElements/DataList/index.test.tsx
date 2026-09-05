@@ -1,5 +1,5 @@
 import { screen, fireEvent, render } from '@testing-library/react';
-import DataList from '.';
+import DataList, { DataListFeatures } from '.';
 import { MantineProvider } from '@mantine/core';
 import {
   BasePaginatedContextState,
@@ -50,13 +50,14 @@ const columns = [
   {
     accessorKey: 'date',
     header: 'Date',
-    cell: (info: CellContext<TestItem, unknown>) =>
+    cell: (info: CellContext<DataListFeatures, TestItem, unknown>) =>
       new Date(info.getValue() as string).toLocaleDateString(),
   },
   {
     accessorKey: 'score',
     header: 'Score',
-    cell: (info: CellContext<TestItem, unknown>) => (info.getValue() as number).toFixed(1),
+    cell: (info: CellContext<DataListFeatures, TestItem, unknown>) =>
+      (info.getValue() as number).toFixed(1),
     meta: {
       filterType: 'range',
     },

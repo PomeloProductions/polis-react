@@ -112,7 +112,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/dropzone": "^9",
     "@tabler/icons-react": "^3.36.1",
-    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-table": "^9.0.0",
     "@tanstack/react-virtual": "^3.13.18",
     "@tiptap/extension-link": "^3.19.0",
     "@tiptap/extension-placeholder": "^3.19.0",

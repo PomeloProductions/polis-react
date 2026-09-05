@@ -19,7 +19,7 @@ jobs:
           HEAD_BRANCH: ${{ github.event.check_suite.head_branch }}
           CONCL: ${{ github.event.check_suite.conclusion }}
           CHECK_RUNS_URL: ${{ github.event.check_suite.check_runs_url }}
-          MARKER: "<!-- incompatible-bot -->"
+          MARKER: '<!-- incompatible-bot -->'
         run: |
           set -uo pipefail
 

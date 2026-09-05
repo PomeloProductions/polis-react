@@ -1,12 +1,20 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import './index.scss';
 import {
-  useReactTable,
-  getCoreRowModel,
+  useTable,
+  tableFeatures,
+  createCoreRowModel,
+  createFilteredRowModel,
+  createSortedRowModel,
+  columnFilteringFeature,
+  columnResizingFeature,
+  columnSizingFeature,
+  columnVisibilityFeature,
+  rowSortingFeature,
+  filterFn_includesString,
+  sortFn_alphanumeric,
   flexRender,
-  getFilteredRowModel,
   ColumnFiltersState,
-  getSortedRowModel,
   SortingState,
   Row,
   Column,
@@ -29,6 +37,27 @@ import RangeFilter, { RangeFilterValue, rangeFilterFn } from './RangeFilter';
 import { BasePaginatedContextState } from '../../../contexts/BasePaginatedContext';
 import BaseModel from '../../../models/base-model';
 
+/**
+ * The @tanstack/react-table v9 feature set used by DataList. v9 requires the
+ * feature modules and row models to be registered statically via
+ * `tableFeatures`, rather than being passed as `getCoreRowModel()` style
+ * options like in v8.
+ */
+export const dataListFeatures = tableFeatures({
+  columnFilteringFeature,
+  columnResizingFeature,
+  columnSizingFeature,
+  columnVisibilityFeature,
+  rowSortingFeature,
+  coreRowModel: createCoreRowModel(),
+  filteredRowModel: createFilteredRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  filterFns: { includesString: filterFn_includesString },
+  sortFns: { alphanumeric: sortFn_alphanumeric },
+});
+
+export type DataListFeatures = typeof dataListFeatures;
+
 export interface RangeFilterColumn<T> {
   valueCallback?: (row: T) => number | undefined | null;
   disableServerSearch?: boolean;
@@ -36,7 +65,7 @@ export interface RangeFilterColumn<T> {
 
 export interface DataListProps<T extends BaseModel> {
   context: BasePaginatedContextState<T>;
-  columns: AccessorKeyColumnDef<T>[];
+  columns: AccessorKeyColumnDef<DataListFeatures, T>[];
   onRowClick?: (row: T) => void;
   onArrangeData?: (data: T[]) => T[];
   onFilterChanged?: (columnId: string, value: unknown) => boolean;
@@ -50,7 +79,7 @@ export interface DataListProps<T extends BaseModel> {
 }
 
 const handleTableFilter = <T extends BaseModel>(
-  row: Row<T>,
+  row: Row<DataListFeatures, T>,
   columnId: string,
   value: unknown,
   rangeFields: Record<string, RangeFilterColumn<T>>,
@@ -146,7 +175,10 @@ const DataList = <T extends BaseModel>({
     });
   };
 
-  const handleTextFilterChange = (column: Column<T, unknown>, value: string | undefined) => {
+  const handleTextFilterChange = (
+    column: Column<DataListFeatures, T, unknown>,
+    value: string | undefined,
+  ) => {
     // Update table filter state
     const newFilters = columnFilters.filter((f) => f.id !== column.id);
     if (value) {
@@ -162,7 +194,8 @@ const DataList = <T extends BaseModel>({
       return;
     }
 
-    const key = (column.columnDef as AccessorKeyColumnDef<T, unknown>).accessorKey as string;
+    const key = (column.columnDef as AccessorKeyColumnDef<DataListFeatures, T, unknown>)
+      .accessorKey as string;
     if (key) {
       context.setFilter(key, value ? 'like,*' + value + '*' : null);
     }
@@ -242,13 +275,14 @@ const DataList = <T extends BaseModel>({
     return onArrangeData ? onArrangeData(context.loadedData) : context.loadedData;
   }, [context.loadedData, onArrangeData]);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: dataListFeatures,
     data: tableData,
     columns: columns.map((col) => ({
       ...col,
       enableColumnFilter: true,
       enableSorting: true,
-      filterFn: (row: Row<T>, columnId: string, value: unknown) =>
+      filterFn: (row: Row<DataListFeatures, T>, columnId: string, value: unknown) =>
         handleTableFilter(row, columnId, value, rangeFields),
     })),
     state: {
@@ -257,9 +291,6 @@ const DataList = <T extends BaseModel>({
     },
     onColumnFiltersChange: handleTableFilterChange,
     onSortingChange: handleSortingChange,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',
     enableSortingRemoval: true,
     sortDescFirst: false,

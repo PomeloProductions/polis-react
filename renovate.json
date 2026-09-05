@@ -1,4 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": [
+    "config:recommended"
+  ],
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "description": "Group all non-major (minor + patch) dependency updates into a single PR so merging one bump does not leave sibling PRs conflicting on composer.lock / package-lock.json. Majors stay separate for individual review + incompatible labeling. Repo-specific groups declared later override this by last-match precedence.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major dependencies"
+    }
+  ]
 }

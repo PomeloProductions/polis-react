@@ -97,6 +97,105 @@ function invalidateSession(badToken: string) {
   clearMeState();
 }
 
+// ============================================================================
+// Session-failure handling (redirect to login)
+// ----------------------------------------------------------------------------
+// Some auth failures cannot be recovered by a refresh: an expired/invalid token
+// that a refresh can't renew (401 after retry), or a request that reached the
+// server with NO token at all — which the API answers as HTTP 400
+// `Polis\Exceptions\JWT\TokenMissingException` ("Missing JWT Token"), not 401.
+// In these cases we clear the persisted session and send the user to the login
+// route so they are never stranded on a half-broken page with a dead session
+// (previously required manually clearing localStorage). Guarded so we never
+// redirect for a public request (e.g. the login call itself) or when the user
+// is already on a public/login page, which would otherwise loop.
+// ============================================================================
+const LOGIN_ROUTE = '/sign-in';
+
+// Public routes the user can legitimately sit on with no session. Redirecting
+// to login from any of these would be pointless (or an infinite loop when the
+// target IS login). Kept in sync conceptually with the app's public routes.
+const PUBLIC_ROUTES: readonly string[] = [
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/reset-password',
+];
+
+/** Whether the browser is currently on a public/no-auth route. */
+function isOnPublicRoute(): boolean {
+  if (typeof window === 'undefined') return true; // SSR/tests: never redirect
+  const path = window.location.pathname;
+  return PUBLIC_ROUTES.some((r) => path === r || path.startsWith(`${r}/`));
+}
+
+// The actual navigation is funnelled through a single, replaceable function.
+// This is the one place the app touches the browser location for auth
+// redirects, so it can be swapped in tests (jsdom's `window.location` is not
+// reconfigurable) and gives any future router-driven navigation one home. The
+// default does a full-document assignment so the app tree is torn down and
+// rebuilt in a clean, logged-out state.
+let navigateToLogin: () => void = () => {
+  if (typeof window !== 'undefined') {
+    window.location.assign(LOGIN_ROUTE);
+  }
+};
+
+/** Navigate the browser to the login route. */
+export function redirectToLogin(): void {
+  navigateToLogin();
+}
+
+/**
+ * Override the login-navigation for testing (jsdom cannot reconfigure
+ * `window.location`). Not intended for production use.
+ * @internal
+ */
+export function __setLoginNavigatorForTests(fn: () => void): void {
+  navigateToLogin = fn;
+}
+
+/**
+ * Whether an error response represents the "no/invalid token reached the API"
+ * failure the backend reports as a 400 TokenMissingException. Matched on the
+ * structured `exception_class` first, with a message fallback.
+ */
+function isTokenMissing400(error: AxiosError): boolean {
+  if (error.response?.status !== 400) return false;
+  const data = error.response.data as
+    | { exception_class?: string; message?: string }
+    | undefined;
+  if (!data) return false;
+  return (
+    data.exception_class === 'Polis\\Exceptions\\JWT\\TokenMissingException' ||
+    data.message === 'Missing JWT Token'
+  );
+}
+
+/**
+ * Terminal auth failure: clear the persisted session and redirect to login.
+ * Idempotent and loop-safe — a no-op when the failing request was itself
+ * public (login/refresh/etc.) or when we're already on a public/login route.
+ */
+function handleSessionFailure(error: AxiosError, badToken?: string): void {
+  // Never bounce off a public request (e.g. the login POST returning 400/401).
+  if (isPublicPath(error.config?.url)) return;
+
+  if (badToken) {
+    invalidateSession(badToken);
+  } else if (appState) {
+    // No token to key the invalidation on (e.g. the 400 no-token case): still
+    // clear session state so a stale token can't linger.
+    appState.dispatch(logOut());
+    clearMeState();
+  }
+
+  // Redirect only if we aren't already sitting on a public/login route.
+  if (typeof window !== 'undefined' && !isOnPublicRoute()) {
+    redirectToLogin();
+  }
+}
+
 /**
  * Attempt to refresh the token. Returns null if refresh fails.
  */
@@ -397,20 +496,39 @@ export const responseErrorInterceptor = (error: AxiosError): Promise<AxiosRespon
             config.headers['Authorization'] = `Bearer ${refreshed.token}`;
             return api.request(config);
           }
-          // Refresh failed — invalidateSession was already called
+          // Refresh failed — invalidateSession was already called. The token is
+          // dead and unrecoverable: clear the session and land the user on
+          // login rather than leaving them on a broken page.
+          handleSessionFailure(error, requestToken || tokenData.token);
           return Promise.reject({ status: 401, data: error.response?.data });
         });
       }
     }
-    // Already retried or no token — invalidate and reject
+    // Already retried or no token — invalidate, redirect to login, and reject.
     releaseSlot();
     if (appState) appState.dispatch(decrementLoadingCount());
     const badToken = (error.config?.headers?.['Authorization'] as string | undefined)?.replace(
       'Bearer ',
       '',
     );
-    if (badToken) invalidateSession(badToken);
+    handleSessionFailure(error, badToken);
     return Promise.reject({ status: 401, data: error.response?.data });
+  }
+
+  // 400 "Missing JWT Token" (Polis\Exceptions\JWT\TokenMissingException): the
+  // request reached the API with no valid token. This is an auth failure the
+  // backend surfaces as 400 rather than 401, so it must be handled explicitly
+  // as a session failure — clear the session and redirect to login (loop-safe;
+  // no-op for public requests / when already on a public route).
+  if (isTokenMissing400(error) && error.config) {
+    releaseSlot();
+    if (appState) appState.dispatch(decrementLoadingCount());
+    const badToken = (error.config.headers?.['Authorization'] as string | undefined)?.replace(
+      'Bearer ',
+      '',
+    );
+    handleSessionFailure(error, badToken);
+    return Promise.reject(error.response);
   }
 
   // Retry on 429 with retry-after / exponential backoff

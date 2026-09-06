@@ -162,9 +162,7 @@ export function __setLoginNavigatorForTests(fn: () => void): void {
  */
 function isTokenMissing400(error: AxiosError): boolean {
   if (error.response?.status !== 400) return false;
-  const data = error.response.data as
-    | { exception_class?: string; message?: string }
-    | undefined;
+  const data = error.response.data as { exception_class?: string; message?: string } | undefined;
   if (!data) return false;
   return (
     data.exception_class === 'Polis\\Exceptions\\JWT\\TokenMissingException' ||

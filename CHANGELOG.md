@@ -10,6 +10,24 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.5.0](https://github.com/PomeloProductions/polis-react/compare/v0.4.2...v0.5.0) (2026-09-10)
+
+
+### Features
+
+* **settings:** Add Appearance tab, ColorSchemeContextProvider, extraTabs prop ([dd8f310](https://github.com/PomeloProductions/polis-react/commit/dd8f3100a306b741aaf9741c252fc06c251d6cd8))
+* **settings:** Appearance tab, ColorSchemeContextProvider, and extraTabs ([180804f](https://github.com/PomeloProductions/polis-react/commit/180804f793ee8a8cdee339e6e32de7394cb8311b))
+
+
+### Bug Fixes
+
+* **api:** Redirect to login on unrecoverable auth failures ([a357128](https://github.com/PomeloProductions/polis-react/commit/a357128d66aff1dadaf21cfdc8d77de07c30aac0))
+* **api:** Redirect to login on unrecoverable auth failures ([514cd2e](https://github.com/PomeloProductions/polis-react/commit/514cd2e273fd92fc9a114304ef4229ed67fcd38e))
+* **auth:** Guard goToSignIn against post-login token propagation race ([141cea2](https://github.com/PomeloProductions/polis-react/commit/141cea2eed0df6cd92fa7e2b41d1cf5a90dee572))
+* **deps:** Update dependency @tanstack/react-table to v9 ([6a9c145](https://github.com/PomeloProductions/polis-react/commit/6a9c1455b553a2eb4a7dba949a627b19211f139d))
+* **deps:** Update dependency @tanstack/react-table to v9 ([f880c79](https://github.com/PomeloProductions/polis-react/commit/f880c7944cc25dc263a890c00ed399dae1af370f))
+* Migrate @tanstack/react-table usage to v9 API ([9ad39cb](https://github.com/PomeloProductions/polis-react/commit/9ad39cb91887fa0763be67576fcaa8b62b895d93))
+
 ## [0.4.2](https://github.com/PomeloProductions/polis-react/compare/v0.4.1...v0.4.2) (2026-08-31)
 
 

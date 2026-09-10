@@ -16,6 +16,9 @@ const inner = tsJest.createTransformer({
     module: 'CommonJS',
     moduleResolution: 'node',
     isolatedModules: true,
+    // @tanstack/react-table v9 is ESM-only JS; allow ts-jest to compile the
+    // `.js` files pulled in from node_modules down to CommonJS.
+    allowJs: true,
     allowImportingTsExtensions: false,
     skipLibCheck: true,
     strict: false,

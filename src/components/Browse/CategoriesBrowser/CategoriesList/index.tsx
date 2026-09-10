@@ -7,13 +7,13 @@ import { ActionIcon, Group } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import Category from '../../../../models/category';
 import CategoryRequests from '../../../../services/requests/CategoryRequests';
-import DataList from '../../../GeneralUIElements/DataList';
+import DataList, { DataListFeatures } from '../../../GeneralUIElements/DataList';
 
 interface Props {
   contextState: CategoriesContextState;
 }
 
-const columnHelper = createColumnHelper<Category>();
+const columnHelper = createColumnHelper<DataListFeatures, Category>();
 
 const CategoriesList: React.FC<Props> = ({ contextState }) => {
   const navigate = useNavigate();
@@ -34,13 +34,13 @@ const CategoriesList: React.FC<Props> = ({ contextState }) => {
       header: 'Name',
       cell: (info) => info.getValue(),
       filterFn: 'includesString',
-      sortingFn: 'alphanumeric',
+      sortFn: 'alphanumeric',
     }),
     columnHelper.accessor('description', {
       header: 'Description',
       cell: (info) => info.getValue() || '',
       filterFn: 'includesString',
-      sortingFn: 'alphanumeric',
+      sortFn: 'alphanumeric',
     }),
     columnHelper.display({
       id: 'actions',
@@ -82,7 +82,7 @@ const CategoriesList: React.FC<Props> = ({ contextState }) => {
   return (
     <DataList
       context={contextState}
-      columns={columns as AccessorKeyColumnDef<Category>[]}
+      columns={columns as AccessorKeyColumnDef<DataListFeatures, Category>[]}
       onRowClick={handleRowClick}
       rowIdField="id"
     />

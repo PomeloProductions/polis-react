@@ -17,9 +17,13 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
-    '^.+\\.(ts|tsx)$': '<rootDir>/jest-transform.cjs',
+    '^.+\\.(ts|tsx|js|jsx|mjs)$': '<rootDir>/jest-transform.cjs',
   },
-  transformIgnorePatterns: ['/node_modules/(?!(.*\\.mjs$))'],
+  // @tanstack/react-table v9 (and its @tanstack/table-core / store deps) ship
+  // as ESM-only `.js` files with no CommonJS build, so they must be transformed
+  // rather than ignored. Everything else in node_modules stays ignored except
+  // pre-existing `.mjs` files.
+  transformIgnorePatterns: ['/node_modules/(?!(@tanstack)/)(?!(.*\\.mjs$))'],
 
   collectCoverage: false,
   collectCoverageFrom: [

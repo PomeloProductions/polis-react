@@ -12,6 +12,26 @@
         "patch"
       ],
       "groupName": "all non-major dependencies"
+    },
+    {
+      "matchManagers": ["composer"],
+      "addLabels": ["php"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "addLabels": ["javascript"]
+    },
+    {
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "addLabels": ["docker"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "addLabels": ["github-actions"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
     }
   ]
 }

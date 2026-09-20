@@ -3,32 +3,47 @@ name: Code Checks
 on:
   push:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.json'
-      - 'eslint.config.js'
-      - 'jest.config.cjs'
-      - 'jest.setup.ts'
-      - 'jest-transform.cjs'
-      - '.github/workflows/code-checks.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.json'
-      - 'eslint.config.js'
-      - 'jest.config.cjs'
-      - 'jest.setup.ts'
-      - 'jest-transform.cjs'
-      - '.github/workflows/code-checks.yaml'
+
+# Cancel superseded runs on the same PR; never cancel push builds on main.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Detect what changed so docs/README/renovate-only PRs skip the heavy
+  # TypeScript + Jest jobs. Path filtering happens here (not at the workflow
+  # `on:` level) so the workflow always runs and the gated jobs report a
+  # clean skip instead of leaving required checks pending.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              - 'package.json'
+              - 'tsconfig*.json'
+              - 'jest*'
+              - '*.config.*'
+            workflows:
+              - '.github/workflows/**'
+
   type-check:
     name: TypeScript (Node ${{ matrix.node }})
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -63,6 +78,8 @@ jobs:
 
   test:
     name: Jest (Node ${{ matrix.node }})
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

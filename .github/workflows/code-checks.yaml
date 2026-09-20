@@ -19,6 +19,7 @@ jobs:
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       src: ${{ steps.filter.outputs.src }}
       workflows: ${{ steps.filter.outputs.workflows }}
@@ -43,8 +44,11 @@ jobs:
   type-check:
     name: TypeScript (Node ${{ matrix.node }})
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true' }}
+    # Skip on draft PRs to save minutes; runs on ready-for-review, push, and
+    # non-PR events (github.event.pull_request is null → not draft).
+    if: ${{ (needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true') && github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -79,8 +83,11 @@ jobs:
   test:
     name: Jest (Node ${{ matrix.node }})
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true' }}
+    # Skip on draft PRs to save minutes; runs on ready-for-review, push, and
+    # non-PR events (github.event.pull_request is null → not draft).
+    if: ${{ (needs.changes.outputs.src == 'true' || needs.changes.outputs.workflows == 'true') && github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:

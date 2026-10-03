@@ -219,6 +219,27 @@ export type { TreeNode, NodePath } from './util/node-tree-utils';
 export { createPageTypeRegistry, defaultPageTypeRegistry } from './util/page-type-registry';
 export type { PageTypeRegistry, PageTypeConfig, PageTypeContext } from './util/page-type-registry';
 
+// ───── Plugin system (frontend half of the Polis plugin contract) ─────
+// `definePlugin`/`registerPlugin` wire a plugin's components, page-types, nav
+// items, settings tabs and routes into the app. Mirrors polis-laravel's
+// `Polis\Plugins\PluginContract`.
+export {
+  definePlugin,
+  registerPlugin,
+  registerPlugins,
+  getPluginNavItems,
+  getPluginSettingsTabs,
+  getPluginRoutes,
+  getPluginReduxSlices,
+  getRegisteredPlugins,
+  isPluginRegistered,
+  resetPlugins,
+  usePluginNavItems,
+  usePluginRoutes,
+  usePluginSettingsTabs,
+} from './plugins';
+export type { PluginDefinition, NavItem, PluginRoute, Reducer } from './plugins';
+
 /*
  * Stateful core modules. These carry module-level state (the AppContext
  * store bridge, the shared axios instance, the Me context) and MUST be

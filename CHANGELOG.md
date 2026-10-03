@@ -10,6 +10,20 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.6.0](https://github.com/PomeloProductions/polis-react/compare/v0.5.0...v0.6.0) (2026-10-03)
+
+
+### Features
+
+* Add frontend plugin registry (definePlugin/registerPlugin) ([c451cc0](https://github.com/PomeloProductions/polis-react/commit/c451cc059fef83dd780a8ccb4e423d499184ec15))
+* Frontend plugin registry (definePlugin/registerPlugin) ([fd6802a](https://github.com/PomeloProductions/polis-react/commit/fd6802a1bb909e80fcc593ee58aa8836db84f960))
+
+
+### Bug Fixes
+
+* Make app shell + global styles colour-scheme aware in dark mode ([92964b4](https://github.com/PomeloProductions/polis-react/commit/92964b42a83ed4dde53673ea531775140b79c843))
+* Make app shell + global styles colour-scheme aware in dark mode ([c340fe5](https://github.com/PomeloProductions/polis-react/commit/c340fe5621784311542a9df1328c9e3ba4bfb219))
+
 ## [0.5.0](https://github.com/PomeloProductions/polis-react/compare/v0.4.2...v0.5.0) (2026-09-29)
 
 

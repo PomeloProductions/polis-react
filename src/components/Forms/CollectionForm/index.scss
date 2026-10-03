@@ -1,7 +1,7 @@
 .collection-form {
   padding: var(--polis-spacing-lg, 20px);
   font-family: var(--polis-font-body, system-ui, sans-serif);
-  color: var(--polis-color-text-primary, #222428);
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
 
   .error-message {
     background-color: var(--polis-color-surface-alt, #f8d7da);
@@ -29,7 +29,7 @@
       border-radius: var(--polis-radius-md, 4px);
       font-size: 16px;
       font-family: var(--polis-font-body, system-ui, sans-serif);
-      color: var(--polis-color-text-primary, #222428);
+      color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
       transition:
         border-color 0.15s ease-in-out,
         box-shadow 0.15s ease-in-out;
@@ -41,7 +41,10 @@
       }
 
       &:disabled {
-        background-color: var(--polis-color-surface-alt, #e9ecef);
+        background-color: var(
+          --polis-color-surface-alt,
+          var(--mantine-color-default-hover, #e9ecef)
+        );
         opacity: 0.65;
       }
     }
@@ -84,12 +87,12 @@
       font-family: var(--polis-font-body, system-ui, sans-serif);
 
       &.cancel-button {
-        background: var(--polis-color-surface-alt, #f8f9fa);
+        background: var(--polis-color-surface-alt, var(--mantine-color-default, #f8f9fa));
         border: 1px solid var(--polis-color-border, #ced4da);
         color: var(--polis-color-text-primary, #495057);
 
         &:hover {
-          background: var(--polis-color-surface-alt, #e9ecef);
+          background: var(--polis-color-surface-alt, var(--mantine-color-default-hover, #e9ecef));
         }
 
         &:disabled {
@@ -108,7 +111,7 @@
         }
 
         &:disabled {
-          background: var(--polis-color-text-muted, #6c757d);
+          background: var(--polis-color-text-muted, var(--mantine-color-dimmed, #6c757d));
           cursor: not-allowed;
         }
       }

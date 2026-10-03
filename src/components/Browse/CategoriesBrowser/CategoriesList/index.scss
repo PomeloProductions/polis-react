@@ -19,7 +19,7 @@
   }
 
   .category-card {
-    background: var(--polis-color-surface, #fff);
+    background: var(--polis-color-surface, var(--mantine-color-body, #fff));
     border-radius: var(--polis-radius-lg, 8px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition:
@@ -83,7 +83,7 @@
     border: none;
     padding: 0.5rem;
     cursor: pointer;
-    color: var(--polis-color-text-muted, #6c757d);
+    color: var(--polis-color-text-muted, var(--mantine-color-dimmed, #6c757d));
     transition: color 0.2s;
     display: flex;
     align-items: center;

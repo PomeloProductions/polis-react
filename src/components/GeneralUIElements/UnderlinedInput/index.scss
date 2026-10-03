@@ -25,7 +25,7 @@ input[type='number'] {
   font-size: 16px;
   background: transparent;
   font-family: var(--polis-font-body, system-ui, sans-serif);
-  color: var(--polis-color-text-primary, #222428);
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
 
   &:focus {
     outline: none;

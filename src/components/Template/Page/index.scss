@@ -13,38 +13,55 @@
 // The `--polis-color-*` custom properties are swapped per colour scheme by
 // <PolisProvider>, so these rules give a dark shell in dark mode and a light
 // shell in light mode with no per-component JS.
+//
+// FALLBACKS MUST BE SCHEME-AWARE. The old fallbacks here were `transparent` /
+// `inherit`, which broke dark mode in two very common cases: (1) a theme that
+// ships only a light `colors` set (no `dark`) — then `--polis-color-surface`
+// holds light values in dark mode; and (2) consumers using the standalone
+// `<ColorSchemeContextProvider>` (their own `<MantineProvider>`), which sets
+// `data-mantine-color-scheme` but does NOT inject `--polis-color-*` at all — so
+// every rule fell back to `transparent`, exposing the white page body while
+// only Mantine's own components turned dark (the half-applied dark mode bug).
+//
+// The fallbacks now chain to Mantine's always-present, scheme-aware tokens
+// (`--mantine-color-body` for the page surface, `--mantine-color-default` for
+// panel/nav surfaces, `--mantine-color-text` for text,
+// `--mantine-color-default-border` for borders). Mantine flips these with
+// `data-mantine-color-scheme`, so the shell follows dark mode even with no Polis
+// dark palette and no PolisProvider, while a themed app with a `dark` palette
+// still wins via `--polis-color-*`.
 
 // AppShell root (id="wrapper"). Fill the viewport so the scheme-aware surface
 // reaches below short content instead of exposing the (possibly white) page
 // body underneath it.
 #wrapper.mantine-AppShell-root,
 #wrapper {
-  background: var(--polis-color-surface, transparent);
-  color: var(--polis-color-text-primary, inherit);
+  background: var(--polis-color-surface, var(--mantine-color-body, #fff));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
   font-family: var(--polis-font-body, system-ui, sans-serif);
   min-height: 100vh;
 }
 
 // Header bar: burger + title. Was rendering light/white in dark mode.
 #wrapper .mantine-AppShell-header {
-  background: var(--polis-color-surface-alt, transparent);
-  color: var(--polis-color-text-primary, inherit);
-  border-bottom: 1px solid var(--polis-color-border, transparent);
+  background: var(--polis-color-surface-alt, var(--mantine-color-default, #f8f9fa));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
+  border-bottom: 1px solid var(--polis-color-border, var(--mantine-color-default-border, #dee2e6));
 }
 
 // Sidebar / navbar surface.
 #wrapper .mantine-AppShell-navbar {
-  background: var(--polis-color-surface-alt, transparent);
-  color: var(--polis-color-text-primary, inherit);
-  border-right: 1px solid var(--polis-color-border, transparent);
+  background: var(--polis-color-surface-alt, var(--mantine-color-default, #f8f9fa));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
+  border-right: 1px solid var(--polis-color-border, var(--mantine-color-default-border, #dee2e6));
 }
 
 // Outer content region (the area around the content cards). Was white in dark
 // mode because only the inner cards honoured the scheme.
 #wrapper .mantine-AppShell-main,
 #wrapper #page-content-wrapper {
-  background: var(--polis-color-surface, transparent);
-  color: var(--polis-color-text-primary, inherit);
+  background: var(--polis-color-surface, var(--mantine-color-body, #fff));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
 }
 
 // Never allow the shell to scroll the page sideways on mobile.

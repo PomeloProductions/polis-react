@@ -5,8 +5,8 @@
 
   .modal-content {
     position: relative;
-    background-color: var(--polis-color-surface, #fff);
-    color: var(--polis-color-text-primary, #222428);
+    background-color: var(--polis-color-surface, var(--mantine-color-body, #fff));
+    color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
     font-family: var(--polis-font-body, system-ui, sans-serif);
     border-radius: var(--polis-radius-lg, 8px);
     padding: var(--polis-spacing-lg, 20px);
@@ -113,7 +113,7 @@
               color: var(--polis-color-text-muted, #666);
 
               &:hover {
-                background: var(--polis-color-surface-alt, #f5f5f5);
+                background: var(--polis-color-surface-alt, var(--mantine-color-default, #f5f5f5));
               }
             }
 

@@ -1,3 +1,27 @@
+// Base element styles. Colour fallbacks chain to Mantine's scheme-aware tokens
+// (`--mantine-color-text` / `--mantine-color-body` / ...), which flip with
+// `data-mantine-color-scheme`, so text and surfaces stay legible in dark mode
+// even when no Polis dark palette is injected (light-only theme) and even when
+// the app uses the standalone `<ColorSchemeContextProvider>` (which sets the
+// scheme attributes but does NOT inject `--polis-color-*`). A themed app's
+// `--polis-color-*` (set by <PolisProvider>) still takes precedence.
+
+// Page surface: without this the document body stays the browser-default white
+// behind the app shell in dark mode (headings read dark-on-white, unreadable).
+body {
+  background: var(--polis-color-surface, var(--mantine-color-body, #fff));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
+}
+
+// Headings + labels: default to the scheme-aware text colour so they invert in
+// dark mode instead of staying near-black.
+h1,
+h2,
+h5,
+label {
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
+}
+
 h3 {
   color: var(--polis-color-primary, #3171e0);
   text-align: center;
@@ -7,11 +31,12 @@ h3 {
 h4 {
   font-weight: bold;
   margin: 0;
-  color: var(--polis-color-text-primary, black);
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
   font-family: var(--polis-font-heading, inherit);
 }
 h6 {
   font-size: 5vw;
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
   @media screen and (min-width: 400px) {
     font-size: 20px;
   }
@@ -30,7 +55,9 @@ a {
 
 input,
 textarea {
-  border: 1px solid var(--polis-color-border, #d7d8da);
+  background: var(--polis-color-surface, var(--mantine-color-body, #fff));
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
+  border: 1px solid var(--polis-color-border, var(--mantine-color-default-border, #d7d8da));
   padding: var(--polis-spacing-sm, 8px);
   border-radius: var(--polis-radius-md, 4px);
   font-family: var(--polis-font-body, system-ui, sans-serif);

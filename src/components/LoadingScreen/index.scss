@@ -3,7 +3,7 @@
   justify-content: center;
   flex-direction: column;
   height: 100%;
-  color: var(--polis-color-text-primary, #222428);
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
   font-family: var(--polis-font-body, system-ui, sans-serif);
   #loading-wrapper {
     border-radius: var(--polis-radius-md, 3.125vw);

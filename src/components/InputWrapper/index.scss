@@ -7,7 +7,7 @@
   }
   &.dark {
     input {
-      border-color: var(--polis-color-text-primary, #222428);
+      border-color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
     }
   }
   label {
@@ -23,7 +23,7 @@
   .subtext {
     padding-top: 5px;
     padding-left: 5px;
-    color: var(--polis-color-text-muted, #6c757d);
+    color: var(--polis-color-text-muted, var(--mantine-color-dimmed, #6c757d));
   }
 }
 .plt-android {

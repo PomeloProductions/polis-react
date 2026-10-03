@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -116,5 +118,39 @@ describe('Page shell colour scheme', () => {
   it('syncs the Mantine colour scheme to light in light mode', () => {
     renderShell('light');
     expect(document.documentElement.getAttribute('data-mantine-color-scheme')).toBe('light');
+  });
+});
+
+// Guards the OTHER dark-mode path: apps that mount the standalone
+// `<ColorSchemeContextProvider>` (their own `<MantineProvider>`) or ship a
+// light-only theme never inject `--polis-color-*`, so the shell/global SCSS
+// falls back to its hardcoded fallback. Those fallbacks MUST chain to Mantine's
+// scheme-aware tokens (`--mantine-color-body` / `--mantine-color-text` / ...),
+// NOT `transparent` / `inherit` / a hardcoded white — otherwise dark mode is
+// half-applied (Mantine components turn dark, the shell stays white). jsdom
+// does not compile SCSS, so assert on the source text.
+describe('shell + global SCSS fallbacks are colour-scheme aware', () => {
+  const read = (p: string) => fs.readFileSync(path.resolve(__dirname, p), 'utf8');
+  const shellScss = read('./index.scss');
+  const elementsScss = read('../../../theme/elements.scss');
+
+  it('the shell never falls back to transparent / inherit on surfaces or text', () => {
+    expect(shellScss).not.toMatch(/var\(--polis-color-surface(-alt)?,\s*transparent\)/);
+    expect(shellScss).not.toMatch(/var\(--polis-color-text-primary,\s*inherit\)/);
+    expect(shellScss).not.toMatch(/var\(--polis-color-border,\s*transparent\)/);
+  });
+
+  it('the shell chains surface/text/border fallbacks to Mantine scheme-aware vars', () => {
+    expect(shellScss).toContain('var(--polis-color-surface, var(--mantine-color-body');
+    expect(shellScss).toContain('var(--polis-color-text-primary, var(--mantine-color-text');
+    expect(shellScss).toContain('var(--polis-color-border, var(--mantine-color-default-border');
+  });
+
+  it('global body/headings default to the scheme-aware text + body colours', () => {
+    expect(elementsScss).toMatch(/body\s*\{/);
+    expect(elementsScss).toContain('var(--polis-color-surface, var(--mantine-color-body');
+    expect(elementsScss).toContain('var(--polis-color-text-primary, var(--mantine-color-text');
+    // The old hardcoded `black` heading fallback must be gone.
+    expect(elementsScss).not.toMatch(/var\(--polis-color-text-primary,\s*black\)/);
   });
 });

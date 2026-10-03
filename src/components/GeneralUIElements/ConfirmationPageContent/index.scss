@@ -7,7 +7,7 @@
   font-family: var(--polis-font-body, system-ui, sans-serif);
   p {
     font-size: 3.5vw;
-    color: var(--polis-color-text-primary, black);
+    color: var(--polis-color-text-primary, var(--mantine-color-text, #212529));
   }
   h3 {
     color: var(--polis-color-text-muted, var(--ion-color-medium, #92949c));

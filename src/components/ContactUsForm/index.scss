@@ -1,12 +1,14 @@
 .contact-us-form {
   font-family: var(--polis-font-body, system-ui, sans-serif);
-  color: var(--polis-color-text-primary, #222428);
+  color: var(--polis-color-text-primary, var(--mantine-color-text, #222428));
 
   .contact-us-form__submit {
     margin-top: var(--polis-spacing-md, 16px);
     padding: var(--polis-spacing-sm, 8px) var(--polis-spacing-md, 16px);
     background-color: var(--polis-color-primary, #2299dd);
-    color: var(--polis-color-surface, #ffffff);
+    // Text sits on the saturated primary fill, so it reads white in BOTH
+    // schemes — use the contrast token, not the scheme-aware body colour.
+    color: var(--polis-color-primary-contrast, #ffffff);
     border: none;
     border-radius: var(--polis-radius-md, 4px);
     font-family: var(--polis-font-body, system-ui, sans-serif);

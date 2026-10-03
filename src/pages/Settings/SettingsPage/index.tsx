@@ -6,6 +6,7 @@ import AccountPage from '../AccountPage';
 import MyOrganizationPage from '../MyOrganizationPage';
 import { useColorScheme } from '../../../theme/colorScheme';
 import type { PolisColorScheme } from '../../../theme/colorScheme';
+import { getPluginSettingsTabs } from '../../../plugins/registry';
 
 export interface ExtraTab {
   value: string;
@@ -84,6 +85,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 }) => {
   const [tab, setTab] = useState<string | null>('account');
 
+  // Merge globally-registered plugin settings tabs with the `extraTabs` prop.
+  // The prop wins on `value` collisions so an app can override a plugin tab.
+  const pluginTabs = getPluginSettingsTabs();
+  const propValues = new Set(extraTabs.map((t) => t.value));
+  const mergedExtraTabs: ExtraTab[] = [
+    ...extraTabs,
+    ...pluginTabs.filter((t) => !propValues.has(t.value)),
+  ];
+
   return (
     <Stack gap="lg">
       <Group gap="xs">
@@ -104,7 +114,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               My organization
             </Tabs.Tab>
           )}
-          {extraTabs.map((t) => (
+          {mergedExtraTabs.map((t) => (
             <Tabs.Tab key={t.value} value={t.value} leftSection={t.icon}>
               {t.label}
             </Tabs.Tab>
@@ -122,7 +132,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             <MyOrganizationPage me={me} />
           </Tabs.Panel>
         )}
-        {extraTabs.map((t) => (
+        {mergedExtraTabs.map((t) => (
           <Tabs.Panel key={t.value} value={t.value} pt="md">
             {t.panel}
           </Tabs.Panel>

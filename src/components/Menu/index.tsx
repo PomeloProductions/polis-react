@@ -3,6 +3,7 @@ import { Stack } from '@mantine/core';
 import { useLocation } from 'react-router-dom';
 import MeContextProvider, { MeContext } from '../../contexts/MeContext';
 import MenuLink from './MenuLink';
+import { getPluginNavItems } from '../../plugins/registry';
 
 /**
  * App-specific sidebar menu. Polis-family apps call setAppMenu at startup to
@@ -22,6 +23,10 @@ const Menu: React.FC = () => {
     return <AppMenu />;
   }
 
+  // Plugin-contributed nav items (merged + sorted by `order`). Apps using a
+  // custom `AppMenu` consume these themselves via `usePluginNavItems()`.
+  const pluginNavItems = getPluginNavItems();
+
   return (
     <Stack gap={0}>
       <MeContextProvider optional hideLoadingSpace>
@@ -38,6 +43,12 @@ const Menu: React.FC = () => {
                     <MenuLink to="/todos/calendars">Calendars</MenuLink>
                   </Stack>
                 )}
+                {pluginNavItems.map((item) => (
+                  <MenuLink key={item.key} to={item.to}>
+                    {item.icon}
+                    {item.label}
+                  </MenuLink>
+                ))}
                 <MenuLink to="/settings">Settings</MenuLink>
               </>
             ) : (

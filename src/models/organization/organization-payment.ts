@@ -2,7 +2,7 @@ import BaseModel from '../base-model';
 
 /**
  * A payment / invoice line scoped to an organization — used as the "Invoices"
- * surface on the Organization detail page. Backed by the Athenia payment
+ * surface on the Organization detail page. Backed by the Polis payment
  * records, exposed org-scoped via `GET /organizations/{organization}/payments`.
  */
 export default interface OrganizationPayment extends BaseModel {

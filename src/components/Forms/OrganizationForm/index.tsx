@@ -47,7 +47,7 @@ export interface OrganizationFormProps<
    */
   additionalValidation?: Yup.AnySchema;
   /**
-   * Max length for the name field. Defaults to 120 (Athenia rule).
+   * Max length for the name field. Defaults to 120 (Polis rule).
    */
   nameMaxLength?: number;
   /**

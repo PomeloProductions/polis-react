@@ -62,7 +62,7 @@ export default class AuthRequests {
    * Gets the logged-in user with the relations the Settings scaffolding needs:
    * `expand[roles]` (for super-admin gating) and
    * `expand[organizationManagers.organization]` (for the "My organization"
-   * settings section). Athenia's expand contract is `expand[<relation>]=*`.
+   * settings section). Polis's expand contract is `expand[<relation>]=*`.
    *
    * Backend endpoint: GET /v1/users/me?expand[roles]=*&expand[organizationManagers.organization]=*
    */
@@ -94,7 +94,7 @@ export default class AuthRequests {
    * anyone else gets 403). Validation: `password` string, min 6. Invalid input
    * returns HTTP 400 with `{ errors: { password: [...] } }`.
    *
-   * NOTE: the Athenia endpoint does NOT accept or verify a `current_password`
+   * NOTE: the Polis endpoint does NOT accept or verify a `current_password`
    * — the password is set directly. The form still collects a "new password +
    * confirm" pair (matched client-side) for typo safety.
    *

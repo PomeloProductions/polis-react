@@ -1,7 +1,7 @@
 import { parseApiError, firstFieldErrors } from './api-errors';
 
 describe('parseApiError', () => {
-  test('maps Athenia 400 { errors } to fieldErrors', () => {
+  test('maps Polis 400 { errors } to fieldErrors', () => {
     const err = { response: { status: 400, data: { errors: { name: ['Required'] } } } };
     const parsed = parseApiError(err, 'fallback');
     expect(parsed.fieldErrors).toEqual({ name: ['Required'] });

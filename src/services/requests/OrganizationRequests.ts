@@ -77,7 +77,7 @@ export default class OrganizationRequests {
   /**
    * Lists ALL organizations. Super-admin only (OrganizationPolicy::all()).
    *
-   * Backend endpoint: GET /v1/organizations — returns the Athenia paginated
+   * Backend endpoint: GET /v1/organizations — returns the Polis paginated
    * envelope (`Page<Organization>`: `{ total, current_page, per_page,
    * last_page, data: [] }`).
    *
@@ -189,7 +189,7 @@ export default class OrganizationRequests {
    * Organization detail page.
    *
    * Backend endpoint: GET /v1/organizations/{organization}/organization-managers
-   * — returns the Athenia paginated envelope. Authorized for managers of that
+   * — returns the Polis paginated envelope. Authorized for managers of that
    * org / super admins (OrganizationManagerPolicy).
    *
    * @param organizationId the organization whose managers to list
@@ -232,7 +232,7 @@ export default class OrganizationRequests {
    * Organization detail page).
    *
    * Backend endpoint: GET /v1/organizations/{organization}/articles — returns
-   * the Athenia paginated envelope. Authorized for managers of that org /
+   * the Polis paginated envelope. Authorized for managers of that org /
    * super admins (OrganizationArticlePolicy).
    *
    * @param organizationId the organization whose articles to list
@@ -249,7 +249,7 @@ export default class OrganizationRequests {
    * Organization detail page).
    *
    * Backend endpoint: GET /v1/organizations/{organization}/payments — returns
-   * the Athenia paginated envelope. Authorized for managers of that org /
+   * the Polis paginated envelope. Authorized for managers of that org /
    * super admins.
    *
    * @param organizationId the organization whose payments to list

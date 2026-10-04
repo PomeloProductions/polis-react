@@ -35,7 +35,7 @@ export interface ChangePasswordFormProps {
   onSubmit: (password: string) => Promise<void>;
   /**
    * Minimum password length enforced client-side. Defaults to 6 (matches the
-   * Athenia `UserController@update` password rule).
+   * Polis `UserController@update` password rule).
    */
   minLength?: number;
   /**
@@ -65,7 +65,7 @@ export interface ChangePasswordFormProps {
  * consumer's `onSubmit`. Mirrors `ResetPasswordForm`: formik + yup +
  * react-bootstrap, no direct API/Redux coupling.
  *
- * NOTE: the Athenia `PUT /v1/users/{id}` route does not verify a current
+ * NOTE: the Polis `PUT /v1/users/{id}` route does not verify a current
  * password, so this form intentionally does not collect one.
  */
 const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({

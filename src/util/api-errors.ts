@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 
 /**
- * Field-level validation errors as Athenia / polis-laravel returns them:
+ * Field-level validation errors as Polis / polis-laravel returns them:
  * `{ field: [messages] }`.
  */
 export type FieldErrors = Record<string, string[]>;
@@ -23,7 +23,7 @@ export interface ParsedApiError {
   message: string | null;
 }
 
-interface AtheniaErrorBody {
+interface PolisErrorBody {
   errors?: FieldErrors;
   message?: string;
 }
@@ -31,7 +31,7 @@ interface AtheniaErrorBody {
 /**
  * Normalize an unknown thrown value into a `{ fieldErrors, message }` pair.
  *
- * Athenia / polis-laravel returns validation failures as HTTP 400 with a body
+ * Polis / polis-laravel returns validation failures as HTTP 400 with a body
  * of `{ errors: { field: [msg, ...] } }` (note: 400, not Laravel's default
  * 422 — some resources still use 422, so both are accepted). Other failures
  * surface a top-level `{ message }`. The package's `api.ts` interceptor may
@@ -43,8 +43,8 @@ interface AtheniaErrorBody {
  */
 export function parseApiError(error: unknown, fallback: string): ParsedApiError {
   const candidate = error as
-    | (AxiosError<AtheniaErrorBody> & { data?: AtheniaErrorBody })
-    | { status?: number; data?: AtheniaErrorBody; message?: string }
+    | (AxiosError<PolisErrorBody> & { data?: PolisErrorBody })
+    | { status?: number; data?: PolisErrorBody; message?: string }
     | undefined;
 
   // Prefer the axios response envelope, then fall back to the flattened
@@ -52,8 +52,8 @@ export function parseApiError(error: unknown, fallback: string): ParsedApiError 
   const status =
     (candidate as AxiosError)?.response?.status ?? (candidate as { status?: number })?.status;
   const body =
-    ((candidate as AxiosError<AtheniaErrorBody>)?.response?.data as AtheniaErrorBody | undefined) ??
-    ((candidate as { data?: AtheniaErrorBody })?.data as AtheniaErrorBody | undefined);
+    ((candidate as AxiosError<PolisErrorBody>)?.response?.data as PolisErrorBody | undefined) ??
+    ((candidate as { data?: PolisErrorBody })?.data as PolisErrorBody | undefined);
 
   if ((status === 400 || status === 422) && body?.errors) {
     return { fieldErrors: body.errors, message: null };

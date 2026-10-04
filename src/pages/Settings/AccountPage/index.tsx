@@ -18,7 +18,7 @@ export interface AccountPageProps {
    */
   onUpdatePassword?: (userId: number, password: string) => Promise<void>;
   /**
-   * Minimum password length. Defaults to 6 (Athenia rule).
+   * Minimum password length. Defaults to 6 (Polis rule).
    */
   minLength?: number;
   /**

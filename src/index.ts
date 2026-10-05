@@ -240,6 +240,36 @@ export {
 } from './plugins';
 export type { PluginDefinition, NavItem, PluginRoute, Reducer } from './plugins';
 
+// ───── Plugin customizable spaces + deliverables (end-user rendering surface) ─────
+// `<PluginSpace>` renders the enabled plugin deliverables a user has assigned to
+// a named space; the loader fetches each deliverable's bundle/manifest from the
+// controller and registers it via the plugin registry.
+export {
+  PluginSpace,
+  normalizeManifest,
+  createMemorySpaceAssignmentStore,
+  memorySpaceAssignmentStore,
+  assignmentsForSpace,
+  useSpaceAssignments,
+  loadPlugin,
+  resolveBundleUrl,
+  resetLoaderCache,
+  isDeliverableReady,
+  isPluginLoaded,
+} from './plugins';
+export type {
+  PluginSpaceProps,
+  PluginManifest,
+  PluginFrontendDeliverable,
+  SpaceAssignment,
+  SpaceAssignmentMap,
+  SpaceAssignmentStore,
+  UseSpaceAssignments,
+  LoaderConfig,
+  DeliverableLoadResult,
+  PluginLoadResult,
+} from './plugins';
+
 /*
  * Stateful core modules. These carry module-level state (the AppContext
  * store bridge, the shared axios instance, the Me context) and MUST be

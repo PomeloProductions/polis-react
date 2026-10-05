@@ -18,3 +18,25 @@ export {
 } from './registry';
 export { usePluginNavItems, usePluginRoutes, usePluginSettingsTabs } from './hooks';
 export type { PluginDefinition, NavItem, PluginRoute, Reducer } from './types';
+
+// ───── Customizable spaces + deliverables (end-user rendering surface) ─────
+export { default as PluginSpace } from './PluginSpace';
+export type { PluginSpaceProps } from './PluginSpace';
+export { normalizeManifest } from './manifest';
+export type { PluginManifest, PluginFrontendDeliverable } from './manifest';
+export {
+  createMemorySpaceAssignmentStore,
+  memorySpaceAssignmentStore,
+  assignmentsForSpace,
+} from './space-model';
+export type { SpaceAssignment, SpaceAssignmentMap, SpaceAssignmentStore } from './space-model';
+export { useSpaceAssignments } from './useSpaceAssignments';
+export type { UseSpaceAssignments } from './useSpaceAssignments';
+export {
+  loadPlugin,
+  resolveBundleUrl,
+  resetLoaderCache,
+  isDeliverableReady,
+  isPluginLoaded,
+} from './loader';
+export type { LoaderConfig, DeliverableLoadResult, PluginLoadResult } from './loader';

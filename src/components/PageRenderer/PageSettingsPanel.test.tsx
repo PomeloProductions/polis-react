@@ -51,6 +51,10 @@ import PageSettingsPanel from './PageSettingsPanel';
 import { UserPagesContext } from '../../contexts/UserPagesContext';
 import { UserPage, UserPageComponent } from '../../models/user/user-page';
 
+// The full PageSettingsPanel render (MantineProvider + Select) is slow in jsdom (~25s each);
+// the reorder tests do a second render on click, exceeding the 30s default. Raise it.
+jest.setTimeout(120000);
+
 const makeComponent = (
   overrides: Partial<UserPageComponent> & Pick<UserPageComponent, 'id' | 'display_order'>,
 ): UserPageComponent =>

@@ -1,6 +1,6 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { storeReceivedToken, tokenNeedsRefresh } from './AuthManager';
-import { appState } from '../data/AppContext';
+import { getAppState } from '../data/AppContext';
 import { TokenState } from '../data/persistent/persistent.state';
 import { decrementLoadingCount, incrementLoadingCount } from '../data/session/session.actions';
 import { logOut } from '../data/persistent/persistent.actions';
@@ -91,6 +91,7 @@ let invalidatedToken: string | null = null;
 function invalidateSession(badToken: string) {
   if (invalidatedToken === badToken) return; // already handling this token
   invalidatedToken = badToken;
+  const appState = getAppState();
   if (appState) {
     appState.dispatch(logOut());
   }
@@ -179,6 +180,7 @@ function handleSessionFailure(error: AxiosError, badToken?: string): void {
   // Never bounce off a public request (e.g. the login POST returning 400/401).
   if (isPublicPath(error.config?.url)) return;
 
+  const appState = getAppState();
   if (badToken) {
     invalidateSession(badToken);
   } else if (appState) {
@@ -223,6 +225,7 @@ function attemptRefresh(currentToken: string): Promise<TokenState | null> {
 
 /** Refresh the current token if it is within the refresh margin of expiry. */
 function refreshIfNeeded() {
+  const appState = getAppState();
   if (!appState) return;
   const tokenData = appState.state.persistent.tokenData;
   if (tokenData?.token && tokenNeedsRefresh(tokenData)) {
@@ -358,6 +361,8 @@ export const requestInterceptor = async (
   // Wait for a slot to prevent overwhelming the API
   await waitForSlot();
 
+  const appState = getAppState();
+
   // If a bad token was invalidated, block any request still carrying it
   // until React rehydrates state with a cleared/new token.
   if (invalidatedToken) {
@@ -426,6 +431,7 @@ export const requestInterceptor = async (
 
 export const responseInterceptor = (response: AxiosResponse): AxiosResponse => {
   releaseSlot();
+  const appState = getAppState();
   if (appState) {
     appState.dispatch(decrementLoadingCount());
   }
@@ -450,6 +456,8 @@ export const responseErrorInterceptor = (error: AxiosError): Promise<AxiosRespon
       inflightRequests.delete(key);
     }
   }
+
+  const appState = getAppState();
 
   // On 401, attempt a token refresh and retry the request once. If the
   // refresh itself fails, invalidateSession() will be called from

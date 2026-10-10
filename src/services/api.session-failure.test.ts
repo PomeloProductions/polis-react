@@ -31,7 +31,7 @@ function loadModule(): Interceptors {
   let mod: Interceptors;
   jest.isolateModules(() => {
     jest.doMock('../data/AppContext', () => ({
-      appState: {
+      getAppState: () => ({
         get state() {
           return {
             persistent: {
@@ -40,7 +40,7 @@ function loadModule(): Interceptors {
           };
         },
         dispatch,
-      },
+      }),
     }));
     jest.doMock('./AuthManager', () => ({
       tokenNeedsRefresh: () => false,

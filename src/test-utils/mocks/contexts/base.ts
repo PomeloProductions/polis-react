@@ -1,9 +1,10 @@
 import { mockPagination } from '../pagination';
 import BaseModel from '../../../models/base-model';
 
-// Mock appState
-
-(global as any).appState = {
+// Mock appState. The real store is kept on a single globalThis slot
+// (`__POLIS_APP_STATE__`) so duplicated module copies share one store; mirror
+// that here so non-component code resolving the singleton finds a store.
+(globalThis as any).__POLIS_APP_STATE__ = {
   state: {
     persistent: {
       tokenData: null,

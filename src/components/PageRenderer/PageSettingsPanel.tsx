@@ -12,10 +12,16 @@ import {
   Modal,
   Box,
 } from '@mantine/core';
-import { IconPlus, IconTrash, IconGripVertical } from '@tabler/icons-react';
+import {
+  IconPlus,
+  IconTrash,
+  IconGripVertical,
+  IconArrowUp,
+  IconArrowDown,
+} from '@tabler/icons-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { UserPagesContext } from '../../contexts/UserPagesContext';
-import { UserPage } from '../../models/user/user-page';
+import { UserPage, UserPageComponent } from '../../models/user/user-page';
 import { getRegisteredTypes } from './ComponentRegistry';
 
 const COMPONENT_LABELS: Record<string, string> = {
@@ -33,7 +39,7 @@ interface PageSettingsPanelProps {
 }
 
 const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }) => {
-  const { pages, editPage, addPage, removePage, addComponent, removeComponent } =
+  const { pages, editPage, addPage, removePage, addComponent, editComponent, removeComponent } =
     useContext(UserPagesContext);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -113,7 +119,29 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
     await onRefresh?.();
   };
 
-  const pageComponents = (page.components ?? []).filter((c) => c.component_type !== 'page_manager');
+  const pageComponents = (page.components ?? [])
+    .filter((c) => c.component_type !== 'page_manager')
+    .sort((a, b) => a.display_order - b.display_order);
+
+  const handleMoveComponent = useCallback(
+    async (index: number, direction: 'up' | 'down') => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= pageComponents.length) return;
+
+      const reordered = [...pageComponents];
+      const [moved] = reordered.splice(index, 1);
+      reordered.splice(targetIndex, 0, moved);
+
+      // Renumber to a clean contiguous 0..n-1 so there are no gaps/collisions.
+      for (let i = 0; i < reordered.length; i++) {
+        if (reordered[i].display_order !== i) {
+          await editComponent(page.id!, reordered[i].id!, { display_order: i });
+        }
+      }
+      await onRefresh?.();
+    },
+    [pageComponents, editComponent, page.id, onRefresh],
+  );
 
   return (
     <Stack gap="md">
@@ -222,19 +250,40 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
             No components yet.
           </Text>
         ) : (
-          pageComponents.map((comp) => (
+          pageComponents.map((comp: UserPageComponent, index: number) => (
             <Group key={comp.id} justify="space-between">
               <Badge variant="light" size="sm" tt="uppercase">
                 {comp.component_type.replace(/_/g, ' ')}
               </Badge>
-              <ActionIcon
-                size="sm"
-                color="red"
-                variant="subtle"
-                onClick={() => handleRemoveComponent(page.id!, comp.id!)}
-              >
-                <IconTrash size={14} />
-              </ActionIcon>
+              <Group gap={4}>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  disabled={index === 0}
+                  aria-label="Move component up"
+                  onClick={() => handleMoveComponent(index, 'up')}
+                >
+                  <IconArrowUp size={14} />
+                </ActionIcon>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  disabled={index === pageComponents.length - 1}
+                  aria-label="Move component down"
+                  onClick={() => handleMoveComponent(index, 'down')}
+                >
+                  <IconArrowDown size={14} />
+                </ActionIcon>
+                <ActionIcon
+                  size="sm"
+                  color="red"
+                  variant="subtle"
+                  aria-label="Remove component"
+                  onClick={() => handleRemoveComponent(page.id!, comp.id!)}
+                >
+                  <IconTrash size={14} />
+                </ActionIcon>
+              </Group>
             </Group>
           ))
         )}

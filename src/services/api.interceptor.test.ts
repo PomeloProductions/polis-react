@@ -34,7 +34,7 @@ function loadModule(): Mod {
   let mod: Mod;
   jest.isolateModules(() => {
     jest.doMock('../data/AppContext', () => ({
-      appState: {
+      getAppState: () => ({
         get state() {
           return {
             persistent: {
@@ -43,7 +43,7 @@ function loadModule(): Mod {
           };
         },
         dispatch,
-      },
+      }),
     }));
 
     jest.doMock('./AuthManager', () => ({

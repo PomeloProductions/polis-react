@@ -1,9 +1,12 @@
 import { jest } from '@jest/globals';
 
 const dispatch = jest.fn();
-jest.mock('../data/AppContext', () => ({
-  appState: { dispatch, state: { persistent: {} } },
-}));
+jest.mock('../data/AppContext', () => {
+  const appState = { dispatch, state: { persistent: {} } };
+  return {
+    getAppState: () => appState,
+  };
+});
 
 import {
   tokenNeedsRefresh,

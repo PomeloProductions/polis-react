@@ -278,7 +278,7 @@ export type {
  * module instances under dev servers that mix optimized and raw source
  * (e.g. Vite), splitting appState across copies and breaking auth.
  */
-export { AppContext, AppContextProvider, appState } from './data/AppContext';
+export { AppContext, AppContextProvider, getAppState } from './data/AppContext';
 export { MeContext, clearMeState, default as MeContextProvider } from './contexts/MeContext';
 export { default as api, dedupedGet } from './services/api';
 export { default as AuthRequests } from './services/requests/AuthRequests';

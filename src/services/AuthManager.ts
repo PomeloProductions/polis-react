@@ -1,5 +1,5 @@
 import { TokenState } from '../data/persistent/persistent.state';
-import { appState } from '../data/AppContext';
+import { getAppState } from '../data/AppContext';
 import { setTokenData } from '../data/persistent/persistent.actions';
 
 // How long before a token's actual expiry we proactively refresh it. Refreshing
@@ -83,7 +83,10 @@ export function storeReceivedToken(token: string): TokenState {
     receivedAt: Date.now(),
     ...(expiryMs !== null ? { expiresAt: expiryMs } : {}),
   };
-  appState.dispatch(setTokenData(tokenData));
+  const appState = getAppState();
+  if (appState) {
+    appState.dispatch(setTokenData(tokenData));
+  }
 
   return tokenData;
 }

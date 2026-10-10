@@ -15,16 +15,19 @@ Object.defineProperty(globalThis, 'import', {
 });
 
 // Mock dependencies
-jest.mock('../data/AppContext', () => ({
-  appState: {
+jest.mock('../data/AppContext', () => {
+  const appState = {
     state: {
       persistent: {
         tokenData: null,
       },
     },
     dispatch: jest.fn(),
-  },
-}));
+  };
+  return {
+    getAppState: () => appState,
+  };
+});
 
 jest.mock('./AuthManager', () => ({
   storeReceivedToken: jest.fn(),

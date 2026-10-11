@@ -140,23 +140,65 @@ describe('UserPagesContext', () => {
     expect(updateUserPage).toHaveBeenCalledWith(7, 5, { name: 'New' });
   });
 
-  test('removePage delegates to deleteUserPage and re-fetches', async () => {
+  test('removePage delegates to deleteUserPage and updates local state immediately', async () => {
     getUserPages.mockResolvedValueOnce({
       data: { data: [{ id: 5, slug: 'a' }] },
     });
-    getUserPages.mockResolvedValueOnce({ data: { data: [] } });
     deleteUserPage.mockResolvedValueOnce({});
-    let remove!: (id: number) => Promise<void>;
+    let ctxRef!: { pages: Array<{ id: number }>; removePage: (id: number) => Promise<void> };
     renderWithProvider((ctx) => {
-      remove = (ctx as { removePage: typeof remove }).removePage;
+      ctxRef = ctx as never;
       return null;
     });
-    await waitFor(() => expect(getUserPages).toHaveBeenCalled());
+    await waitFor(() => expect(ctxRef.pages).toHaveLength(1));
     await act(async () => {
-      await remove(5);
+      await ctxRef.removePage(5);
     });
     expect(deleteUserPage).toHaveBeenCalledWith(7, 5);
-    expect(getUserPages).toHaveBeenCalledTimes(2);
+    // Local state reflects the delete without needing a refetch.
+    expect(ctxRef.pages).toHaveLength(0);
+  });
+
+  test('removeComponent removes the component from its page in local state', async () => {
+    getUserPages.mockResolvedValueOnce({
+      data: { data: [{ id: 5, slug: 'a', components: [{ id: 9 }, { id: 10 }] }] },
+    });
+    deleteUserPageComponent.mockResolvedValueOnce({});
+    let ctxRef!: {
+      pages: Array<{ id: number; components?: Array<{ id: number }> }>;
+      removeComponent: (p: number, c: number) => Promise<void>;
+    };
+    renderWithProvider((ctx) => {
+      ctxRef = ctx as never;
+      return null;
+    });
+    await waitFor(() => expect(ctxRef.pages[0]?.components).toHaveLength(2));
+    await act(async () => {
+      await ctxRef.removeComponent(5, 9);
+    });
+    expect(deleteUserPageComponent).toHaveBeenCalledWith(7, 5, 9);
+    expect(ctxRef.pages[0].components).toEqual([{ id: 10 }]);
+  });
+
+  test('addComponent appends the created component to its page in local state', async () => {
+    getUserPages.mockResolvedValueOnce({
+      data: { data: [{ id: 5, slug: 'a', components: [] }] },
+    });
+    createUserPageComponent.mockResolvedValueOnce({ data: { id: 42, component_type: 'x' } });
+    let ctxRef!: {
+      pages: Array<{ id: number; components?: Array<{ id: number }> }>;
+      addComponent: (p: number, d: unknown) => Promise<unknown>;
+    };
+    renderWithProvider((ctx) => {
+      ctxRef = ctx as never;
+      return null;
+    });
+    await waitFor(() => expect(ctxRef.pages).toHaveLength(1));
+    await act(async () => {
+      await ctxRef.addComponent(5, { component_type: 'x' });
+    });
+    expect(createUserPageComponent).toHaveBeenCalled();
+    expect(ctxRef.pages[0].components).toEqual([{ id: 42, component_type: 'x' }]);
   });
 
   test('addComponent / editComponent / removeComponent delegate', async () => {

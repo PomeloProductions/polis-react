@@ -42,25 +42,31 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
   const { pages, editPage, addPage, removePage, addComponent, editComponent, removeComponent } =
     useContext(UserPagesContext);
 
+  // The context is the source of truth: prefer the live page from context so
+  // mutations (add/remove/reorder components, rename) reflect immediately
+  // without depending on the consumer re-passing a fresh `page` prop. Fall back
+  // to the prop when the context hasn't loaded this page yet.
+  const currentPage = pages.find((p) => p.id === page.id) ?? page;
+
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [newPageName, setNewPageName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [pageName, setPageName] = useState(page.name);
+  const [pageName, setPageName] = useState(currentPage.name);
 
   React.useEffect(() => {
-    setPageName(page.name);
-  }, [page.name]);
+    setPageName(currentPage.name);
+  }, [currentPage.name]);
 
   const childPages = pages
-    .filter((p) => p.parent_page_id === page.id)
+    .filter((p) => p.parent_page_id === currentPage.id)
     .sort((a, b) => a.display_order - b.display_order);
 
-  const canHaveChildren = page.page_type !== 'detail';
+  const canHaveChildren = currentPage.page_type !== 'detail';
 
   const handleNameSave = useCallback(async () => {
-    if (!pageName.trim() || pageName === page.name) return;
-    await editPage(page.id!, { name: pageName });
-  }, [page.id, page.name, pageName, editPage]);
+    if (!pageName.trim() || pageName === currentPage.name) return;
+    await editPage(currentPage.id!, { name: pageName });
+  }, [currentPage.id, currentPage.name, pageName, editPage]);
 
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
@@ -91,7 +97,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
         page_type: 'list',
         route_path: newPageName.toLowerCase().replace(/\s+/g, '-'),
         is_nav_item: true,
-        parent_page_id: page.id,
+        parent_page_id: currentPage.id,
       });
       setAddModalOpen(false);
       setNewPageName('');
@@ -119,7 +125,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
     await onRefresh?.();
   };
 
-  const pageComponents = (page.components ?? [])
+  const pageComponents = (currentPage.components ?? [])
     .filter((c) => c.component_type !== 'page_manager')
     .sort((a, b) => a.display_order - b.display_order);
 
@@ -135,12 +141,12 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
       // Renumber to a clean contiguous 0..n-1 so there are no gaps/collisions.
       for (let i = 0; i < reordered.length; i++) {
         if (reordered[i].display_order !== i) {
-          await editComponent(page.id!, reordered[i].id!, { display_order: i });
+          await editComponent(currentPage.id!, reordered[i].id!, { display_order: i });
         }
       }
       await onRefresh?.();
     },
-    [pageComponents, editComponent, page.id, onRefresh],
+    [pageComponents, editComponent, currentPage.id, onRefresh],
   );
 
   return (
@@ -279,7 +285,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
                   color="red"
                   variant="subtle"
                   aria-label="Remove component"
-                  onClick={() => handleRemoveComponent(page.id!, comp.id!)}
+                  onClick={() => handleRemoveComponent(currentPage.id!, comp.id!)}
                 >
                   <IconTrash size={14} />
                 </ActionIcon>
@@ -299,7 +305,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
               label: COMPONENT_LABELS[t] ?? t.replace(/_/g, ' '),
             }))}
           onChange={(v) => {
-            if (v) void handleAddComponent(page.id!, v);
+            if (v) void handleAddComponent(currentPage.id!, v);
           }}
           clearable
         />

@@ -74,8 +74,19 @@ export const UserPagesContextProvider: React.FC<Props> = ({ children }) => {
   const addPage = useCallback(
     async (data: Partial<UserPage>) => {
       const response = await createUserPage(me.id!, data);
+      // Optimistically add to local state so the UI reflects the new page
+      // immediately, without depending on a consumer-provided refresh hook.
+      const created = response.data;
+      if (created?.id != null) {
+        setPages((prev) =>
+          prev.some((page) => page.id === created.id)
+            ? prev.map((page) => (page.id === created.id ? { ...page, ...created } : page))
+            : [...prev, { ...created, components: created.components ?? [] }],
+        );
+      }
+      // Reconcile with the server (e.g. server-assigned ordering/defaults).
       await fetchPages();
-      return response.data;
+      return created;
     },
     [me?.id, fetchPages],
   );
@@ -94,18 +105,31 @@ export const UserPagesContextProvider: React.FC<Props> = ({ children }) => {
   const removePage = useCallback(
     async (pageId: number) => {
       await deleteUserPage(me.id!, pageId);
-      await fetchPages();
+      // Remove from local state immediately so the UI updates without a reload.
+      setPages((prev) => prev.filter((page) => page.id !== pageId));
     },
-    [me?.id, fetchPages],
+    [me?.id],
   );
 
   const addComponent = useCallback(
     async (pageId: number, data: Partial<UserPageComponent>) => {
       const response = await createUserPageComponent(me.id!, pageId, data);
-      await fetchPages();
-      return response.data;
+      // Optimistically append the new component to its page so the UI reflects
+      // it immediately, independent of any consumer refresh hook.
+      const created = response.data;
+      if (created?.id != null) {
+        setPages((prev) =>
+          prev.map((page) => {
+            if (page.id !== pageId) return page;
+            const components = page.components ?? [];
+            if (components.some((comp) => comp.id === created.id)) return page;
+            return { ...page, components: [...components, created] };
+          }),
+        );
+      }
+      return created;
     },
-    [me?.id, fetchPages],
+    [me?.id],
   );
 
   const editComponent = useCallback(
@@ -117,7 +141,7 @@ export const UserPagesContextProvider: React.FC<Props> = ({ children }) => {
           return {
             ...page,
             components: (page.components ?? []).map((comp) =>
-              comp.id === componentId ? { ...comp, ...data } : comp,
+              comp.id === componentId ? { ...comp, ...data, ...response.data } : comp,
             ),
           };
         }),
@@ -130,9 +154,18 @@ export const UserPagesContextProvider: React.FC<Props> = ({ children }) => {
   const removeComponent = useCallback(
     async (pageId: number, componentId: number) => {
       await deleteUserPageComponent(me.id!, pageId, componentId);
-      await fetchPages();
+      // Remove from local state immediately so the UI updates without a reload.
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id !== pageId) return page;
+          return {
+            ...page,
+            components: (page.components ?? []).filter((comp) => comp.id !== componentId),
+          };
+        }),
+      );
     },
-    [me?.id, fetchPages],
+    [me?.id],
   );
 
   return (

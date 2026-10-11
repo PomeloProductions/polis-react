@@ -176,3 +176,129 @@ describe('PageSettingsPanel component reordering', () => {
     expect(onRefresh).toHaveBeenCalled();
   });
 });
+
+describe('PageSettingsPanel reflects context state (no onRefresh required)', () => {
+  // Render helper that drives the panel purely from the context's `pages`
+  // (the real source of truth), with NO onRefresh wired up.
+  const renderFromContext = (contextPage: UserPage) =>
+    render(
+      <MantineProvider>
+        <UserPagesContext.Provider value={{ ...userPagesValue, pages: [contextPage] } as never}>
+          {/* A stale prop snapshot; the panel must prefer the context page. */}
+          <PageSettingsPanel page={contextPage} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+  const twoComponents = () => [
+    makeComponent({ id: 10, display_order: 0, component_type: 'stats_cards' }),
+    makeComponent({ id: 20, display_order: 1, component_type: 'settings_panel' }),
+  ];
+
+  test('deleting a component removes it from the rendered list via context state', async () => {
+    const { rerender } = renderFromContext(makePage(twoComponents()));
+
+    // Both component badges are shown initially.
+    expect(screen.getByText('stats cards')).toBeInTheDocument();
+    expect(screen.getByText('settings panel')).toBeInTheDocument();
+
+    // Simulate the context removing the component from its `pages` state after
+    // a successful delete (what the real context now does in removeComponent).
+    const afterDelete = makePage([makeComponent({ id: 10, display_order: 0 })]);
+    rerender(
+      <MantineProvider>
+        <UserPagesContext.Provider value={{ ...userPagesValue, pages: [afterDelete] } as never}>
+          <PageSettingsPanel page={makePage(twoComponents())} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+    // No reload, no onRefresh: the removed row is gone because the panel reads
+    // components from context, not the stale prop.
+    await waitFor(() => {
+      expect(screen.queryByText('settings panel')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('stats cards')).toBeInTheDocument();
+  });
+
+  test('deleting a child page removes it from the rendered list via context state', async () => {
+    const parent = makePage([]);
+    const childA = { ...makePage([]), id: 2, name: 'Child A', parent_page_id: 1 } as UserPage;
+    const childB = { ...makePage([]), id: 3, name: 'Child B', parent_page_id: 1 } as UserPage;
+
+    const { rerender } = render(
+      <MantineProvider>
+        <UserPagesContext.Provider
+          value={{ ...userPagesValue, pages: [parent, childA, childB] } as never}
+        >
+          <PageSettingsPanel page={parent} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText('Child A')).toBeInTheDocument();
+    expect(screen.getByText('Child B')).toBeInTheDocument();
+
+    rerender(
+      <MantineProvider>
+        <UserPagesContext.Provider value={{ ...userPagesValue, pages: [parent, childA] } as never}>
+          <PageSettingsPanel page={parent} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText('Child B')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Child A')).toBeInTheDocument();
+  });
+
+  test('adding a component shows it immediately via context state', async () => {
+    const { rerender } = renderFromContext(makePage([makeComponent({ id: 10, display_order: 0 })]));
+    expect(screen.queryByText('settings panel')).not.toBeInTheDocument();
+
+    const afterAdd = makePage([
+      makeComponent({ id: 10, display_order: 0, component_type: 'stats_cards' }),
+      makeComponent({ id: 30, display_order: 1, component_type: 'settings_panel' }),
+    ]);
+    rerender(
+      <MantineProvider>
+        <UserPagesContext.Provider value={{ ...userPagesValue, pages: [afterAdd] } as never}>
+          <PageSettingsPanel page={makePage([makeComponent({ id: 10, display_order: 0 })])} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('settings panel')).toBeInTheDocument();
+    });
+  });
+
+  test('reordering components reflects immediately via context state', async () => {
+    const { rerender } = renderFromContext(makePage(twoComponents()));
+
+    // Initial order: stats_cards (0) then settings_panel (1).
+    let badges = screen.getAllByText(/stats cards|settings panel/);
+    expect(badges[0]).toHaveTextContent('stats cards');
+    expect(badges[1]).toHaveTextContent('settings panel');
+
+    // Context swaps the display_order after a reorder.
+    const reordered = makePage([
+      makeComponent({ id: 10, display_order: 1, component_type: 'stats_cards' }),
+      makeComponent({ id: 20, display_order: 0, component_type: 'settings_panel' }),
+    ]);
+    rerender(
+      <MantineProvider>
+        <UserPagesContext.Provider value={{ ...userPagesValue, pages: [reordered] } as never}>
+          <PageSettingsPanel page={makePage(twoComponents())} />
+        </UserPagesContext.Provider>
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      badges = screen.getAllByText(/stats cards|settings panel/);
+      expect(badges[0]).toHaveTextContent('settings panel');
+    });
+    expect(badges[1]).toHaveTextContent('stats cards');
+  });
+});

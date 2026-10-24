@@ -195,12 +195,21 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
     makeComponent({ id: 20, display_order: 1, component_type: 'settings_panel' }),
   ];
 
+  // The chip and the "Add component…" Select option now share the same label
+  // source (getComponentLabel), so a label string can appear in both the badge
+  // and the dropdown. Scope chip assertions to the Mantine Badge label so they
+  // target the component row, not the picker option.
+  const componentBadge = (label: string): HTMLElement | null =>
+    screen.queryAllByText(label).find((el) => el.closest('.mantine-Badge-label') !== null) ?? null;
+  const componentBadges = (re: RegExp): HTMLElement[] =>
+    screen.getAllByText(re).filter((el) => el.closest('.mantine-Badge-label') !== null);
+
   test('deleting a component removes it from the rendered list via context state', async () => {
     const { rerender } = renderFromContext(makePage(twoComponents()));
 
     // Both component badges are shown initially.
-    expect(screen.getByText('stats cards')).toBeInTheDocument();
-    expect(screen.getByText('settings panel')).toBeInTheDocument();
+    expect(componentBadge('Stats Cards')).toBeInTheDocument();
+    expect(componentBadge('Settings Panel')).toBeInTheDocument();
 
     // Simulate the context removing the component from its `pages` state after
     // a successful delete (what the real context now does in removeComponent).
@@ -216,9 +225,9 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
     // No reload, no onRefresh: the removed row is gone because the panel reads
     // components from context, not the stale prop.
     await waitFor(() => {
-      expect(screen.queryByText('settings panel')).not.toBeInTheDocument();
+      expect(componentBadge('Settings Panel')).not.toBeInTheDocument();
     });
-    expect(screen.getByText('stats cards')).toBeInTheDocument();
+    expect(componentBadge('Stats Cards')).toBeInTheDocument();
   });
 
   test('deleting a child page removes it from the rendered list via context state', async () => {
@@ -255,7 +264,7 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
 
   test('adding a component shows it immediately via context state', async () => {
     const { rerender } = renderFromContext(makePage([makeComponent({ id: 10, display_order: 0 })]));
-    expect(screen.queryByText('settings panel')).not.toBeInTheDocument();
+    expect(componentBadge('Settings Panel')).not.toBeInTheDocument();
 
     const afterAdd = makePage([
       makeComponent({ id: 10, display_order: 0, component_type: 'stats_cards' }),
@@ -270,7 +279,7 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
     );
 
     await waitFor(() => {
-      expect(screen.getByText('settings panel')).toBeInTheDocument();
+      expect(componentBadge('Settings Panel')).toBeInTheDocument();
     });
   });
 
@@ -278,9 +287,9 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
     const { rerender } = renderFromContext(makePage(twoComponents()));
 
     // Initial order: stats_cards (0) then settings_panel (1).
-    let badges = screen.getAllByText(/stats cards|settings panel/);
-    expect(badges[0]).toHaveTextContent('stats cards');
-    expect(badges[1]).toHaveTextContent('settings panel');
+    let badges = componentBadges(/Stats Cards|Settings Panel/);
+    expect(badges[0]).toHaveTextContent('Stats Cards');
+    expect(badges[1]).toHaveTextContent('Settings Panel');
 
     // Context swaps the display_order after a reorder.
     const reordered = makePage([
@@ -296,9 +305,9 @@ describe('PageSettingsPanel reflects context state (no onRefresh required)', () 
     );
 
     await waitFor(() => {
-      badges = screen.getAllByText(/stats cards|settings panel/);
-      expect(badges[0]).toHaveTextContent('settings panel');
+      badges = componentBadges(/Stats Cards|Settings Panel/);
+      expect(badges[0]).toHaveTextContent('Settings Panel');
     });
-    expect(badges[1]).toHaveTextContent('stats cards');
+    expect(badges[1]).toHaveTextContent('Stats Cards');
   });
 });

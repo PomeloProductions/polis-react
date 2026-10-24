@@ -88,7 +88,9 @@
     "./util/node-tree-utils": "./src/util/node-tree-utils.ts",
     "./util/page-type-registry": "./src/util/page-type-registry.ts",
     "./components/NodeTreeRenderer": "./src/components/NodeTreeRenderer/index.tsx",
-    "./components/ComponentRegistry": "./src/components/ComponentRegistry/index.ts"
+    "./components/ComponentRegistry": "./src/components/ComponentRegistry/index.ts",
+    "./components/PageRenderer": "./src/components/PageRenderer/index.tsx",
+    "./components/PageRenderer/ComponentRegistry": "./src/components/PageRenderer/ComponentRegistry.tsx"
   },
   "peerDependencies": {
     "@mantine/core": "^9",

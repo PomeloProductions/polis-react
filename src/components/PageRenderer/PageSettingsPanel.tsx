@@ -22,12 +22,7 @@ import {
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { UserPagesContext } from '../../contexts/UserPagesContext';
 import { UserPage, UserPageComponent } from '../../models/user/user-page';
-import { getRegisteredTypes } from './ComponentRegistry';
-
-const COMPONENT_LABELS: Record<string, string> = {
-  stats_cards: 'Stats Cards',
-  settings_panel: 'Settings Panel',
-};
+import { getRegisteredTypes, getComponentLabel } from './ComponentRegistry';
 
 interface PageSettingsPanelProps {
   page: UserPage;
@@ -259,7 +254,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
           pageComponents.map((comp: UserPageComponent, index: number) => (
             <Group key={comp.id} justify="space-between">
               <Badge variant="light" size="sm" tt="uppercase">
-                {comp.component_type.replace(/_/g, ' ')}
+                {getComponentLabel(comp.component_type)}
               </Badge>
               <Group gap={4}>
                 <ActionIcon
@@ -302,7 +297,7 @@ const PageSettingsPanel: React.FC<PageSettingsPanelProps> = ({ page, onRefresh }
             .filter((t) => t !== 'page_manager')
             .map((t) => ({
               value: t,
-              label: COMPONENT_LABELS[t] ?? t.replace(/_/g, ' '),
+              label: getComponentLabel(t),
             }))}
           onChange={(v) => {
             if (v) void handleAddComponent(currentPage.id!, v);

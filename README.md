@@ -279,6 +279,28 @@ import SignUpPage from '@polis/react/pages/Auth/SignUpPage';
 />
 ```
 
+## Consumer-registrable component labels
+
+The page/component renderer is framework-generic: consumers register their
+own widgets via `registerComponents(map)` and now register their own
+human-readable **labels** the same way. This keeps app-/domain-specific
+naming out of the shared package.
+
+```tsx
+import {
+  registerComponents,
+  registerComponentLabels,
+} from '@polis/react/components/PageRenderer/ComponentRegistry';
+
+registerComponents({ todo_bullet_list: GoalsWidget });
+registerComponentLabels({ todo_bullet_list: 'Goals' });
+```
+
+The picker and component chip resolve a type's display name through
+`getComponentLabel(type)`, which returns the registered label or falls
+back to a de-underscored form of the type (e.g. `todo_bullet_list` →
+`todo bullet list`) when none is registered.
+
 ## How it ships
 
 This is a **source package**, not a built one — the consumer's Vite / TS

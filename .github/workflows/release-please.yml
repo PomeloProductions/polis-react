@@ -13,8 +13,9 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      # Manifest mode emits `releases_created` (not `release_created`).
-      releases_created: ${{ steps.release.outputs.releases_created }}
+      # Single root package: release-please emits the root-level
+      # `release_created` when the release PR is merged.
+      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
@@ -23,11 +24,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # Publish to public npmjs.com when release-please actually cuts a release
-  # (i.e. the owner merges the release PR). Gated on `releases_created` so it
+  # (i.e. the owner merges the release PR). Gated on `release_created` so it
   # never fires on ordinary pushes to main.
   publish-npm:
     needs: release-please
-    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

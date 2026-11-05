@@ -305,7 +305,7 @@ back to a de-underscored form of the type (e.g. `todo_bullet_list` →
 
 `SettingsPage` ships built-in Account / Appearance / (optional) Organization
 tabs and has always accepted an `extraTabs` prop so the **host app** can bolt
-its own tabs on. A *package* or *plugin* (a theme, a feature package) can now
+its own tabs on. A _package_ or _plugin_ (a theme, a feature package) can now
 contribute a settings tab too — without the host app threading a prop down for
 it — by registering a pane at init:
 

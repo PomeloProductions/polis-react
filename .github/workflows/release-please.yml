@@ -12,8 +12,50 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      # Manifest mode emits `releases_created` (not `release_created`).
+      releases_created: ${{ steps.release.outputs.releases_created }}
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           # Manifest-driven configuration; release-please reads both files.
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish to public npmjs.com when release-please actually cuts a release
+  # (i.e. the owner merges the release PR). Gated on `releases_created` so it
+  # never fires on ordinary pushes to main.
+  publish-npm:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No build step: the package ships TypeScript source directly
+      # (package.json main/types/exports all point at ./src/**), so there is
+      # nothing to compile before publishing.
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$PKG@$VERSION" version >/dev/null 2>&1; then
+            echo "$PKG@$VERSION already published; skipping."
+          else
+            npm publish --access public
+          fi

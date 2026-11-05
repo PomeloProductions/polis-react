@@ -219,6 +219,20 @@ export type { TreeNode, NodePath } from './util/node-tree-utils';
 export { createPageTypeRegistry, defaultPageTypeRegistry } from './util/page-type-registry';
 export type { PageTypeRegistry, PageTypeConfig, PageTypeContext } from './util/page-type-registry';
 
+// ───── Settings-pane registry (package settings manifest) ─────
+// Any package/plugin can `registerSettingsPane({...})` at init to contribute a
+// tab that every mounted `SettingsPage` auto-includes (merged with its
+// `extraTabs` prop, which still wins on `value` collisions).
+export {
+  createSettingsPaneRegistry,
+  defaultSettingsPaneRegistry,
+  registerSettingsPane,
+  registerSettingsPanes,
+  getRegisteredSettingsPanes,
+  resetRegisteredSettingsPanes,
+} from './util/settings-pane-registry';
+export type { SettingsPaneEntry, SettingsPaneRegistry } from './util/settings-pane-registry';
+
 // ───── Plugin system (frontend half of the Polis plugin contract) ─────
 // `definePlugin`/`registerPlugin` wire a plugin's components, page-types, nav
 // items, settings tabs and routes into the app. Mirrors polis-laravel's

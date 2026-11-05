@@ -7,6 +7,10 @@ import MyOrganizationPage from '../MyOrganizationPage';
 import { useColorScheme } from '../../../theme/colorScheme';
 import type { PolisColorScheme } from '../../../theme/colorScheme';
 import { getPluginSettingsTabs } from '../../../plugins/registry';
+import {
+  getRegisteredSettingsPanes,
+  type SettingsPaneEntry,
+} from '../../../util/settings-pane-registry';
 
 export interface ExtraTab {
   value: string;
@@ -72,7 +76,11 @@ const AppearanceTab: React.FC = () => {
 /**
  * Drop-in Settings composition: Account (change password) + Appearance (color
  * scheme) + My organization, as Mantine tabs. Mount one component and pass the
- * injected `me`. Additional app-specific tabs can be passed via `extraTabs`.
+ * injected `me`. Additional app-specific tabs can be passed via `extraTabs`;
+ * any package/plugin can also contribute a tab globally by calling
+ * `registerSettingsPane(...)` (see `util/settings-pane-registry`) — those panes
+ * are merged in automatically, with the `extraTabs` prop winning on `value`
+ * collisions so the host app can always override.
  *
  * Exported both as `SettingsPage` and `SettingsLayout`.
  */
@@ -85,14 +93,27 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 }) => {
   const [tab, setTab] = useState<string | null>('account');
 
-  // Merge globally-registered plugin settings tabs with the `extraTabs` prop.
-  // The prop wins on `value` collisions so an app can override a plugin tab.
+  // Merge three sources of extra tabs, in descending precedence on `value`:
+  //   1. the `extraTabs` prop          — the host app, wins all collisions so it
+  //                                       can override a plugin/registered pane;
+  //   2. plugin-registered settings tabs (getPluginSettingsTabs);
+  //   3. package-registered settings panes (getRegisteredSettingsPanes) — any
+  //      package/plugin that called `registerSettingsPane(...)` at init.
+  // Deduped by `value` (first source to claim a value keeps it). The combined
+  // extras are sorted by optional `order` (default 0) then `label`, and rendered
+  // after the built-in Account/Appearance/Organization tabs. With no plugin
+  // tabs and an empty registry this reduces to the old `extraTabs`-only path.
   const pluginTabs = getPluginSettingsTabs();
-  const propValues = new Set(extraTabs.map((t) => t.value));
-  const mergedExtraTabs: ExtraTab[] = [
-    ...extraTabs,
-    ...pluginTabs.filter((t) => !propValues.has(t.value)),
-  ];
+  const registeredPanes = getRegisteredSettingsPanes();
+
+  const seen = new Set<string>();
+  const mergedExtraTabs: SettingsPaneEntry[] = [];
+  for (const entry of [...extraTabs, ...pluginTabs, ...registeredPanes]) {
+    if (seen.has(entry.value)) continue;
+    seen.add(entry.value);
+    mergedExtraTabs.push(entry);
+  }
+  mergedExtraTabs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.label.localeCompare(b.label));
 
   return (
     <Stack gap="lg">

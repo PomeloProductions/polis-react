@@ -301,6 +301,49 @@ The picker and component chip resolve a type's display name through
 back to a de-underscored form of the type (e.g. `todo_bullet_list` →
 `todo bullet list`) when none is registered.
 
+## Package-registrable settings panes
+
+`SettingsPage` ships built-in Account / Appearance / (optional) Organization
+tabs and has always accepted an `extraTabs` prop so the **host app** can bolt
+its own tabs on. A *package* or *plugin* (a theme, a feature package) can now
+contribute a settings tab too — without the host app threading a prop down for
+it — by registering a pane at init:
+
+```tsx
+import { registerSettingsPane } from '@polis/react';
+import { IconPalette } from '@tabler/icons-react';
+
+// in a package/plugin init module
+registerSettingsPane({
+  value: 'theme', // stable tab value (also the dedupe key)
+  label: 'Theme',
+  icon: <IconPalette size={16} />,
+  panel: <ThemeSettingsPanel />,
+  order: 10, // optional; ascending sort among extra tabs (default 0)
+  packageId: '@polis/theme-mantine', // optional; for diagnostics
+});
+```
+
+Every mounted `SettingsPage` reads `getRegisteredSettingsPanes()` and merges the
+registered panes with its `extraTabs` prop (and with plugin-contributed
+`settingsTabs`). The shared package ships the mechanism and a neutral empty
+default; packages register behaviour for their own panes.
+
+Merge rules (all deduped by `value`):
+
+- **Precedence:** `extraTabs` prop > plugin `settingsTabs` > registered panes.
+  So the host app can always override a package/plugin pane by passing an
+  `extraTabs` entry with the same `value`.
+- **Order:** the combined extra tabs are sorted by optional `order` (default
+  `0`), ties broken by `label`, and rendered after the built-in tabs.
+- **Backwards-compatible:** with an empty registry and no plugin tabs this
+  reduces to exactly the old `extraTabs`-only behaviour.
+
+`registerSettingsPanes([...])` registers several at once;
+`getRegisteredSettingsPanes()` returns the sorted list;
+`createSettingsPaneRegistry()` makes an isolated registry (the module-level
+`defaultSettingsPaneRegistry` backs the convenience helpers).
+
 ## How it ships
 
 This is a **source package**, not a built one — the consumer's Vite / TS

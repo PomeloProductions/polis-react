@@ -10,6 +10,14 @@
   * `DynamicPage` container sizing now comes from `defaultPageTypeRegistry.resolveContainerSize(page.page_type)` instead of the hard-coded `dashboard`/default check.
   * `PageRenderer` and `PageSettingsPanel` gained an optional `onRefresh?: () => void | Promise<void>` prop, replacing the removed `TodoContext.silentRefresh()` call after reorder / add / remove.
 
+## [0.9.0](https://github.com/PomeloProductions/polis-react/compare/v0.8.0...v0.9.0) (2026-11-06)
+
+
+### Features
+
+* Settings-pane registry so packages can register settings tabs ([a7b4c99](https://github.com/PomeloProductions/polis-react/commit/a7b4c99fcfb13bb3ea4a44dc983298b186b92ee1))
+* Settings-pane registry so packages can register settings tabs ([585a9bf](https://github.com/PomeloProductions/polis-react/commit/585a9bf6e2a3183424d743c66757b4b5cf9917ea))
+
 ## [0.8.0](https://github.com/PomeloProductions/polis-react/compare/v0.7.1...v0.8.0) (2026-10-26)
 
 

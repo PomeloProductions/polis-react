@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -39,9 +40,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: 'https://registry.npmjs.org'
           cache: npm
+
+      - name: Upgrade npm (trusted publishing needs >= 11.5.1)
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
@@ -50,8 +54,6 @@ jobs:
       # (package.json main/types/exports all point at ./src/**), so there is
       # nothing to compile before publishing.
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           PKG=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")

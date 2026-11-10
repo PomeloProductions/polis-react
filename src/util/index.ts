@@ -1,9 +1,9 @@
 /**
- * Barrel for `@polis/react/util`.
+ * Barrel for `@polisplatform/react/util`.
  *
  * Re-exports util helpers so consumers can `import { ellipsisText }
- * from '@polis/react/util'`. Granular submodule paths
- * (`@polis/react/util/strings`) also remain available.
+ * from '@polisplatform/react/util'`. Granular submodule paths
+ * (`@polisplatform/react/util/strings`) also remain available.
  */
 export * from './strings';
 export * from './platform';

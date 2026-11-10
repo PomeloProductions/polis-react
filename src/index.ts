@@ -1,14 +1,14 @@
 /**
- * @polis/react — shared toolkit for Polis-family apps.
+ * @polisplatform/react — shared toolkit for Polis-family apps.
  *
  * This top-level barrel exports only the parts that are **standalone** today
  * — i.e. consumable without bringing along PolisOS's Redux store and SCSS
  * theme. Deeper bits live behind their own paths:
  *
- *   - `@polis/react/services/api`         (Redux-coupled; needs migration)
- *   - `@polis/react/contexts/MeContext`   (Redux-coupled; needs migration)
- *   - `@polis/react/components/AuthenticatedRoute`  (Redux-coupled)
- *   - `@polis/react/components/Template/Page`       (Bootstrap-coupled)
+ *   - `@polisplatform/react/services/api`         (Redux-coupled; needs migration)
+ *   - `@polisplatform/react/contexts/MeContext`   (Redux-coupled; needs migration)
+ *   - `@polisplatform/react/components/AuthenticatedRoute`  (Redux-coupled)
+ *   - `@polisplatform/react/components/Template/Page`       (Bootstrap-coupled)
  *
  * Whether to decouple those in this package or wire Redux into consumers is
  * an open architectural choice — see CLAUDE.md.

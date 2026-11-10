@@ -32,7 +32,7 @@ export interface PolisColorTokens {
 }
 
 /**
- * Canonical token interface shared across `@polis/react` and the
+ * Canonical token interface shared across `@polisplatform/react` and the
  * `@polis/theme-*` packages.
  *
  * Themes export a `theme: PolisTheme` object. `<PolisProvider>` injects

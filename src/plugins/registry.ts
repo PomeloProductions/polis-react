@@ -85,7 +85,7 @@ export function registerPlugin(def: PluginDefinition): void {
       console.warn(
         `[plugins] Plugin "${key}" declares reduxSlices (${Object.keys(def.reduxSlices).join(
           ', ',
-        )}) but the current @polis/react store does not support dynamic slice ` +
+        )}) but the current @polisplatform/react store does not support dynamic slice ` +
           `injection. These slices are recorded (getPluginReduxSlices) but NOT ` +
           `mounted. Follow-up: make data/AppContext store extensible.`,
       );

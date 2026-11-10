@@ -4,7 +4,7 @@ Shared React toolkit for Polis-family apps. Sibling of `polis-laravel`.
 
 This is a **source package** — TypeScript ships unbuilt and the consumer
 compiles it via its own Vite/TS. Faster iteration; the consumer's Vite must
-allow `node_modules/@polis/react/**` to be processed (the path: dep mechanism
+allow `node_modules/@polisplatform/react/**` to be processed (the path: dep mechanism
 handles this automatically).
 
 ## What's in here
@@ -48,9 +48,9 @@ reusable parts here without forcing a layout.
 For now PolisOS and VGR still have their own copies in `apps/web/src/`.
 Migration plan (later, separate work):
 
-1. Add `"@polis/react": "file:../../packages/polis-react"` to each consumer.
+1. Add `"@polisplatform/react": "file:../../packages/polis-react"` to each consumer.
 2. Delete their copies of the moved files.
-3. Update imports from `'../../components/X'` to `'@polis/react/components/X'`.
+3. Update imports from `'../../components/X'` to `'@polisplatform/react/components/X'`.
 4. If a consumer needs a different version of a file, fork it back into
    their `src/` (the customization rule).
 

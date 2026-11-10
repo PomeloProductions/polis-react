@@ -1,8 +1,8 @@
 /**
- * Barrel for `@polis/react/components`.
+ * Barrel for `@polisplatform/react/components`.
  *
  * Re-exports commonly-used components. Granular submodule paths
- * (`@polis/react/components/Forms/SignInForm`) remain available and are
+ * (`@polisplatform/react/components/Forms/SignInForm`) remain available and are
  * usually preferred for tree-shaking.
  */
 export { PolisProvider, usePolisTheme } from './PolisProvider';

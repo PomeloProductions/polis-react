@@ -1,5 +1,5 @@
 /**
- * Barrel for `@polis/react/services`.
+ * Barrel for `@polisplatform/react/services`.
  *
  * Exposes the configured `api` axios instance, AuthManager helpers, and
  * the per-resource request classes.

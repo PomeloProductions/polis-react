@@ -4,10 +4,10 @@
  * PolisOS's `DynamicPage`/`PageRenderer` hard-coded behaviour keyed off
  * `page.page_type === 'todo'` (redirect todo pages to a bespoke URL, use a
  * wider container for dashboards, enable drag-and-drop reordering on todo
- * pages, …). That coupling meant `@polis/react` could not host the renderer
+ * pages, …). That coupling meant `@polisplatform/react` could not host the renderer
  * without importing todo knowledge.
  *
- * This registry replaces those literals with per-consumer config. `@polis/react`
+ * This registry replaces those literals with per-consumer config. `@polisplatform/react`
  * ships the mechanism and a neutral default; the consumer registers behaviour
  * for its own page types (e.g. Todo registers a `redirect` + `draggable: true`).
  */

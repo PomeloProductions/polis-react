@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
  * contribute its own settings surface without the host app threading a prop down
  * for it.
  *
- * This registry fills that gap. `@polis/react` ships the mechanism and a neutral
+ * This registry fills that gap. `@polisplatform/react` ships the mechanism and a neutral
  * empty default; any package/plugin registers behaviour for its own settings
  * pane at init time (e.g. a theme package calls
  * `registerSettingsPane({ value: 'theme', label: 'Theme', panel: <ThemeSettings/> })`).
@@ -21,7 +21,7 @@ import type { ReactNode } from 'react';
  * optional `order` and `packageId`) so the two sources merge cleanly.
  *
  * @example Register a pane from a package's init module
- *   import { registerSettingsPane } from '@polis/react';
+ *   import { registerSettingsPane } from '@polisplatform/react';
  *   registerSettingsPane({
  *     value: 'theme',
  *     label: 'Theme',

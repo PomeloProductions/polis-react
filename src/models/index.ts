@@ -1,8 +1,8 @@
 /**
- * Barrel for `@polis/react/models`.
+ * Barrel for `@polisplatform/react/models`.
  *
  * Re-exports the user-facing model interfaces. Granular submodule paths
- * (`@polis/react/models/user/user`) remain available.
+ * (`@polisplatform/react/models/user/user`) remain available.
  */
 export type { default as User } from './user/user';
 export { placeholderUser, isSuperUser, isSuperAdmin } from './user/user';

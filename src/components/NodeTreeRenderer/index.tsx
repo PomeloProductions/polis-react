@@ -18,7 +18,7 @@ import type { TreeNode, NodePath } from '../../util/node-tree-utils';
  *
  * ALL node-body rendering — labels, tally/schedule/balance/checkoff, settings
  * drawers, add-child inputs, and any domain logic — is delegated to the
- * consumer-supplied {@link NodeRenderDelegate}. `@polis/react` therefore holds
+ * consumer-supplied {@link NodeRenderDelegate}. `@polisplatform/react` therefore holds
  * zero todo (or any domain) knowledge; the consumer's delegate does.
  */
 

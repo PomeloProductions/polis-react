@@ -97,7 +97,7 @@ function toPushRow(entry: PushTemplateEntry): DisplayRow {
  * implementation. The client is what fetches from the polis-laravel
  * admin endpoints; supply your own (mockable) implementation or use the
  * `emailTemplateRequests` / `pushTemplateRequests` defaults exported
- * from `@polis/react/services/MessagingTemplateRequests`.
+ * from `@polisplatform/react/services/MessagingTemplateRequests`.
  */
 const TemplateList: React.FC<TemplateListProps> = (props) => {
   const { organizationId, onEdit, type, title } = props;

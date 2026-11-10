@@ -1,4 +1,4 @@
-# @polis/react
+# @polisplatform/react
 
 Shared React core for Polis-family apps. This is the React-side sibling of
 `@polis/polis-laravel`: one source of truth for auth, API client, base
@@ -35,7 +35,7 @@ In a sibling app's `package.json`:
 ```json
 {
   "dependencies": {
-    "@polis/react": "file:../../packages/polis-react"
+    "@polisplatform/react": "file:../../packages/polis-react"
   }
 }
 ```
@@ -49,46 +49,46 @@ no `tsconfig` paths, no Vite alias, no Jest `moduleNameMapper`:
 
 ```ts
 // Subpath imports
-import Menu from '@polis/react/components/Menu';
-import SignInForm from '@polis/react/components/Forms/SignInForm';
-import api from '@polis/react/services/api';
-import AuthRequests from '@polis/react/services/requests/AuthRequests';
-import { ellipsisText } from '@polis/react/util/strings';
+import Menu from '@polisplatform/react/components/Menu';
+import SignInForm from '@polisplatform/react/components/Forms/SignInForm';
+import api from '@polisplatform/react/services/api';
+import AuthRequests from '@polisplatform/react/services/requests/AuthRequests';
+import { ellipsisText } from '@polisplatform/react/util/strings';
 
 // Top-level barrels
-import { Menu, SignInForm, ellipsisText, api } from '@polis/react';
+import { Menu, SignInForm, ellipsisText, api } from '@polisplatform/react';
 ```
 
 The exports map is now structured so:
 
-- `@polis/react/components/X` → `./src/components/X/index.tsx`
-- `@polis/react/contexts/X` → `./src/contexts/X.tsx`
-- `@polis/react/services/X` and `@polis/react/services/Y/Z` →
+- `@polisplatform/react/components/X` → `./src/components/X/index.tsx`
+- `@polisplatform/react/contexts/X` → `./src/contexts/X.tsx`
+- `@polisplatform/react/services/X` and `@polisplatform/react/services/Y/Z` →
   `./src/services/X.ts` / `./src/services/Y/Z.ts`
-- `@polis/react/util/X` → `./src/util/X.ts`
-- `@polis/react/models/X` → `./src/models/X.ts`
-- `@polis/react/pages/X` → `./src/pages/X/index.tsx`
-- `@polis/react/theme/X` → `./src/theme/X.scss`
+- `@polisplatform/react/util/X` → `./src/util/X.ts`
+- `@polisplatform/react/models/X` → `./src/models/X.ts`
+- `@polisplatform/react/pages/X` → `./src/pages/X/index.tsx`
+- `@polisplatform/react/theme/X` → `./src/theme/X.scss`
 
-Plus barrel entries at every top-level directory (`@polis/react/components`,
-`@polis/react/util`, `@polis/react/services`, `@polis/react/contexts`,
-`@polis/react/models`).
+Plus barrel entries at every top-level directory (`@polisplatform/react/components`,
+`@polisplatform/react/util`, `@polisplatform/react/services`, `@polisplatform/react/contexts`,
+`@polisplatform/react/models`).
 
 If you were previously carrying a `tsconfig.json` `paths` mapping, a
 `vite.config.ts` `resolve.alias`, or a `jest.config.js` `moduleNameMapper`
-just to coax `@polis/react/...` resolution, you can delete all three.
+just to coax `@polisplatform/react/...` resolution, you can delete all three.
 
 ## Theming
 
 Themes ship as separate packages — `@polis/theme-bootstrap`,
 `@polis/theme-mantine`, or a custom one — and each exports a `theme`
-object that satisfies `PolisTheme` (defined in `@polis/react/theme`).
+object that satisfies `PolisTheme` (defined in `@polisplatform/react/theme`).
 Swapping themes is a one-line consumer change.
 
 ### Consumer pattern
 
 ```tsx
-import { PolisProvider } from '@polis/react';
+import { PolisProvider } from '@polisplatform/react';
 import { theme } from '@polis/theme-mantine'; // or '@polis/theme-bootstrap'
 
 <PolisProvider theme={theme}>
@@ -109,7 +109,7 @@ import { theme } from '@polis/theme-mantine'; // or '@polis/theme-bootstrap'
    need JS access to tokens can call `usePolisTheme()`:
 
    ```tsx
-   import { usePolisTheme } from '@polis/react';
+   import { usePolisTheme } from '@polisplatform/react';
    const theme = usePolisTheme();
    // theme.colors.primary, theme.fonts.body, ...
    ```
@@ -129,7 +129,7 @@ framework-native attributes on `<html>`:
 - `data-polis-color-scheme` (generic hook for your own CSS)
 
 ```tsx
-import { PolisProvider, useColorScheme, ColorSchemeToggle } from '@polis/react';
+import { PolisProvider, useColorScheme, ColorSchemeToggle } from '@polisplatform/react';
 import { theme } from '@polis/theme-mantine';
 
 <PolisProvider theme={theme} defaultAppliedColorScheme="system">
@@ -164,7 +164,7 @@ Create a package whose `src/theme.ts` exports a `theme: PolisTheme`
 object. The interface is:
 
 ```ts
-import type { PolisTheme, PolisColorTokens } from '@polis/react/theme/PolisTheme';
+import type { PolisTheme, PolisColorTokens } from '@polisplatform/react/theme/PolisTheme';
 ```
 
 …and includes `name`, `colors` (light), an optional `dark`
@@ -225,7 +225,7 @@ Robustness applied uniformly:
 
 ```tsx
 import * as Yup from 'yup';
-import SignUpForm from '@polis/react/components/Forms/SignUpForm';
+import SignUpForm from '@polisplatform/react/components/Forms/SignUpForm';
 
 <SignUpForm
   additionalInitialValues={{ first_name: '', last_name: '' }}
@@ -251,17 +251,17 @@ import SignUpForm from '@polis/react/components/Forms/SignUpForm';
 
 ## Default pages (v0.2)
 
-Pre-composed pages live under `@polis/react/pages/`. They wrap each form
+Pre-composed pages live under `@polisplatform/react/pages/`. They wrap each form
 in a centered Mantine `<Paper>` layout with cross-page links and accept
 an optional `branding` prop (`{ appName, logo }`):
 
-- `@polis/react/pages/Auth/SignInPage`
-- `@polis/react/pages/Auth/SignUpPage`
-- `@polis/react/pages/Auth/ForgotPasswordPage`
-- `@polis/react/pages/Auth/ResetPasswordPage`
-- `@polis/react/pages/Welcome` — logged-out landing page with sign-in /
+- `@polisplatform/react/pages/Auth/SignInPage`
+- `@polisplatform/react/pages/Auth/SignUpPage`
+- `@polisplatform/react/pages/Auth/ForgotPasswordPage`
+- `@polisplatform/react/pages/Auth/ResetPasswordPage`
+- `@polisplatform/react/pages/Welcome` — logged-out landing page with sign-in /
   sign-up CTAs and an optional copy slot via `children`
-- `@polis/react/pages/Dashboard` — minimal logged-in stub that reads
+- `@polisplatform/react/pages/Dashboard` — minimal logged-in stub that reads
   `MeContext` and shows a greeting; override `children` for real content
 
 The `additionalFields` / `additionalValidation` / `additionalInitialValues` /
@@ -270,7 +270,7 @@ their wrapper page, so you can use the pages without ever importing the
 underlying forms:
 
 ```tsx
-import SignUpPage from '@polis/react/pages/Auth/SignUpPage';
+import SignUpPage from '@polisplatform/react/pages/Auth/SignUpPage';
 
 <SignUpPage
   branding={{ appName: 'Video Game Rankings' }}
@@ -290,7 +290,7 @@ naming out of the shared package.
 import {
   registerComponents,
   registerComponentLabels,
-} from '@polis/react/components/PageRenderer/ComponentRegistry';
+} from '@polisplatform/react/components/PageRenderer/ComponentRegistry';
 
 registerComponents({ todo_bullet_list: GoalsWidget });
 registerComponentLabels({ todo_bullet_list: 'Goals' });
@@ -310,7 +310,7 @@ contribute a settings tab too — without the host app threading a prop down for
 it — by registering a pane at init:
 
 ```tsx
-import { registerSettingsPane } from '@polis/react';
+import { registerSettingsPane } from '@polisplatform/react';
 import { IconPalette } from '@tabler/icons-react';
 
 // in a package/plugin init module

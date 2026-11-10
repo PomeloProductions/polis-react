@@ -6,7 +6,7 @@ import React from 'react';
  * A page/dashboard renderer maps a stored `component_type` string to a React
  * component to render. Historically PolisOS hard-coded that map (with the todo
  * widgets baked in). This factory makes the map a runtime, per-consumer
- * concern: `@polis/react` ships the mechanism, the consumer registers its own
+ * concern: `@polisplatform/react` ships the mechanism, the consumer registers its own
  * widgets against it.
  *
  * Widgets are typically `React.lazy(...)` so they code-split, but any component

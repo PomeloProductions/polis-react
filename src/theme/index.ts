@@ -1,5 +1,5 @@
 /**
- * JS barrel for `@polis/react/theme`.
+ * JS barrel for `@polisplatform/react/theme`.
  *
  * NOTE: the `.scss` files in this directory remain accessible via the
  * package's `./theme/*` SCSS export pattern in `package.json`. This barrel
